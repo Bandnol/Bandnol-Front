@@ -1,8 +1,8 @@
-import Logo from '@/assets/splash/logo.svg';
-import KakaoIcon from '@/assets/splash/kakao.svg';
-import NaverIcon from '@/assets/splash/naver.svg';
-import GoogleIcon from '@/assets/splash/google.svg';
-import GuestIcon from '@/assets/splash/nonlogin.svg';
+import Logo from '@/assets/auth/splash/logo.svg';
+import KakaoIcon from '@/assets/auth/splash/kakao.svg';
+import NaverIcon from '@/assets/auth/splash/naver.svg';
+import GoogleIcon from '@/assets/auth/splash/google.svg';
+import GuestIcon from '@/assets/auth/splash/nonlogin.svg';
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';

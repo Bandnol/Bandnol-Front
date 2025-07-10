@@ -2,8 +2,8 @@ import * as React from 'react';
 import { Text, StyleSheet, View, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import BackIcon from '@/assets/inquiry/Vector.svg';
-import InquiryButton from '@/assets/inquiry/btn.svg';
+import BackIcon from '@/assets/auth/inquiry/Vector.svg';
+import InquiryButton from '@/assets/auth/inquiry/btn.svg';
 const Component = () => {
   const router = useRouter();
   return (
