@@ -6,7 +6,8 @@ module.exports = {
     './constants/**/*.{js,jsx,ts,tsx}',
     './hooks/**/*.{js,jsx,ts,tsx}',
   ],
-  theme: { // 밴놀 디자인 시스템 커스텀
+  theme: {
+    // 밴놀 디자인 시스템 커스텀
     extend: {
       fontFamily: {
         pretendard: ['Pretendard'],

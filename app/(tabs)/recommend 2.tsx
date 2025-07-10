@@ -1,4 +1,5 @@
 import { Text, View } from 'react-native';
+import BottomTabBar from '../../components/common/BottomTabBar';
 
 export default function HomeScreen() {
   return (
