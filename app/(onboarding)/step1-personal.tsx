@@ -7,8 +7,8 @@ import {
   SafeAreaView,
   TextInput,
 } from 'react-native';
-import BackIcon from '@/assets/onboarding/step1/Vector.svg';
-import Logo from '@/assets/onboarding/step1/logo.svg';
+import BackIcon from '@/assets/onboarding/Vector.svg';
+import Logo from '@/assets/onboarding/logo.svg';
 import { useRouter } from 'expo-router';
 
 export default function Step1Personal() {
@@ -151,6 +151,7 @@ export default function Step1Personal() {
 const styles = StyleSheet.create({
   parent: {
     flex: 1,
+    backgroundColor: '#121212',
   },
   textTypo: {
     textAlign: 'left',
@@ -190,7 +191,6 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     alignItems: 'center',
   },
-  icon1: {},
   text: {
     color: '#f4f4f4',
     textAlign: 'center',
@@ -215,9 +215,6 @@ const styles = StyleSheet.create({
     color: '#7c7c7c',
     textAlign: 'left',
     alignSelf: 'stretch',
-  },
-  text2: {
-    color: '#fff',
   },
   container: {
     alignSelf: 'stretch',
@@ -282,15 +279,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#1f1f1f',
     padding: 16,
     height: 50,
+    width: 335,
     borderRadius: 10,
     flexDirection: 'row',
-    alignSelf: 'stretch',
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'absolute',
+    bottom: 30,
+    left: 0,
+    right: 0,
+    marginHorizontal: 'auto',
+    alignSelf: 'center',
   },
   frameParent: {
     width: 335,
     gap: 123,
+    flex: 1,
+    position: 'relative',
   },
   view: {
     width: '100%',
