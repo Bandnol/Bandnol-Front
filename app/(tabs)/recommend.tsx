@@ -1,6 +1,5 @@
-import { Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import BottomTabBar from '../../components/common/BottomTabBar';
+import { Text, View } from 'react-native';
 
 export default function RecommendScreen() {
   const router = useRouter();
