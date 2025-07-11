@@ -1,50 +1,26 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
-import { Platform } from 'react-native';
+import { Slot, useRouter, useSegments } from 'expo-router';
+import { StatusBar, View } from 'react-native';
 
-import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import TabBarBackground from '@/components/ui/TabBarBackground';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import BottomTabBar from '../../components/common/BottomTabBar';
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+type TabKey = 'home' | 'artist' | 'recommend' | 'mypage' | 'setting';
+
+<StatusBar barStyle="light-content" backgroundColor="#000" />;
+
+export default function TabsLayout() {
+  const router = useRouter();
+  const segments = useSegments();
+
+  // 현재 탭 키 추출 (예: /home, /artist → 'home', 'artist')
+  const currentTab = segments[1] || 'home';
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
-          },
-          default: {},
-        }),
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="house.fill" color={color} />
-          ),
-        }}
+    <View style={{ flex: 1 }}>
+      <Slot />
+      <BottomTabBar
+        currentTab={currentTab}
+        onTabPress={(tab: string) => router.push(`/(tabs)/${tab}` as any)}
       />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="paperplane.fill" color={color} />
-          ),
-        }}
-      />
-    </Tabs>
+    </View>
   );
 }
