@@ -3,6 +3,11 @@ import { useEffect, useRef, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import Swiper from 'react-native-swiper';
 
+import AlertIcon from '@/assets/icons/alert.svg';
+import BandnolIcon from '@/assets/icons/bandnol-logo.svg';
+import CommentIcon from '@/assets/icons/comment.svg';
+import ErrorIcon from '@/assets/icons/error.svg';
+import PlayIcon from '@/assets/icons/play-solid.svg';
 import DateHeader from '@/components/common/DateHeader';
 import { Typography } from '@/constants/tyopography';
 
@@ -64,10 +69,7 @@ export default function MyRecommendSwiper() {
               onPress={() => router.push('/(tabs)/music-recommend/alarmCenter')}
               style={styles.bellWrapper}
             >
-              <Image
-                source={require('@/assets/images/alert.png')}
-                style={styles.bellIcon}
-              />
+              <AlertIcon width={24} height={24} />
             </Pressable>
           </View>
 
@@ -79,17 +81,11 @@ export default function MyRecommendSwiper() {
 
           <View style={styles.albumWrapper}>
             <Image source={albumImage} style={styles.albumImage} />
-            <Image
-              source={require('@/assets/images/play.png')}
-              style={{ width: 62, height: 62 }}
-            />
+            <PlayIcon width={58.1} height={58.1} />
           </View>
 
           <Pressable style={styles.commentButton}>
-            <Image
-              source={require('@/assets/images/comment.png')}
-              style={{ width: 24, height: 24 }}
-            />
+            <CommentIcon width={16} height={14.37} />
             <Text style={styles.commentText}>코멘트 확인하기</Text>
           </Pressable>
 
@@ -108,19 +104,13 @@ export default function MyRecommendSwiper() {
           </Text>
           <View style={styles.circleBox}>
             <View style={styles.BandnolLogo}>
-              <Image
-                source={require('@/assets/images/Bandnol-logo.png')}
-                style={{ width: 48, height: 48 }}
-              />
+              <BandnolIcon width={48} height={48} />
             </View>
             <Text style={styles.countdownLabel}>오늘의 추천곡 도착까지</Text>
             <Text style={styles.countdown}>{formatTime(timeLeft)}</Text>
           </View>
           <View style={styles.settingRow}>
-            <Image
-              source={require('@/assets/images/error.png')}
-              style={{ width: 16, height: 16 }}
-            />
+            <ErrorIcon width={16} height={16} />
             <Text style={styles.setting}>추천곡 수신시간 설정</Text>
           </View>
         </View>

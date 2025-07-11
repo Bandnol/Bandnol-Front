@@ -12,6 +12,9 @@ import {
   View,
 } from 'react-native';
 
+import BackArrowIcon from '@/assets/icons/back-arrow.svg';
+import CheckboxIcon from '@/assets/icons/checkbox.svg';
+import MagicIcon from '@/assets/icons/magic.svg';
 import DateHeader from '@/components/common/DateHeader';
 import { Typography } from '@/constants/tyopography';
 
@@ -37,10 +40,7 @@ export default function SendRecommendPage() {
         {/* 헤더 */}
         <View style={styles.header}>
           <Pressable onPress={() => router.back()} style={styles.backArrow}>
-            <Image
-              source={require('@/assets/images/backarrow.png')}
-              style={{ width: 24, height: 24 }}
-            />
+            <BackArrowIcon width={9.05} height={16.19} />
           </Pressable>
           <Text style={styles.headerTitle}>추천곡 보내기</Text>
         </View>
@@ -76,20 +76,14 @@ export default function SendRecommendPage() {
           <View style={styles.commentOptions}>
             <View style={styles.checkboxRow}>
               <Text style={styles.checkbox}>
-                <Image
-                  source={require('@/assets/images/checkbox.png')}
-                  style={{ width: 24, height: 24 }}
-                />
+                <CheckboxIcon width={24} height={24} />
               </Text>
               <Text style={styles.checkboxLabel}>익명으로 보내기</Text>
             </View>
             <Pressable>
               <View style={styles.aiCommentRow}>
                 <Text style={styles.aiComment}>
-                  <Image
-                    source={require('@/assets/images/ai-comment.png')}
-                    style={{ width: 21, height: 21 }}
-                  />
+                  <MagicIcon width={24} height={24} />
                 </Text>
                 <Text style={styles.aiCommentLabel}>AI COMMENT</Text>
               </View>

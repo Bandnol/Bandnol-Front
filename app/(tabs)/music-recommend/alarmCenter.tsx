@@ -1,13 +1,8 @@
 import { useRouter } from 'expo-router';
-import {
-  FlatList,
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import BackArrowIcon from '@/assets/icons/back-arrow.svg';
+import SongIcon from '@/assets/icons/song.svg';
 import { Typography } from '@/constants/tyopography';
 
 const notifications = [
@@ -28,10 +23,7 @@ export default function AlarmCenterPage() {
       {/* 헤더 */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backArrow}>
-          <Image
-            source={require('@/assets/images/backarrow.png')}
-            style={{ width: 24, height: 24 }}
-          />
+          <BackArrowIcon width={9.05} height={16.19} />
         </Pressable>
         <View style={styles.center}>
           <Text style={styles.headerTitle}>알림</Text>
@@ -46,10 +38,7 @@ export default function AlarmCenterPage() {
         renderItem={({ item }) => (
           <View style={styles.card}>
             <Text style={styles.cardIcon}>
-              <Image
-                source={require('@/assets/images/alarm.png')}
-                style={{ width: 36, height: 36 }}
-              />
+              <SongIcon width={36} height={36} />
             </Text>
             <View style={styles.cardTextBox}>
               <Text style={styles.cardTitle}>{item.title}</Text>

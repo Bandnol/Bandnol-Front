@@ -1,6 +1,9 @@
 import { useLocalSearchParams } from 'expo-router';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import LikeIcon from '@/assets/icons/like.svg';
+import PlayIcon from '@/assets/icons/play-solid.svg';
+import UnlikeIcon from '@/assets/icons/unlike.svg';
 import DateHeader from '@/components/common/DateHeader';
 import { Typography } from '@/constants/tyopography';
 
@@ -30,10 +33,7 @@ export default function ReceiveRecommend() {
       <Text style={styles.artist}>{artist}</Text>
       <View style={styles.albumWrapper}>
         <Image source={albumImage} style={styles.albumImage} />
-        <Image
-          source={require('@/assets/images/play.png')}
-          style={{ width: 62, height: 62 }}
-        />
+        <PlayIcon width={58.1} height={58.1} />
       </View>
       <Text style={styles.fromText}>
         From. <Text style={styles.sender}>{sender}</Text>
@@ -43,20 +43,14 @@ export default function ReceiveRecommend() {
       <View style={styles.likeOptions}>
         <View style={styles.likeRow}>
           <Text style={styles.like}>
-            <Image
-              source={require('@/assets/images/like.png')}
-              style={{ width: 24, height: 24 }}
-            />
+            <LikeIcon width={18.56} height={18} />
           </Text>
           <Text style={styles.likeLabel}>좋아요</Text>
         </View>
         <Pressable>
           <View style={styles.unlikeRow}>
             <Text style={styles.unlike}>
-              <Image
-                source={require('@/assets/images/unlike.png')}
-                style={{ width: 21, height: 21 }}
-              />
+              <UnlikeIcon width={18.56} height={18} />
             </Text>
             <Text style={styles.unlikeLabel}>별로예요</Text>
           </View>

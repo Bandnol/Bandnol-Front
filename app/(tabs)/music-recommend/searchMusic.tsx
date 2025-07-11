@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 
+import SearchIcon from '@/assets/icons/search.svg';
 import DateHeader from '@/components/common/DateHeader';
 import { Typography } from '@/constants/tyopography';
 
@@ -97,10 +98,7 @@ export default function SearchMusicPage() {
               placeholderTextColor="#888"
             />
             <Pressable onPress={handleSubmit} style={styles.iconBox}>
-              <Image
-                source={require('@/assets/images/search.png')}
-                style={{ width: 17, height: 17 }}
-              />
+              <SearchIcon width={24} height={24} />
             </Pressable>
           </View>
         </View>
