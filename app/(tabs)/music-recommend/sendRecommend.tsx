@@ -12,6 +12,8 @@ import {
   View,
 } from 'react-native';
 
+import Checkbox from '@/assets/images/checkbox.svg';
+import CheckboxChecked from '@/assets/images/checkbox_checked.svg';
 import DateHeader from '@/components/common/DateHeader';
 import { Typography } from '@/constants/tyopography';
 
@@ -20,15 +22,22 @@ export default function SendRecommendPage() {
   const { title, artist } = useLocalSearchParams();
   const [comment, setComment] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(true);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isSendModalVisible, setIsSendModalVisible] = useState(false);
 
   const handleSend = () => {
-    router.push({
-      pathname: '/(tabs)/music-recommend/myRecommend',
-      params: {
-        title,
-        artist,
-      },
-    });
+    setIsSendModalVisible(true);
+
+    setTimeout(() => {
+      setIsSendModalVisible(false);
+      router.push({
+        pathname: '/(tabs)/music-recommend/myRecommend',
+        params: {
+          title,
+          artist,
+        },
+      });
+    }, 5000);
   };
 
   return (
@@ -74,16 +83,28 @@ export default function SendRecommendPage() {
             style={styles.commentInput}
           />
           <View style={styles.commentOptions}>
-            <View style={styles.checkboxRow}>
-              <Text style={styles.checkbox}>
-                <Image
-                  source={require('@/assets/images/checkbox.png')}
-                  style={{ width: 24, height: 24 }}
-                />
+            <TouchableOpacity
+              onPress={() => setIsAnonymous(!isAnonymous)}
+              style={styles.checkboxRow}
+              activeOpacity={0.8}
+            >
+              <View style={styles.checkbox}>
+                {isAnonymous ? (
+                  <CheckboxChecked width={24} height={24} />
+                ) : (
+                  <Checkbox width={24} height={24} />
+                )}
+              </View>
+              <Text
+                style={[
+                  styles.checkboxLabel,
+                  { color: isAnonymous ? '#FFFFFF' : '#7C7C7C' },
+                ]}
+              >
+                익명으로 보내기
               </Text>
-              <Text style={styles.checkboxLabel}>익명으로 보내기</Text>
-            </View>
-            <Pressable>
+            </TouchableOpacity>
+            <Pressable onPress={() => setIsModalVisible(true)}>
               <View style={styles.aiCommentRow}>
                 <Text style={styles.aiComment}>
                   <Image
@@ -98,9 +119,36 @@ export default function SendRecommendPage() {
         </View>
 
         {/* 전송 버튼 */}
-        <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
+        <TouchableOpacity
+          style={[
+            styles.sendButton,
+            comment.trim() ? { backgroundColor: '#FB4932' } : {},
+          ]}
+          onPress={handleSend}
+        >
           <Text style={styles.sendText}>전송</Text>
         </TouchableOpacity>
+
+        {/* 모달 */}
+        {isModalVisible && (
+          <View style={styles.modalBackground}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.emoji}>😝</Text>
+              <Text style={styles.commentText}>
+                AI가 코멘트를 작성하고 있어요 ...
+              </Text>
+            </View>
+          </View>
+        )}
+        {/* 전송 버튼 눌렀을 때 모달 */}
+        {isSendModalVisible && (
+          <View style={styles.modalBackground}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.emoji}>😎</Text>
+              <Text style={styles.commentText}>오늘의 곡 추천 완료</Text>
+            </View>
+          </View>
+        )}
       </View>
     </TouchableWithoutFeedback>
   );
@@ -229,5 +277,49 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 15,
     fontWeight: '600',
+  },
+  modalBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+  },
+  modalContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    backgroundColor: '#333',
+    width: 324,
+    height: 185,
+  },
+  emoji: {
+    width: 292,
+    height: 76,
+    textAlign: 'center',
+    color: '#333',
+    fontFamily: 'Pretendard',
+    fontSize: 76,
+    lineHeight: 76,
+    fontStyle: 'normal',
+    fontWeight: '400',
+    letterSpacing: -2.28,
+    marginBottom: 10,
+  },
+  commentText: {
+    width: 292,
+    textAlign: 'center',
+    color: '#FFF',
+    fontFamily: 'Pretendard',
+    fontSize: 16,
+    fontStyle: 'normal',
+    fontWeight: '400',
+    letterSpacing: -0.48,
   },
 });
