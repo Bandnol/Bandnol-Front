@@ -134,6 +134,8 @@ export default function MyRecommendSwiper() {
         onClose={() => setIsMyCommentVisible(false)}
         title="MY COMMENT"
         description="여름에 참 잘 어울리는 노래입니다~ 같은 앨범 수록곡도 다 너무 좋아서 요즘 듣기 딱이에요! 추천합니다 ㅎㅎ"
+        closeColor="#1F1F1F"
+        closeText="닫기"
       />
 
       <CommentModal
@@ -141,6 +143,8 @@ export default function MyRecommendSwiper() {
         onClose={() => setIsReplyCommentVisible(false)}
         title="From. 훈심이"
         description="와 노래 좋아요 좋은 노래 알아갑니다!! 감사합니다~~"
+        closeColor="#1F1F1F"
+        closeText="닫기"
       />
     </>
   );

@@ -1,11 +1,13 @@
 import React from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { Typography } from '@/constants/tyopography';
 
 type CommentModalProps = {
   visible: boolean;
   onClose: () => void;
+  closeText?: string;
+  closeColor?: string;
   title: string;
   description: string;
 };
@@ -15,7 +17,11 @@ export default function CommentModal({
   onClose,
   title,
   description,
+  closeText,
+  closeColor,
 }: CommentModalProps) {
+  const isReply = closeText === '답장 보내기';
+
   return (
     <Modal
       animationType="fade"
@@ -28,10 +34,19 @@ export default function CommentModal({
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.description}>{description}</Text>
         </View>
-        <View style={styles.buttonContainer}>
-          <Pressable onPress={onClose} style={styles.closeButton}>
-            <Text style={styles.closeButtonText}>닫기</Text>
-          </Pressable>
+        <View style={[styles.buttonContainer, { backgroundColor: closeColor }]}>
+          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <Text
+              style={[
+                styles.closeButtonText,
+                {
+                  color: isReply ? '#FFFFFF' : '#B3B3B3',
+                },
+              ]}
+            >
+              {closeText}
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </Modal>
@@ -76,7 +91,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     height: 50,
     width: 335,
-    backgroundColor: '#1F1F1F',
+    // backgroundColor: '#1F1F1F',
     borderBottomLeftRadius: 10,
     borderBottomRightRadius: 10,
     justifyContent: 'center',
@@ -88,7 +103,6 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   closeButtonText: {
-    color: '#B3B3B3',
     ...Typography.subtitle3,
   },
 });
