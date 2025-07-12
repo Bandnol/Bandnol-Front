@@ -12,6 +12,8 @@ import {
   View,
 } from 'react-native';
 
+import Checkbox from '@/assets/icons/checkbox.svg';
+import Checkboxchecked from '@/assets/icons/checkbox-checked.svg';
 import DateHeader from '@/components/common/DateHeader';
 import ModalPopup from '@/components/common/ModalPopup';
 import { Typography } from '@/constants/tyopography';
@@ -89,9 +91,9 @@ export default function SendRecommendPage() {
             >
               <View style={styles.checkbox}>
                 {isAnonymous ? (
-                  <CheckboxIcon width={24} height={24} />
+                  <Checkboxchecked width={24} height={24} />
                 ) : (
-                  <CheckboxIcon width={24} height={24} />
+                  <Checkbox width={24} height={24} />
                 )}
               </View>
               <Text
