@@ -1,6 +1,5 @@
-import { View, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import BottomTabBar from '../../components/common/BottomTabBar';
+import { StyleSheet, Text, View } from 'react-native';
 
 export default function SettingPage() {
   const router = useRouter();

@@ -1,3 +1,7 @@
+import NotificationItem from '@/components/NotificationItem';
+import { notifications } from '@/constants/notifications';
+import { Typography } from '@/constants/tyopography';
+
 import { useRouter } from 'expo-router';
 import {
   FlatList,
@@ -7,18 +11,6 @@ import {
   Text,
   View,
 } from 'react-native';
-
-import { Typography } from '@/constants/tyopography';
-
-const notifications = [
-  {
-    id: 1,
-    icon: '',
-    title: '띵동~ 오늘의 추천곡이 도착했어요!',
-    description: '지금 바로 확인해보세요.',
-    time: '지금',
-  },
-];
 
 export default function AlarmCenterPage() {
   const router = useRouter();
@@ -42,22 +34,8 @@ export default function AlarmCenterPage() {
       <FlatList
         data={notifications}
         keyExtractor={(item) => String(item.id)}
+        renderItem={({ item }) => <NotificationItem {...item} />}
         contentContainerStyle={styles.list}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <Text style={styles.cardIcon}>
-              <Image
-                source={require('@/assets/images/alarm.png')}
-                style={{ width: 36, height: 36 }}
-              />
-            </Text>
-            <View style={styles.cardTextBox}>
-              <Text style={styles.cardTitle}>{item.title}</Text>
-              <Text style={styles.cardDescription}>{item.description}</Text>
-            </View>
-            <Text style={styles.cardTime}>{item.time}</Text>
-          </View>
-        )}
       />
     </View>
   );
