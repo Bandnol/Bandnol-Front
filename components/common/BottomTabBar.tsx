@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     width: '100%',
     height: 90,
-    paddingTop: 28,
+    paddingTop: 12,
     backgroundColor: '#1F1F1F',
     flexShrink: 0,
   },
