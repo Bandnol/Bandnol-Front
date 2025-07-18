@@ -1,7 +1,9 @@
 {
-    "singleQuote": true,
-    "trailingComma": "all",
-    "printWidth": 80,
-    "tabWidth": 2,
-    "semi": true
-  }
+  "singleQuote": true,
+  "trailingComma": "all",
+  "printWidth": 80,
+  "tabWidth": 2,
+  "semi": true,
+  "files.eol": "\n",
+  "editor.formatOnSave": true
+}

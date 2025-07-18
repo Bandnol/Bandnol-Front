@@ -1,8 +1,11 @@
-import { View } from 'react-native';
 import { Slot, useRouter, useSegments } from 'expo-router';
+import { StatusBar, View } from 'react-native';
+
 import BottomTabBar from '../../components/common/BottomTabBar';
 
 type TabKey = 'home' | 'artist' | 'recommend' | 'mypage' | 'setting';
+
+<StatusBar barStyle="light-content" backgroundColor="#000" />;
 
 export default function TabsLayout() {
   const router = useRouter();
@@ -16,7 +19,7 @@ export default function TabsLayout() {
       <Slot />
       <BottomTabBar
         currentTab={currentTab}
-        onTabPress={(tab: TabKey) => router.push(`/${tab}`)}
+        onTabPress={(tab: string) => router.push(`/(tabs)/${tab}` as any)}
       />
     </View>
   );
