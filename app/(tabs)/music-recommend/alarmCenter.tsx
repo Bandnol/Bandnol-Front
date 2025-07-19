@@ -2,6 +2,8 @@ import NotificationItem from '@/components/NotificationItem';
 import { notifications } from '@/constants/notifications';
 import { Typography } from '@/constants/tyopography';
 
+import Backarrow from '@/assets/icons/size_m/backarrow.svg';
+
 import { useRouter } from 'expo-router';
 import {
   FlatList,
@@ -22,10 +24,7 @@ export default function AlarmCenterPage() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backArrow}>
-          <Image
-            source={require('@/assets/images/backarrow.png')} //svg로 바꾸삼
-            style={{ width: 24, height: 24 }}
-          />
+          <Backarrow width={22} height={18} />
         </Pressable>
         <Text style={styles.title}>알림</Text>
       </View>
@@ -70,7 +69,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     top: '50%',
-    transform: [{ translateY: -12 }],
+    transform: [{ translateY: -9 }],
   },
 
   list: {
