@@ -47,7 +47,12 @@ export default function MonthPicker({
               itemStyle={styles.pickerItem}
             >
               {years.map((y) => (
-                <Picker.Item key={y} label={`${y}년`} value={y} />
+                <Picker.Item
+                  key={y}
+                  label={`${y}년`}
+                  value={y}
+                  color={y === year ? '#FFF' : '#666'}
+                />
               ))}
             </Picker>
 
@@ -58,7 +63,12 @@ export default function MonthPicker({
               itemStyle={styles.pickerItem}
             >
               {months.map((m) => (
-                <Picker.Item key={m} label={`${m}월`} value={m} />
+                <Picker.Item
+                  key={m}
+                  label={`${m}월`}
+                  value={m}
+                  color={m === month ? '#FFF' : '#666'}
+                />
               ))}
             </Picker>
           </View>
@@ -80,7 +90,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingVertical: 20,
     paddingHorizontal: 20,
-    height: 250,
+    height: 300,
   },
   header: {
     flexDirection: 'row',
@@ -101,7 +111,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    bottom: 50,
+    //bottom: '0%',
   },
   picker: {
     width: '45%',
