@@ -118,65 +118,32 @@ export default function NotificationItem(props: NotificationItemProps) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000',
-    paddingTop: 60,
-    paddingHorizontal: 20,
-  },
-  backArrow: {
-    padding: 8,
-    marginRight: 12,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  backIcon: {
-    color: '#fff',
-    width: 24,
-  },
-  headerTitle: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Typography.subtitle1B,
-    textAlign: 'center',
-    color: '#fff',
-  },
-  list: {
-    gap: 12,
-  },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1C1C1E',
-    borderRadius: 12,
-    padding: 14,
-    gap: 12,
-  },
-  cardIcon: {
-    fontSize: 20,
+    backgroundColor: '#1F1F1F',
+    borderRadius: 10,
+    padding: 15,
+    gap: 21,
+    alignSelf: 'stretch',
   },
   cardTextBox: {
     flex: 1,
   },
-  cardTitle: {
-    ...Typography.caption1,
-    color: '#fff',
-  },
   cardDescription: {
-    ...Typography.caption1,
-    color: '#fff',
-    marginTop: 2,
+    color: '#FFF',
+    fontFamily: 'Pretendard',
+    fontSize: 12,
+    fontWeight: '400',
+    lineHeight: 16.8,
+    letterSpacing: -0.3,
   },
   cardTime: {
-    ...Typography.caption1,
     color: '#7C7C7C',
+    fontFamily: 'Pretendard',
+    fontSize: 12,
+    fontWeight: '400',
+    lineHeight: 16.8,
+    letterSpacing: -0.3,
   },
 });
