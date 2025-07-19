@@ -3,6 +3,12 @@ import { useEffect, useRef, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import Swiper from 'react-native-swiper';
 
+import AlertIcon from '@/assets/icons/alert.svg';
+import BandnolIcon from '@/assets/icons/bandnol-logo.svg';
+import CommentIcon from '@/assets/icons/comment.svg';
+import ErrorIcon from '@/assets/icons/error.svg';
+import PlayIcon from '@/assets/icons/play-solid.svg';
+import CommentModal from '@/components/common/CommentModal';
 import DateHeader from '@/components/common/DateHeader';
 import { Typography } from '@/constants/tyopography';
 
@@ -14,6 +20,8 @@ export default function MyRecommendSwiper() {
   const router = useRouter();
   const swiperRef = useRef<any>(null);
   const [timeLeft, setTimeLeft] = useState(10);
+  const [isMyCommentVisible, setIsMyCommentVisible] = useState(false);
+  const [isReplyCommentVisible, setIsReplyCommentVisible] = useState(false);
 
   // 타이머 시작
   useEffect(() => {
@@ -25,7 +33,7 @@ export default function MyRecommendSwiper() {
         }
         return prev - 1;
       });
-    }, 1000);
+    }, 100000000000); // 작업하기 위해 잠깐 바꿔 둠
 
     return () => clearInterval(timer);
   }, []);
@@ -47,85 +55,98 @@ export default function MyRecommendSwiper() {
   };
 
   return (
-    <Swiper
-      loop={false}
-      showsPagination={true}
-      dotStyle={{ backgroundColor: '#444' }}
-      activeDotStyle={{ backgroundColor: '#fff' }}
-      ref={swiperRef}
-    >
-      {/* 나의 추천곡 */}
-      <View style={styles.container}>
-        <Image source={albumImage} style={styles.backgroundImage} />
-        <View style={styles.overlay}>
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>나의 추천곡</Text>
+    <>
+      <Swiper
+        loop={false}
+        showsPagination={true}
+        dotStyle={{ backgroundColor: '#444' }}
+        activeDotStyle={{ backgroundColor: '#fff' }}
+        ref={swiperRef}
+      >
+        {/* 나의 추천곡 */}
+        <View style={styles.container}>
+          <Image source={albumImage} style={styles.backgroundImage} />
+          <View style={styles.overlay}>
+            <View style={styles.header}>
+              <Text style={styles.headerTitle}>나의 추천곡</Text>
+              <Pressable
+                onPress={() =>
+                  router.push('/(tabs)/music-recommend/alarmCenter')
+                }
+                style={styles.bellWrapper}
+              >
+                <AlertIcon width={24} height={24} />
+              </Pressable>
+            </View>
+
+            <Text style={styles.dateText}>
+              <DateHeader />
+            </Text>
+            <Text style={styles.songTitle}>{title}</Text>
+            <Text style={styles.artist}>{artist}</Text>
+
+            <View style={styles.albumWrapper}>
+              <Image source={albumImage} style={styles.albumImage} />
+              <PlayIcon width={58.1} height={58.1} />
+            </View>
+
             <Pressable
-              onPress={() => router.push('/(tabs)/music-recommend/alarmCenter')}
-              style={styles.bellWrapper}
+              style={styles.commentButton}
+              onPress={() => setIsMyCommentVisible(true)}
             >
-              <Image
-                source={require('@/assets/images/alert.png')}
-                style={styles.bellIcon}
-              />
+              <CommentIcon width={16} height={14.37} />
+              <Text style={styles.commentText}>코멘트 확인하기</Text>
+            </Pressable>
+
+            <Pressable
+              style={styles.replyStatusButton}
+              onPress={() => setIsReplyCommentVisible(true)}
+            >
+              <Text style={styles.replyText}>
+                아직 답장이 도착하지 않았어요
+              </Text>
             </Pressable>
           </View>
-
-          <Text style={styles.dateText}>
-            <DateHeader />
-          </Text>
-          <Text style={styles.songTitle}>{title}</Text>
-          <Text style={styles.artist}>{artist}</Text>
-
-          <View style={styles.albumWrapper}>
-            <Image source={albumImage} style={styles.albumImage} />
-            <Image
-              source={require('@/assets/images/play.png')}
-              style={{ width: 62, height: 62 }}
-            />
-          </View>
-
-          <Pressable style={styles.commentButton}>
-            <Image
-              source={require('@/assets/images/comment.png')}
-              style={{ width: 24, height: 24 }}
-            />
-            <Text style={styles.commentText}>코멘트 확인하기</Text>
-          </Pressable>
-
-          <View style={styles.replyStatusButton}>
-            <Text style={styles.replyText}>아직 답장이 도착하지 않았어요</Text>
-          </View>
         </View>
-      </View>
-
-      {/* 추천 도착 타이머 */}
-      <View style={styles.container}>
-        <View style={styles.timeOverlay}>
-          <Text style={styles.recommendHeaderTitle}>추천 받은 곡</Text>
-          <Text style={styles.recommendDateText}>
-            <DateHeader />
-          </Text>
-          <View style={styles.circleBox}>
-            <View style={styles.BandnolLogo}>
-              <Image
-                source={require('@/assets/images/Bandnol-logo.png')}
-                style={{ width: 48, height: 48 }}
-              />
+        {/* 추천 도착 타이머 */}
+        <View style={styles.container}>
+          <View style={styles.timeOverlay}>
+            <Text style={styles.recommendHeaderTitle}>추천 받은 곡</Text>
+            <Text style={styles.recommendDateText}>
+              <DateHeader />
+            </Text>
+            <View style={styles.circleBox}>
+              <View style={styles.BandnolLogo}>
+                <BandnolIcon width={48} height={48} />
+              </View>
+              <Text style={styles.countdownLabel}>오늘의 추천곡 도착까지</Text>
+              <Text style={styles.countdown}>{formatTime(timeLeft)}</Text>
             </View>
-            <Text style={styles.countdownLabel}>오늘의 추천곡 도착까지</Text>
-            <Text style={styles.countdown}>{formatTime(timeLeft)}</Text>
-          </View>
-          <View style={styles.settingRow}>
-            <Image
-              source={require('@/assets/images/error.png')}
-              style={{ width: 16, height: 16 }}
-            />
-            <Text style={styles.setting}>추천곡 수신시간 설정</Text>
+            <View style={styles.settingRow}>
+              <ErrorIcon width={16} height={16} />
+              <Text style={styles.setting}>추천곡 수신시간 설정</Text>
+            </View>
           </View>
         </View>
-      </View>
-    </Swiper>
+      </Swiper>
+      <CommentModal
+        visible={isMyCommentVisible}
+        onClose={() => setIsMyCommentVisible(false)}
+        title="MY COMMENT"
+        description="여름에 참 잘 어울리는 노래입니다~ 같은 앨범 수록곡도 다 너무 좋아서 요즘 듣기 딱이에요! 추천합니다 ㅎㅎ"
+        closeColor="#1F1F1F"
+        closeText="닫기"
+      />
+
+      <CommentModal
+        visible={isReplyCommentVisible}
+        onClose={() => setIsReplyCommentVisible(false)}
+        title="From. 훈심이"
+        description="와 노래 좋아요 좋은 노래 알아갑니다!! 감사합니다~~"
+        closeColor="#1F1F1F"
+        closeText="닫기"
+      />
+    </>
   );
 }
 

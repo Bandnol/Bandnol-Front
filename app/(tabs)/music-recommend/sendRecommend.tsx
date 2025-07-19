@@ -12,7 +12,10 @@ import {
   View,
 } from 'react-native';
 
+import Checkbox from '@/assets/icons/checkbox.svg';
+import Checkboxchecked from '@/assets/icons/checkbox-checked.svg';
 import DateHeader from '@/components/common/DateHeader';
+import ModalPopup from '@/components/common/ModalPopup';
 import { Typography } from '@/constants/tyopography';
 
 export default function SendRecommendPage() {
@@ -20,15 +23,22 @@ export default function SendRecommendPage() {
   const { title, artist } = useLocalSearchParams();
   const [comment, setComment] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(true);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isSendModalVisible, setIsSendModalVisible] = useState(false);
 
   const handleSend = () => {
-    router.push({
-      pathname: '/(tabs)/music-recommend/myRecommend',
-      params: {
-        title,
-        artist,
-      },
-    });
+    setIsSendModalVisible(true);
+
+    setTimeout(() => {
+      setIsSendModalVisible(false);
+      router.push({
+        pathname: '/(tabs)/music-recommend/myRecommend',
+        params: {
+          title,
+          artist,
+        },
+      });
+    }, 5000);
   };
 
   return (
@@ -74,16 +84,28 @@ export default function SendRecommendPage() {
             style={styles.commentInput}
           />
           <View style={styles.commentOptions}>
-            <View style={styles.checkboxRow}>
-              <Text style={styles.checkbox}>
-                <Image
-                  source={require('@/assets/images/checkbox.png')}
-                  style={{ width: 24, height: 24 }}
-                />
+            <TouchableOpacity
+              onPress={() => setIsAnonymous(!isAnonymous)}
+              style={styles.checkboxRow}
+              activeOpacity={0.8}
+            >
+              <View style={styles.checkbox}>
+                {isAnonymous ? (
+                  <Checkboxchecked width={24} height={24} />
+                ) : (
+                  <Checkbox width={24} height={24} />
+                )}
+              </View>
+              <Text
+                style={[
+                  styles.checkboxLabel,
+                  { color: isAnonymous ? '#FFFFFF' : '#7C7C7C' },
+                ]}
+              >
+                익명으로 보내기
               </Text>
-              <Text style={styles.checkboxLabel}>익명으로 보내기</Text>
-            </View>
-            <Pressable>
+            </TouchableOpacity>
+            <Pressable onPress={() => setIsModalVisible(true)}>
               <View style={styles.aiCommentRow}>
                 <Text style={styles.aiComment}>
                   <Image
@@ -98,9 +120,32 @@ export default function SendRecommendPage() {
         </View>
 
         {/* 전송 버튼 */}
-        <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
+        <TouchableOpacity
+          style={[
+            styles.sendButton,
+            comment.trim() ? { backgroundColor: '#FB4932' } : {},
+          ]}
+          onPress={handleSend}
+        >
           <Text style={styles.sendText}>전송</Text>
         </TouchableOpacity>
+
+        {/* 공용 모달 컴포넌트 사용 */}
+        <ModalPopup
+          visible={isModalVisible}
+          emoji="😝"
+          text="AI가 코멘트를 작성하고 있어요 ..."
+          duration={2}
+          onClose={() => setIsModalVisible(false)}
+        />
+
+        <ModalPopup
+          visible={isSendModalVisible}
+          emoji="😎"
+          text="오늘의 곡 추천 완료"
+          duration={3}
+          onClose={() => setIsSendModalVisible(false)}
+        />
       </View>
     </TouchableWithoutFeedback>
   );

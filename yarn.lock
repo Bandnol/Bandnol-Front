@@ -1422,6 +1422,11 @@
   dependencies:
     merge-options "^3.0.4"
 
+
+"@react-native-picker/picker@^2.11.1":
+  version "2.11.1"
+  resolved "https://registry.yarnpkg.com/@react-native-picker/picker/-/picker-2.11.1.tgz#d8884440abc5f75579d82f9888e50ca047c9ec14"
+  integrity sha512-ThklnkK4fV3yynnIIRBkxxjxR4IFbdMNJVF6tlLdOJ/zEFUEFUEdXY0KmH0iYzMwY8W4/InWsLiA7AkpAbnexA==
 "@react-native-community/checkbox@^0.5.20":
   version "0.5.20"
   resolved "https://registry.npmjs.org/@react-native-community/checkbox/-/checkbox-0.5.20.tgz"
@@ -3734,6 +3739,7 @@ expo-router@~5.1.3:
   version "5.1.4"
   resolved "https://registry.yarnpkg.com/expo-router/-/expo-router-5.1.4.tgz#37d611b35a474531a95638c2b5cc19b10fe13189"
   integrity sha512-8GulCelVN9x+VSOio74K1ZYTG6VyCdJw417gV+M/J8xJOZZTA7rFxAdzujBZZ7jd6aIAG7WEwOUU3oSvUO76Vw==
+
   dependencies:
     "@expo/metro-runtime" "5.0.4"
     "@expo/server" "^0.6.3"
@@ -6108,10 +6114,12 @@ react-native-edge-to-edge@1.6.0:
   resolved "https://registry.npmjs.org/react-native-edge-to-edge/-/react-native-edge-to-edge-1.6.0.tgz"
   integrity sha512-2WCNdE3Qd6Fwg9+4BpbATUxCLcouF6YRY7K+J36KJ4l3y+tWN6XCqAC4DuoGblAAbb2sLkhEDp4FOlbOIot2Og==
 
+
 react-native-gesture-handler@^2.27.1:
   version "2.27.1"
   resolved "https://registry.yarnpkg.com/react-native-gesture-handler/-/react-native-gesture-handler-2.27.1.tgz#8865b2345f4c65536517f20cedc420481fc72d49"
   integrity sha512-57TUWerhdz589OcDD21e/YlL923Ma4OIpyWsP0hy7gItBCPm5d7qIUW7Yo/cS2wo1qDdOhJaNlvlBD1lDou1fA==
+  
   dependencies:
     "@egjs/hammerjs" "^2.0.17"
     hoist-non-react-statics "^3.3.0"
@@ -6185,6 +6193,7 @@ react-native-svg@^15.12.0:
   version "15.12.0"
   resolved "https://registry.yarnpkg.com/react-native-svg/-/react-native-svg-15.12.0.tgz#0e2d476961e8b07f8c549fe4489c99b5130dc150"
   integrity sha512-iE25PxIJ6V0C6krReLquVw6R0QTsRTmEQc4K2Co3P6zsimU/jltcDBKYDy1h/5j9S/fqmMeXnpM+9LEWKJKI6A==
+  
   dependencies:
     css-select "^5.1.0"
     css-tree "^1.1.3"

@@ -1,6 +1,10 @@
 import { useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import LikeIcon from '@/assets/icons/like.svg';
+import UnlikeIcon from '@/assets/icons/unlike.svg';
+import CommentModal from '@/components/common/CommentModal';
 import DateHeader from '@/components/common/DateHeader';
 import { Typography } from '@/constants/tyopography';
 
@@ -13,6 +17,34 @@ export default function ReceiveRecommend() {
     sender = '익명의 사자',
   } = useLocalSearchParams();
 
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [modalProps, setModalProps] = useState({
+    title: '',
+    description: '',
+    closeText: '',
+    closeColor: '',
+  });
+
+  const openModal = (type: 'view' | 'reply') => {
+    if (type === 'view') {
+      setModalProps({
+        title: 'From. noshel',
+        description:
+          '요즘 제가 푹 빠진 밴드 고고학입니다... 파도는 라이브가 진짜 최고인 것 같아요. 후반부로 갈수록 휘몰아치는 악기들이 예술입니다 ㅜㅜ 고고학 다른 곡도 진짜 좋으니까 꼭 들어보세요... 완전 추천합니다!',
+        closeText: '닫기',
+        closeColor: '#1F1F1F',
+      });
+    } else {
+      setModalProps({
+        title: 'To. noshel',
+        description:
+          '와 미쳤다... 바로 제 플리에 저장합니다 ;; 노래 너무 좋아요 ㅜㅜㅜ',
+        closeText: '답장 보내기',
+        closeColor: '#FB4932',
+      });
+    }
+    setIsModalVisible(true);
+  };
   return (
     <View style={styles.container}>
       {/* 헤더 */}
@@ -43,33 +75,38 @@ export default function ReceiveRecommend() {
       <View style={styles.likeOptions}>
         <View style={styles.likeRow}>
           <Text style={styles.like}>
-            <Image
-              source={require('@/assets/images/like.png')}
-              style={{ width: 24, height: 24 }}
-            />
+            <LikeIcon width={24} height={24} style={styles.like} />
           </Text>
           <Text style={styles.likeLabel}>좋아요</Text>
         </View>
         <Pressable>
           <View style={styles.unlikeRow}>
             <Text style={styles.unlike}>
-              <Image
-                source={require('@/assets/images/unlike.png')}
-                style={{ width: 21, height: 21 }}
-              />
+              <UnlikeIcon width={21} height={21} style={styles.unlike} />
             </Text>
             <Text style={styles.unlikeLabel}>별로예요</Text>
           </View>
         </Pressable>
       </View>
       <View style={styles.buttonRow}>
-        <Pressable style={styles.confirmComment}>
+        <Pressable
+          style={styles.confirmComment}
+          onPress={() => openModal('view')}
+        >
           <Text style={styles.confirmCommentText}>코멘트 확인하기</Text>
         </Pressable>
-        <Pressable style={styles.sendReply}>
+        <Pressable style={styles.sendReply} onPress={() => openModal('reply')}>
           <Text style={styles.sendReplyText}>답장 보내기</Text>
         </Pressable>
       </View>
+      <CommentModal
+        visible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
+        title={modalProps.title}
+        description={modalProps.description}
+        closeText={modalProps.closeText}
+        closeColor={modalProps.closeColor}
+      />
     </View>
   );
 }
