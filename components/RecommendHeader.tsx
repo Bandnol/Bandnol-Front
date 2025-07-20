@@ -17,6 +17,7 @@ export default function RecommendHeader({
   onChangeMonth,
 }: RecommendHeaderProps) {
   const [isMonthPickerVisible, setMonthPickerVisible] = useState(false);
+  const isThisMonth = selectedMonth.isSame(dayjs(), 'month');
 
   const openPicker = () => setMonthPickerVisible(true);
   const closePicker = () => setMonthPickerVisible(false);
@@ -36,9 +37,7 @@ export default function RecommendHeader({
           <Dropdown />
         </TouchableOpacity>
 
-        <TouchableOpacity>
-          <Report />
-        </TouchableOpacity>
+        <TouchableOpacity>{isThisMonth && <Report />}</TouchableOpacity>
       </View>
 
       <View style={styles.rightGroup}>

@@ -45,11 +45,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000',
     paddingTop: 60,
-    paddingBottom: 52,
   },
-  topSection: {
-    //marginBottom: 30,
-  },
+  topSection: {},
   myrecSection: {
     flexDirection: 'row',
     padding: 10,
