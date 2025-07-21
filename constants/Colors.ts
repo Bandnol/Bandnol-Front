@@ -1,26 +1,26 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+/****
+ * Color Palette for Bandnol
+ *
+ * Usage:
+ * import { Colors } from '@/constants/Colors';
+ *
+ * Example:
+ * backgroundColor: Colors.palette.Gray900
+ * textColor: Colors.palette.white
  */
-
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
-
 export const Colors = {
-  light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
-  },
-  dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+  palette: {
+    black: '#030303',
+    Gray900: '#121212',
+    Gray800: '#1F1F1F',
+    Gray700: '#333333',
+    Gray600: '#555555',
+    Gray500: '#7C7C7C',
+    Gray400: '#B3B3B3',
+    Gray300: '#D0D0D0',
+    Gray200: '#EAEAEA',
+    Gray100: '#F4F4F4',
+    white: '#FFFFFF',
+    point: '#F84932',
   },
 };
