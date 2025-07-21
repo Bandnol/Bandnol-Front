@@ -5,6 +5,7 @@ import {
   Dimensions,
   Image,
   ImageBackground,
+  Modal,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -16,6 +17,8 @@ import {
 
 import BookmarkFillIcon from '@/assets/icons/bookmark-fill.svg';
 import BookmarkIcon from '@/assets/icons/bookmark.svg';
+import ClipIcon from '@/assets/icons/clip.svg';
+import CloseIcon from '@/assets/icons/close.svg';
 import LikeIcon from '@/assets/icons/heart.svg';
 import MoreIcon from '@/assets/icons/more.svg';
 import SearchIcon from '@/assets/icons/search.svg';
@@ -58,6 +61,7 @@ export default function MyPage() {
     'post',
   );
   const [posts, setPosts] = useState(postData);
+  const [isShareModalVisible, setIsShareModalVisible] = useState(false);
 
   const handleToggleBookmark = (id: number) => {
     setPosts((prev) =>
@@ -123,47 +127,46 @@ export default function MyPage() {
           </View>
 
           {/* 공유 아이콘 */}
-          <TouchableOpacity style={styles.shareButton}>
+          <TouchableOpacity
+            style={styles.shareButton}
+            onPress={() => setIsShareModalVisible(true)}
+          >
             <ShareIcon width={24} height={24} />
           </TouchableOpacity>
+          {/* 공유 모달 */}
+          <Modal visible={isShareModalVisible} transparent animationType="fade">
+            <View style={styles.modalBackground}>
+              <View style={styles.modalContainer}>
+                {/* 닫기 버튼 */}
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={() => setIsShareModalVisible(false)}
+                >
+                  <CloseIcon width={24} height={24} />
+                </TouchableOpacity>
 
+                {/* 중앙 QR 박스 */}
+                <View style={styles.qrBox}>
+                  <Text style={styles.qrText}>QR</Text>
+                </View>
+
+                {/* 텍스트 */}
+                <Text style={styles.textMain}>Nickname</Text>
+                <Text style={styles.textSub}>@user_id</Text>
+
+                {/* 복사 버튼 */}
+                <TouchableOpacity style={styles.copyButton}>
+                  <ClipIcon width={18} height={18} />
+                  <Text style={styles.copyButtonText}>프로필 링크 복사</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
           {/* 프로필 편집 버튼 */}
           <TouchableOpacity style={styles.editButton}>
             <Text style={styles.editButtonText}>프로필 편집</Text>
           </TouchableOpacity>
         </View>
-        {/* 팔로워 섹션 */}
-        <View style={styles.followerRow}>
-          <View
-            style={[styles.followerImages, { flexDirection: 'row-reverse' }]}
-          >
-            <Image
-              source={require('@/assets/images/profile.png')}
-              style={styles.followerImage}
-            />
-            <Image
-              source={require('@/assets/images/profile.png')}
-              style={[styles.followerImage, { marginRight: -6 }]}
-            />
-            <Image
-              source={require('@/assets/images/profile.png')}
-              style={[styles.followerImage, { marginRight: -6 }]}
-            />
-          </View>
-          <Text style={styles.followerText}>팔로워 830명</Text>
-        </View>
-        <View style={styles.layoutRow}>
-          <View style={styles.layoutBox}>
-            <Text style={styles.layoutText}>#페퍼톤스</Text>
-          </View>
-          <View style={styles.layoutBox}>
-            <Text style={styles.layoutText}>#공연후기</Text>
-          </View>
-          <View style={styles.layoutBox}>
-            <Text style={styles.layoutText}>#고고학</Text>
-          </View>
-        </View>
-        <Text style={styles.introText}>신나고 재미있게 평생...</Text>
         {/* // 버튼 레이아웃 (UI 구성용) */}
         <View style={styles.buttonWrapper}>
           <View style={styles.buttonContainer}>
@@ -388,6 +391,61 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 20,
+  }, // 모달 관련 스타일
+  modalBackground: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: 335,
+    height: 431,
+    backgroundColor: '#333',
+    borderRadius: 10,
+    alignItems: 'center',
+    position: 'relative',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+  },
+  qrBox: {
+    marginTop: 66,
+    width: 181,
+    height: 181,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  qrText: {
+    ...Typography.h1,
+    color: '#000',
+  },
+  textMain: {
+    marginTop: 21,
+    ...Typography.subtitle1B,
+    color: '#FFF',
+  },
+  textSub: {
+    marginTop: 4,
+    ...Typography.body2,
+    color: '#7C7C7C',
+  },
+  copyButton: {
+    marginTop: 37,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    gap: 10,
+    borderRadius: 30,
+    backgroundColor: 'rgba(0, 0, 0, 0.30)',
+  },
+  copyButtonText: {
+    color: '#fff',
+    ...Typography.caption1,
   },
   // ✅ 팔로워 (이클립스 세 개)
   followerRow: {
