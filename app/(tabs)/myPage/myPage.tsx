@@ -6,6 +6,7 @@ import {
   Image,
   ImageBackground,
   SafeAreaView,
+  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
@@ -13,184 +14,290 @@ import {
   View,
 } from 'react-native';
 
+import BookmarkFillIcon from '@/assets/icons/bookmark-fill.svg';
+import BookmarkIcon from '@/assets/icons/bookmark.svg';
+import LikeIcon from '@/assets/icons/heart.svg';
+import MoreIcon from '@/assets/icons/more.svg';
 import SearchIcon from '@/assets/icons/search.svg';
 import SettingIcon2 from '@/assets/icons/setting.svg';
 import ShareIcon from '@/assets/icons/share.svg';
 import WriteIcon from '@/assets/icons/write.svg';
+import DummyImage from '@/assets/images/dummy1.png';
+import ProfileImage from '@/assets/images/profile.png';
 import { Typography } from '@/constants/tyopography';
 
 const screenWidth = Dimensions.get('window').width;
+
+const postData = [
+  {
+    id: 1,
+    username: 'sayoxx',
+    time: '2시간',
+    visibility: '전체공개',
+    text: '#오늘공연 오늘 잭킹콩 7주년 공연에 다녀왔다ㅜㅜ 너무 좋았다 투트럼펫 너무 짱이다~',
+    hasImage: true,
+    isBookmarked: false,
+    likeCount: 1423,
+    bookmarkCount: 114,
+  },
+  {
+    id: 2,
+    username: 'sayoxx',
+    time: '3시간',
+    visibility: '비공개',
+    text: '#오늘공연 오늘 공연 skrr 사커고 싶다~~',
+    hasImage: false,
+    isBookmarked: false,
+    likeCount: 300,
+    bookmarkCount: 12,
+  },
+];
 
 export default function MyPage() {
   const [activeTab, setActiveTab] = useState<'post' | 'media' | 'bookmark'>(
     'post',
   );
+  const [posts, setPosts] = useState(postData);
+
+  const handleToggleBookmark = (id: number) => {
+    setPosts((prev) =>
+      prev.map((post) =>
+        post.id === id ? { ...post, isBookmarked: !post.isBookmarked } : post,
+      ),
+    );
+  };
+
+  const filteredPosts = postData.filter((post) => {
+    if (activeTab === 'post') return true;
+    if (activeTab === 'media') return post.hasImage;
+    if (activeTab === 'bookmark') return post.isBookmarked;
+  });
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar
-        translucent
-        backgroundColor="transparent"
-        barStyle="dark-content"
-      />
-      {/* 배경 이미지 */}
-      <ImageBackground
-        source={require('@/assets/images/profile-background.jpg')}
-        style={styles.topImage}
-        resizeMode="cover"
-        imageStyle={styles.imageInner}
-      >
-        <LinearGradient
-          colors={['rgba(18,18,18,0)', '#121212']}
-          style={styles.gradient}
+      <ScrollView>
+        <StatusBar
+          translucent
+          backgroundColor="transparent"
+          barStyle="dark-content"
         />
-
-        {/* 상단 아이콘 */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => router.push('/myPage/myPageSearch')}
-            style={styles.searchButton}
-          >
-            <SearchIcon width={24} height={24} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => router.push('/myPage/appSetting')}
-            style={styles.settingButton}
-          >
-            <SettingIcon2 width={24} height={24} />
-          </TouchableOpacity>
-        </View>
-      </ImageBackground>
-      {/* 프로필 섹션 */}
-      <View style={styles.profileRow}>
-        {/* 프로필 이미지 */}
-        <Image
-          source={require('@/assets/images/profile.png')}
-          style={styles.profileImage}
-        />
-
-        {/* 닉네임 + 유저아이디 */}
-        <View style={styles.nicknameBox}>
-          <Text style={styles.nickname}>Nickname</Text>
-          <Text style={styles.userId}>@user_id</Text>
-        </View>
-
-        {/* 공유 아이콘 */}
-        <TouchableOpacity style={styles.shareButton}>
-          <ShareIcon width={24} height={24} />
-        </TouchableOpacity>
-
-        {/* 프로필 편집 버튼 */}
-        <TouchableOpacity style={styles.editButton}>
-          <Text style={styles.editButtonText}>프로필 편집</Text>
-        </TouchableOpacity>
-      </View>
-      {/* 팔로워 섹션 */}
-      <View style={styles.followerRow}>
-        <View style={[styles.followerImages, { flexDirection: 'row-reverse' }]}>
-          <Image
-            source={require('@/assets/images/profile.png')}
-            style={styles.followerImage}
+        {/* 배경 이미지 */}
+        <ImageBackground
+          source={require('@/assets/images/profile-background.jpg')}
+          style={styles.topImage}
+          resizeMode="cover"
+          imageStyle={styles.imageInner}
+        >
+          <LinearGradient
+            colors={['rgba(18,18,18,0)', '#121212']}
+            style={styles.gradient}
           />
-          <Image
-            source={require('@/assets/images/profile.png')}
-            style={[styles.followerImage, { marginRight: -6 }]}
-          />
-          <Image
-            source={require('@/assets/images/profile.png')}
-            style={[styles.followerImage, { marginRight: -6 }]}
-          />
-        </View>
-        <Text style={styles.followerText}>팔로워 830명</Text>
-      </View>
-      <View style={styles.layoutRow}>
-        <View style={styles.layoutBox}>
-          <Text style={styles.layoutText}>#페퍼톤스</Text>
-        </View>
-        <View style={styles.layoutBox}>
-          <Text style={styles.layoutText}>#공연후기</Text>
-        </View>
-        <View style={styles.layoutBox}>
-          <Text style={styles.layoutText}>#고고학</Text>
-        </View>
-      </View>
-      <Text style={styles.introText}>신나고 재미있게 평생...</Text>
-      {/* // 버튼 레이아웃 (UI 구성용) */}
-      <View style={styles.buttonWrapper}>
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[
-              styles.tabButton,
-              activeTab === 'post' && styles.activeTabButton,
-            ]}
-            onPress={() => setActiveTab('post')}
-          >
-            <Text
-              style={[
-                styles.tabButtonText,
-                activeTab === 'post' && styles.activeTabText,
-              ]}
+
+          {/* 상단 아이콘 */}
+          <View style={styles.header}>
+            <TouchableOpacity
+              onPress={() => router.push('/myPage/myPageSearch')}
+              style={styles.searchButton}
             >
-              포스트
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.tabButton,
-              activeTab === 'media' && styles.activeTabButton,
-            ]}
-            onPress={() => setActiveTab('media')}
-          >
-            <Text
-              style={[
-                styles.tabButtonText,
-                activeTab === 'media' && styles.activeTabText,
-              ]}
+              <SearchIcon width={24} height={24} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => router.push('/myPage/appSetting')}
+              style={styles.settingButton}
             >
-              미디어
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.tabButton,
-              activeTab === 'bookmark' && styles.activeTabButton,
-            ]}
-            onPress={() => setActiveTab('bookmark')}
-          >
-            <Text
-              style={[
-                styles.tabButtonText,
-                activeTab === 'bookmark' && styles.activeTabText,
-              ]}
-            >
-              북마크
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-      <View style={styles.textFieldContainer}>
-        {/* 프로필  + 글쓰기  */}
-        <View style={styles.textFieldHeader}>
+              <SettingIcon2 width={24} height={24} />
+            </TouchableOpacity>
+          </View>
+        </ImageBackground>
+        {/* 프로필 섹션 */}
+        <View style={styles.profileRow}>
+          {/* 프로필 이미지 */}
           <Image
             source={require('@/assets/images/profile.png')}
-            style={styles.textFieldProfile}
+            style={styles.profileImage}
           />
-          <View style={styles.textFieldTextWrapper}>
-            <Text style={styles.textFieldName}>sayoxx</Text>
-            <View style={styles.textFieldRow}>
-              <WriteIcon
-                width={18}
-                height={18}
-                style={{ marginRight: 5, marginTop: 5 }}
-              />
-              <Text style={styles.textFieldGuide}>
-                오늘의 밴놀을 공유해주세요!
+
+          {/* 닉네임 + 유저아이디 */}
+          <View style={styles.nicknameBox}>
+            <Text style={styles.nickname}>Nickname</Text>
+            <Text style={styles.userId}>@user_id</Text>
+          </View>
+
+          {/* 공유 아이콘 */}
+          <TouchableOpacity style={styles.shareButton}>
+            <ShareIcon width={24} height={24} />
+          </TouchableOpacity>
+
+          {/* 프로필 편집 버튼 */}
+          <TouchableOpacity style={styles.editButton}>
+            <Text style={styles.editButtonText}>프로필 편집</Text>
+          </TouchableOpacity>
+        </View>
+        {/* 팔로워 섹션 */}
+        <View style={styles.followerRow}>
+          <View
+            style={[styles.followerImages, { flexDirection: 'row-reverse' }]}
+          >
+            <Image
+              source={require('@/assets/images/profile.png')}
+              style={styles.followerImage}
+            />
+            <Image
+              source={require('@/assets/images/profile.png')}
+              style={[styles.followerImage, { marginRight: -6 }]}
+            />
+            <Image
+              source={require('@/assets/images/profile.png')}
+              style={[styles.followerImage, { marginRight: -6 }]}
+            />
+          </View>
+          <Text style={styles.followerText}>팔로워 830명</Text>
+        </View>
+        <View style={styles.layoutRow}>
+          <View style={styles.layoutBox}>
+            <Text style={styles.layoutText}>#페퍼톤스</Text>
+          </View>
+          <View style={styles.layoutBox}>
+            <Text style={styles.layoutText}>#공연후기</Text>
+          </View>
+          <View style={styles.layoutBox}>
+            <Text style={styles.layoutText}>#고고학</Text>
+          </View>
+        </View>
+        <Text style={styles.introText}>신나고 재미있게 평생...</Text>
+        {/* // 버튼 레이아웃 (UI 구성용) */}
+        <View style={styles.buttonWrapper}>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={[
+                styles.tabButton,
+                activeTab === 'post' && styles.activeTabButton,
+              ]}
+              onPress={() => setActiveTab('post')}
+            >
+              <Text
+                style={[
+                  styles.tabButtonText,
+                  activeTab === 'post' && styles.activeTabText,
+                ]}
+              >
+                포스트
               </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.tabButton,
+                activeTab === 'media' && styles.activeTabButton,
+              ]}
+              onPress={() => setActiveTab('media')}
+            >
+              <Text
+                style={[
+                  styles.tabButtonText,
+                  activeTab === 'media' && styles.activeTabText,
+                ]}
+              >
+                미디어
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.tabButton,
+                activeTab === 'bookmark' && styles.activeTabButton,
+              ]}
+              onPress={() => setActiveTab('bookmark')}
+            >
+              <Text
+                style={[
+                  styles.tabButtonText,
+                  activeTab === 'bookmark' && styles.activeTabText,
+                ]}
+              >
+                북마크
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        <View style={styles.textFieldContainer}>
+          {/* 프로필  + 글쓰기  */}
+          <View style={styles.textFieldHeader}>
+            <Image
+              source={require('@/assets/images/profile.png')}
+              style={styles.textFieldProfile}
+            />
+            <View style={styles.textFieldTextWrapper}>
+              <Text style={styles.textFieldName}>sayoxx</Text>
+              <View style={styles.textFieldRow}>
+                <WriteIcon
+                  width={18}
+                  height={18}
+                  style={{ marginRight: 5, marginTop: 5 }}
+                />
+                <Text style={styles.textFieldGuide}>
+                  오늘의 밴놀을 공유해주세요!
+                </Text>
+              </View>
             </View>
           </View>
         </View>
-      </View>
+        <View contentContainerStyle={styles.scrollContainer}>
+          {posts.map((post, i) => (
+            <View key={post.id ?? i} style={styles.postContainer}>
+              {/* 1. 유저 정보 + 더보기 */}
+              <View style={styles.userRow}>
+                <Image source={ProfileImage} style={styles.userImage} />
+                <Text style={styles.username}>{post.username}</Text>
+                <Text style={styles.postTime}>{post.time}</Text>
+                <Text style={styles.showtext}>{post.visibility}</Text>
+                <TouchableOpacity style={styles.moreButton}>
+                  <MoreIcon width={18} height={18} />
+                </TouchableOpacity>
+              </View>
+
+              {/* 2. 이미지 */}
+              {post.hasImage && (
+                <Image
+                  source={DummyImage}
+                  style={styles.postImage}
+                  resizeMode="cover"
+                />
+              )}
+
+              {/* 3. 텍스트 */}
+              <Text style={styles.postText}>
+                <Text style={styles.highlight}>{post.text.split(' ')[0]}</Text>{' '}
+                {post.text.split(' ').slice(1).join(' ')}
+              </Text>
+
+              {/* 4. 좋아요 / 북마크 */}
+              <View style={styles.actionRow}>
+                <LikeIcon width={18} height={18} />
+                <Text
+                  style={[
+                    styles.actionText,
+                    { marginLeft: 2, marginRight: 12 },
+                  ]}
+                >
+                  {post.likeCount}
+                </Text>
+
+                <TouchableOpacity onPress={() => handleToggleBookmark(post.id)}>
+                  {post.isBookmarked ? (
+                    <BookmarkFillIcon width={18} height={18} />
+                  ) : (
+                    <BookmarkIcon width={18} height={18} />
+                  )}
+                </TouchableOpacity>
+
+                <Text style={[styles.actionText, { marginLeft: 2 }]}>
+                  {post.bookmarkCount}
+                </Text>
+              </View>
+            </View>
+          ))}
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -408,4 +515,66 @@ const styles = StyleSheet.create({
     letterSpacing: -0.42,
     marginTop: 8.5,
   }, //오늘의 밴놀을 공유해 주세요
+  scrollContainer: {
+    paddingVertical: 20,
+  }, // ✅ 포스트 작성 칸
+  postContainer: {
+    paddingVertical: 20,
+    marginTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#555',
+    paddingHorizontal: 20,
+  },
+  userRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  userImage: {
+    width: 36,
+    height: 36,
+    borderRadius: 342,
+    borderWidth: 0.3,
+    borderColor: '#7C7C7C',
+  },
+  username: {
+    ...Typography.subtitle3,
+    color: '#fff',
+  },
+  postTime: {
+    ...Typography.caption1,
+    color: '#999',
+  },
+  showtext: {
+    ...Typography.caption1,
+    color: '#999',
+  },
+  moreButton: {
+    marginLeft: 'auto',
+  },
+  postImage: {
+    width: '100%',
+    height: 188.438,
+    marginTop: 10,
+  },
+  postText: {
+    color: '#FFF',
+    ...Typography.body2,
+    marginTop: 20,
+  },
+  highlight: {
+    ...Typography.body2,
+    color: '#1976D2',
+  },
+  actionRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: 2,
+    marginTop: 10,
+  },
+  actionText: {
+    color: '#fff',
+    ...Typography.caption2,
+  },
 });
