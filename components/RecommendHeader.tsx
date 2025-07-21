@@ -11,10 +11,12 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 type RecommendHeaderProps = {
   selectedMonth: dayjs.Dayjs;
   onChangeMonth: (newMonth: dayjs.Dayjs) => void;
+  onTodayPress: () => void;
 };
 export default function RecommendHeader({
   selectedMonth,
   onChangeMonth,
+  onTodayPress,
 }: RecommendHeaderProps) {
   const [isMonthPickerVisible, setMonthPickerVisible] = useState(false);
   const isThisMonth = selectedMonth.isSame(dayjs(), 'month');
@@ -41,9 +43,13 @@ export default function RecommendHeader({
       </View>
 
       <View style={styles.rightGroup}>
-        <View style={styles.todayContainer}>
-          <Text style={styles.todayText}>Today</Text>
-        </View>
+        <TouchableOpacity onPress={onTodayPress}>
+          {' '}
+          {/* ✅ 수정 */}
+          <View style={styles.todayContainer}>
+            <Text style={styles.todayText}>Today</Text>
+          </View>
+        </TouchableOpacity>
         <TouchableOpacity>
           <Search />
         </TouchableOpacity>

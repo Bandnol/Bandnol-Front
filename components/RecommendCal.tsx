@@ -1,15 +1,21 @@
+import Share from '@/assets/icons/size_m/share.svg';
+import { Typography } from '@/constants/tyopography';
 import dayjs from 'dayjs';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import {
+  Image,
   ImageBackground,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import Modal from 'react-native-modal';
 
 type RecommendCalProps = {
   selectedMonth: dayjs.Dayjs;
+  selectedDate: string | null;
+  setSelectedDate: (date: string | null) => void;
 };
 
 type CalendarDate = {
@@ -39,7 +45,11 @@ const mockCalendarData = {
   ],
 };
 
-export default function RecommendCal({ selectedMonth }: RecommendCalProps) {
+export default function RecommendCal({
+  selectedMonth,
+  selectedDate,
+  setSelectedDate,
+}: RecommendCalProps) {
   const dates: CalendarDate[] = useMemo(() => {
     const startOfMonth = selectedMonth.startOf('month');
     const endOfMonth = selectedMonth.endOf('month');
@@ -81,9 +91,8 @@ export default function RecommendCal({ selectedMonth }: RecommendCalProps) {
 
     return temp;
   }, [selectedMonth]);
-  const today = dayjs().format('YYYY-MM-DD');
 
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const today = dayjs().format('YYYY-MM-DD');
 
   const selectedMusic = mockCalendarData.recommending.find(
     (rec) => rec.date === selectedDate
@@ -130,6 +139,59 @@ export default function RecommendCal({ selectedMonth }: RecommendCalProps) {
             </Pressable>
           );
         })}
+
+        <Modal
+          isVisible={
+            !!selectedDate &&
+            !!mockCalendarData.recommending.find(
+              (rec) => rec.date === selectedDate
+            )
+          }
+          onBackdropPress={() => setSelectedDate(null)}
+          style={styles.bottomModal}
+          hasBackdrop={false}
+          coverScreen={false}
+        >
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalDateText}>
+                {dayjs(selectedDate).format('MM월 DD일')}
+              </Text>
+              <Pressable onPress={() => setSelectedDate(null)}>
+                <Share />
+              </Pressable>
+            </View>
+            <View style={styles.modalRecInfo}>
+              <Text style={styles.myrecText}>나의 추천곡</Text>
+
+              <View style={styles.myrecInfo}>
+                <Image
+                  source={{ uri: selectedMusic?.imageUrl }}
+                  style={{ width: 36, height: 36, padding: 4 }}
+                />
+
+                <View style={styles.myrecSong}>
+                  <Text style={styles.myrecTitle}>{selectedMusic?.title}</Text>
+                  <Text style={styles.myrecArtist}>
+                    {selectedMusic?.artistName}
+                  </Text>
+                </View>
+
+                <View
+                  style={{
+                    width: 1.955,
+                    height: 27.37,
+                    backgroundColor: '#FB4932',
+                  }}
+                ></View>
+
+                <Text style={styles.myrecComment}>
+                  {selectedMusic?.comment}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </View>
     </View>
   );
@@ -196,5 +258,78 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     width: 40,
     alignSelf: 'center',
+  },
+  bottomModal: {
+    justifyContent: 'flex-end',
+    margin: 0,
+  },
+
+  modalContent: {
+    display: 'flex',
+    width: '100%',
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+    backgroundColor: '#333',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    gap: 10,
+    justifyContent: 'space-between',
+    alignSelf: 'stretch',
+  },
+  modalDateText: {
+    ...Typography.subtitle1,
+    color: '#fff',
+    fontWeight: '700',
+  },
+  modalRecInfo: {
+    flexDirection: 'column', // flex-direction: column
+    paddingVertical: 10, // padding: 10px 20px
+    paddingHorizontal: 20,
+    alignItems: 'flex-start', // align-items: flex-start
+    gap: 6, // gap: 6px → RN 0.71+ 또는 View 내에서 marginBottom으로 처리
+    alignSelf: 'stretch', // align-self: stretch
+    borderBottomWidth: 0.5, // border-bottom
+    borderBottomColor: '#7C7C7C', // var(--Gray-500)
+    backgroundColor: '#333', // var(--Gray-700)
+  },
+  myrecText: {
+    ...Typography.subtitle4,
+    color: '#fff',
+    fontWeight: '600',
+  },
+  myrecInfo: {
+    flexDirection: 'row',
+    width: '100%',
+    paddingVertical: 0,
+    paddingHorizontal: 3.91,
+    alignItems: 'center',
+    gap: 6.843,
+  },
+  myrecSong: {
+    flexDirection: 'column',
+    width: 100,
+    gap: 2,
+  },
+  myrecTitle: {
+    ...Typography.subtitle4,
+    color: '#fff',
+    fontWeight: '600',
+  },
+  myrecArtist: {
+    ...Typography.subtitle4,
+    color: '#fff',
+    fontWeight: '400',
+  },
+  myrecComment: {
+    ...Typography.caption2,
+    color: '#fff',
+    fontWeight: '400',
   },
 });

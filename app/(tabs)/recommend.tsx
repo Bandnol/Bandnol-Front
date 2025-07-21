@@ -12,7 +12,12 @@ import { Typography } from '@/constants/tyopography';
 export default function RecommendScreen() {
   const router = useRouter();
   const [selectedMonth, setSelectedMonth] = useState(dayjs());
-
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const handleTodayPress = () => {
+    const today = dayjs();
+    setSelectedMonth(today);
+    setSelectedDate(today.format('YYYY-MM-DD'));
+  };
   return (
     <>
       <View style={styles.container}>
@@ -21,6 +26,7 @@ export default function RecommendScreen() {
             <RecommendHeader
               selectedMonth={selectedMonth}
               onChangeMonth={setSelectedMonth}
+              onTodayPress={handleTodayPress}
             />
           </View>
         </View>
@@ -33,7 +39,11 @@ export default function RecommendScreen() {
         </View>
 
         <View style={styles.calendarSection}>
-          <RecommendCal selectedMonth={selectedMonth} />
+          <RecommendCal
+            selectedMonth={selectedMonth}
+            selectedDate={selectedDate}
+            setSelectedDate={setSelectedDate}
+          />
         </View>
       </View>
     </>
