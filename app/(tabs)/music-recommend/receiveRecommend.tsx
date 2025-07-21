@@ -6,7 +6,7 @@ import LikeIcon from '@/assets/icons/like.svg';
 import UnlikeIcon from '@/assets/icons/unlike.svg';
 import CommentModal from '@/components/common/CommentModal';
 import DateHeader from '@/components/common/DateHeader';
-import { Typography } from '@/constants/tyopography';
+import { Typography } from '@/constants/Typo';
 
 const albumImage = require('@/assets/images/album-cover.jpg');
 
