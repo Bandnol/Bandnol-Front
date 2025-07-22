@@ -1,5 +1,7 @@
 import BackIcon from '@/assets/auth/inquiry/Vector.svg';
 import InquiryButton from '@/assets/auth/inquiry/btn.svg';
+import { Colors } from '@/constants/Colors';
+import { Typography } from '@/constants/typography';
 import api from '@/store/api'; // axios 인스턴스
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -56,7 +58,11 @@ const Component = () => {
                   <TextInput
                     placeholder="이름을 입력하세요."
                     placeholderTextColor="#7c7c7c"
-                    style={{ flex: 1, width: '100%', color: '#fff' }}
+                    style={{
+                      flex: 1,
+                      width: '100%',
+                      color: Colors.palette.white,
+                    }}
                     value={name}
                     onChangeText={setName}
                   />
@@ -68,7 +74,11 @@ const Component = () => {
                   <TextInput
                     placeholder="이메일을 입력하세요."
                     placeholderTextColor="#7c7c7c"
-                    style={{ flex: 1, width: '100%', color: '#fff' }}
+                    style={{
+                      flex: 1,
+                      width: '100%',
+                      color: Colors.palette.white,
+                    }}
                     value={email}
                     onChangeText={setEmail}
                     keyboardType="email-address"
@@ -87,7 +97,7 @@ const Component = () => {
                   style={{
                     flex: 1,
                     width: '100%',
-                    color: '#fff',
+                    color: Colors.palette.white,
                     textAlignVertical: 'top',
                   }}
                   value={content}
@@ -140,31 +150,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   text: {
-    fontSize: 16,
-    letterSpacing: -0.4,
-    lineHeight: 22,
-    fontFamily: 'Pretendard',
+    ...Typography.subtitle2,
+    color: Colors.palette.white,
     textAlign: 'center',
-    color: '#fff',
     fontWeight: '600',
   },
   text1: {
-    color: '#7c7c7c',
-    textAlign: 'left',
-    lineHeight: 20,
-    letterSpacing: -0.3,
-    fontSize: 14,
-    alignSelf: 'stretch',
+    color: Colors.palette.Gray500,
+    ...Typography.body2,
   },
   text2: {
-    color: '#7c7c7c',
-    textAlign: 'left',
-    lineHeight: 20,
-    letterSpacing: -0.3,
-    fontSize: 14,
+    color: Colors.palette.Gray500,
+    ...Typography.body2,
   },
   wrapper: {
-    borderColor: '#555',
+    borderColor: Colors.palette.Gray600,
     shadowOpacity: 1,
     elevation: 1,
     shadowRadius: 1,
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderStyle: 'solid',
     alignSelf: 'stretch',
-    backgroundColor: '#121212',
+    backgroundColor: Colors.palette.Gray900,
     flex: 1,
     alignItems: 'center',
   },
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
     height: 78,
   },
   container: {
-    borderColor: '#555',
+    borderColor: Colors.palette.Gray600,
     shadowOpacity: 1,
     elevation: 1,
     shadowRadius: 1,
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderStyle: 'solid',
     alignSelf: 'stretch',
-    backgroundColor: '#121212',
+    backgroundColor: Colors.palette.Gray900,
     flex: 1,
     alignItems: 'center',
   },
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   frameView: {
-    borderColor: '#555',
+    borderColor: Colors.palette.Gray600,
     shadowOpacity: 1,
     elevation: 1,
     shadowRadius: 1,
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderStyle: 'solid',
     alignSelf: 'stretch',
-    backgroundColor: '#121212',
+    backgroundColor: Colors.palette.Gray900,
     flex: 1,
   },
   textfield2: {
