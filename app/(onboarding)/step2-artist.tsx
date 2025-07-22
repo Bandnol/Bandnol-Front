@@ -2,7 +2,7 @@ import Ellipse from '@/assets/onboarding/Ellipse 1.svg';
 import RoadingIcon from '@/assets/onboarding/roading.svg';
 import BackIcon from '@/assets/onboarding/Vector.svg';
 import { Colors } from '@/constants/Colors';
-import { Typography } from '@/constants/Typo';
+import { Typography } from '@/constants/typography';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import * as React from 'react';

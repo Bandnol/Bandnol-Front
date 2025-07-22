@@ -10,7 +10,7 @@ import ErrorIcon from '@/assets/icons/error.svg';
 import PlayIcon from '@/assets/icons/play-solid.svg';
 import CommentModal from '@/components/common/CommentModal';
 import DateHeader from '@/components/common/DateHeader';
-import { Typography } from '@/constants/Typo';
+import { Typography } from '@/constants/typography';
 
 const albumImage = require('@/assets/images/album-cover.jpg');
 

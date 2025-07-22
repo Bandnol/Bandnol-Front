@@ -1,7 +1,7 @@
 import Logo from '@/assets/auth/splash/logo.svg';
 import BackIcon from '@/assets/onboarding/Vector.svg';
 import { Colors } from '@/constants/Colors';
-import { Typography } from '@/constants/Typo';
+import { Typography } from '@/constants/typography';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';

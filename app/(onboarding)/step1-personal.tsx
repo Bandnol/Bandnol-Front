@@ -1,7 +1,7 @@
 import BackIcon from '@/assets/onboarding/Vector.svg';
 import Logo from '@/assets/onboarding/logo.svg';
 import { Colors } from '@/constants/Colors';
-import { Typography } from '@/constants/Typo';
+import { Typography } from '@/constants/typography';
 import { useRouter } from 'expo-router';
 import * as React from 'react';
 import {
