@@ -4,8 +4,8 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import RecommendCal from '@/components/RecommendCal';
-import RecommendHeader from '@/components/RecommendHeader';
+import RecommendCal from '@/app/(tabs)/recommend-tab/RecommendCal';
+import RecommendHeader from '@/app/(tabs)/recommend-tab/RecommendHeader';
 
 import { Typography } from '@/constants/tyopography';
 

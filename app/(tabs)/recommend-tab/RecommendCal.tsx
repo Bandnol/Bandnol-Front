@@ -1,24 +1,22 @@
-import Share from '@/assets/icons/size_m/share.svg';
 import {
   mockCalendarData,
   RecommendedItem,
   RecommendingItem,
 } from '@/components/testdata';
 import 'dayjs/locale/ko'; // 꼭 추가
+import RecBottomModal from './RecBottomModal';
 dayjs.locale('ko'); // 전역 설정
 
 import { Typography } from '@/constants/tyopography';
 import dayjs from 'dayjs';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
-  Image,
   ImageBackground,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
-import Modal from 'react-native-modal';
 
 type RecommendCalProps = {
   selectedMonth: dayjs.Dayjs;
@@ -89,6 +87,7 @@ export default function RecommendCal({
       | RecommendedItem
     )[]
   ).find((rec) => rec.date === selectedDate);
+  const [isShareModalVisible, setIsShareModalVisible] = useState(false);
 
   return (
     <View style={styles.container}>
@@ -132,77 +131,14 @@ export default function RecommendCal({
           );
         })}
 
-        <Modal
-          isVisible={
-            !!selectedDate &&
-            !!mockCalendarData[
-              isTabRecommending ? 'recommending' : 'recommended'
-            ].find((rec) => rec.date === selectedDate)
-          }
-          onBackdropPress={() => setSelectedDate(null)}
-          style={styles.bottomModal}
-          hasBackdrop={false}
-          coverScreen={false}
-        >
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <View
-                style={{
-                  ...styles.modalHeader,
-                  justifyContent: 'flex-start',
-                  paddingHorizontal: 0,
-                }}
-              >
-                {selectedDate === today ? (
-                  <View style={styles.todayContainer}>
-                    <Text style={styles.todayText}>Today</Text>
-                  </View>
-                ) : null}
-                <Text style={styles.modalDateText}>
-                  {dayjs(selectedDate).format(' M월 D일 (dd)')}
-                </Text>
-              </View>
-              <Pressable onPress={() => setSelectedDate(null)}>
-                <Share />
-              </Pressable>
-            </View>
-            <View style={styles.modalRecInfo}>
-              <Text style={styles.myrecText}>
-                {isTabRecommending
-                  ? '나의 추천곡'
-                  : `${(selectedSongData as RecommendedItem)?.senderNickname}의 추천곡`}
-              </Text>
-
-              <View style={styles.myrecInfo}>
-                <Image
-                  source={{ uri: selectedSongData?.imageUrl }}
-                  style={{ width: 36, height: 36, padding: 4 }}
-                />
-
-                <View style={styles.myrecSong}>
-                  <Text style={styles.myrecTitle}>
-                    {selectedSongData?.title}
-                  </Text>
-                  <Text style={styles.myrecArtist}>
-                    {selectedSongData?.artistName}
-                  </Text>
-                </View>
-
-                <View
-                  style={{
-                    width: 1.955,
-                    height: 27.37,
-                    backgroundColor: '#FB4932',
-                  }}
-                ></View>
-
-                <Text style={styles.myrecComment}>
-                  {selectedSongData?.comment}
-                </Text>
-              </View>
-            </View>
-          </View>
-        </Modal>
+        <RecBottomModal
+          visible={!!selectedDate && !!selectedSongData}
+          onClose={() => setSelectedDate(null)}
+          selectedDate={selectedDate}
+          isTabRecommending={isTabRecommending}
+          songData={selectedSongData}
+          isToday={selectedDate === today}
+        />
       </View>
     </View>
   );
