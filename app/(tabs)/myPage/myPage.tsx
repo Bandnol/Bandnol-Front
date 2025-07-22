@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   Dimensions,
@@ -70,6 +70,8 @@ export default function MyPage() {
       ),
     );
   };
+
+  const router = useRouter();
 
   const filteredPosts = postData.filter((post) => {
     if (activeTab === 'post') return true;
@@ -170,6 +172,42 @@ export default function MyPage() {
             <Text style={styles.editButtonText}>프로필 편집</Text>
           </TouchableOpacity>
         </View>
+        <TouchableOpacity
+          style={styles.followerRow}
+          activeOpacity={0.8}
+          onPress={() => router.push('/(tabs)/myPage/followPage')}
+        >
+          <View style={styles.followerImages}>
+            <Image
+              source={require('@/assets/images/profile.png')}
+              style={[styles.followerImage, { marginRight: -6 }]}
+            />
+            <Image
+              source={require('@/assets/images/profile.png')}
+              style={[styles.followerImage, { marginRight: -6 }]}
+            />
+            <Image
+              source={require('@/assets/images/profile.png')}
+              style={styles.followerImage}
+            />
+          </View>
+          <Text style={styles.followerText}>팔로워 803</Text>
+        </TouchableOpacity>
+        {/* 해시태그 */}
+        <View style={styles.layoutRow}>
+          <View style={styles.layoutBox}>
+            <Text style={styles.layoutText}>#페퍼톤스</Text>
+          </View>
+          <View style={styles.layoutBox}>
+            <Text style={styles.layoutText}>#공연후기</Text>
+          </View>
+          <View style={styles.layoutBox}>
+            <Text style={styles.layoutText}>#고고학</Text>
+          </View>
+        </View>
+
+        {/* 한줄소개 */}
+        <Text style={styles.introText}>신나고 재미있게 평생...</Text>
         {/* // 버튼 레이아웃 (UI 구성용) */}
         <View style={styles.buttonWrapper}>
           <View style={styles.buttonContainer}>
@@ -469,7 +507,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'lightgray',
   },
   followerText: {
-    marginLeft: 10,
+    marginLeft: 5.5,
     ...Typography.caption1,
     color: '#999',
   },
