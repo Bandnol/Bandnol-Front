@@ -32,7 +32,7 @@ export const mockCalendarData = {
   recommended: [
     {
       senderNickname: 'gummies',
-      date: '2025-07-18',
+      date: '2025-07-22',
       title: '소격동',
       artistName: 'IU',
       imageUrl:

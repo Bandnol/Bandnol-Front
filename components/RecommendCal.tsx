@@ -4,6 +4,9 @@ import {
   RecommendedItem,
   RecommendingItem,
 } from '@/components/testdata';
+import 'dayjs/locale/ko'; // 꼭 추가
+dayjs.locale('ko'); // 전역 설정
+
 import { Typography } from '@/constants/tyopography';
 import dayjs from 'dayjs';
 import { useMemo } from 'react';
@@ -150,11 +153,13 @@ export default function RecommendCal({
                   paddingHorizontal: 0,
                 }}
               >
-                <View style={styles.todayContainer}>
-                  <Text style={styles.todayText}>Today</Text>
-                </View>
+                {selectedDate === today ? (
+                  <View style={styles.todayContainer}>
+                    <Text style={styles.todayText}>Today</Text>
+                  </View>
+                ) : null}
                 <Text style={styles.modalDateText}>
-                  {dayjs(selectedDate).format('MM월 DD일')}
+                  {dayjs(selectedDate).format(' M월 D일 (dd)')}
                 </Text>
               </View>
               <Pressable onPress={() => setSelectedDate(null)}>
@@ -356,8 +361,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#D9D9D9',
+    backgroundColor: '#FB4932',
     gap: 10,
   },
 });
