@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 
-import { Typography } from '@/constants/Typo';
+import { Typography } from '@/constants/typography';
 
 const notifications = [
   {

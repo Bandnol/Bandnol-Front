@@ -1,6 +1,6 @@
 import BackIcon from '@/assets/onboarding/Vector.svg';
 import { Colors } from '@/constants/Colors';
-import { Typography } from '@/constants/Typo';
+import { Typography } from '@/constants/typography';
 import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
