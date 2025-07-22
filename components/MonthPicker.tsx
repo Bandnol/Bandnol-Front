@@ -1,4 +1,4 @@
-import { Typography } from '@/constants/tyopography';
+import { Typography } from '@/constants/typography';
 import { Picker } from '@react-native-picker/picker';
 import dayjs from 'dayjs';
 import React, { useState } from 'react';

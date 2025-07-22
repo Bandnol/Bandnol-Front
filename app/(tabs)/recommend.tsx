@@ -7,7 +7,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import RecommendCal from '@/app/(tabs)/recommend-tab/RecommendCal';
 import RecommendHeader from '@/app/(tabs)/recommend-tab/RecommendHeader';
 
-import { Typography } from '@/constants/tyopography';
+import { Typography } from '@/constants/typography';
 
 export default function RecommendScreen() {
   const router = useRouter();

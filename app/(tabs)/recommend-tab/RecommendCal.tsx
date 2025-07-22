@@ -7,7 +7,7 @@ import 'dayjs/locale/ko'; // 꼭 추가
 import RecBottomModal from './RecBottomModal';
 dayjs.locale('ko'); // 전역 설정
 
-import { Typography } from '@/constants/tyopography';
+import { Typography } from '@/constants/typography';
 import dayjs from 'dayjs';
 import { useMemo, useState } from 'react';
 import {

@@ -1,24 +1,20 @@
 import NotificationItem from '@/components/NotificationItem';
 import { notifications } from '@/constants/notifications';
-import { Typography } from '@/constants/tyopography';
+import { Typography } from '@/constants/typography';
 
 import Backarrow from '@/assets/icons/size_m/backarrow.svg';
 
 import { useRouter } from 'expo-router';
 import {
+  Dimensions,
   FlatList,
-  Image,
   Pressable,
   StyleSheet,
   Text,
   View,
-  Dimensions,
 } from 'react-native';
 
-
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
-
 
 export default function AlarmCenterPage() {
   const router = useRouter();
