@@ -1,58 +1,108 @@
-import * as React from 'react';
-import { Text, StyleSheet, View, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
 import BackIcon from '@/assets/auth/inquiry/Vector.svg';
 import InquiryButton from '@/assets/auth/inquiry/btn.svg';
+import api from '@/store/api'; // axios 인스턴스
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import {
+  Keyboard,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 const Component = () => {
   const router = useRouter();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [content, setContent] = useState('');
+
+  const handleSubmit = async () => {
+    try {
+      const res = await api.post('/api/v1/users/inquiry', {
+        name,
+        email,
+        content,
+      });
+      console.log('문의 전송 성공:', res.data);
+    } catch (error) {
+      console.error('문의 전송 실패:', error);
+    }
+  };
+
   return (
-    <SafeAreaView style={styles.viewBg}>
-      <View style={[styles.view, styles.viewBg]}>
-        <View style={styles.statusBarLayout}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backIcon}
-          >
-            <BackIcon width={24} height={24} />
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <SafeAreaView style={styles.viewBg}>
+        <View style={[styles.view, styles.viewBg]}>
+          <View style={styles.statusBarLayout}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.backIcon}
+            >
+              <BackIcon width={24} height={24} />
+            </TouchableOpacity>
+            <View style={{ flex: 1, alignItems: 'center' }}>
+              <Text style={styles.text}>문의하기</Text>
+            </View>
+          </View>
+
+          <View style={styles.frameParent}>
+            <View style={styles.textfieldParent}>
+              <View style={[styles.textfield, styles.textfieldFlexBox]}>
+                <Text style={[styles.text1, styles.textTypo]}>이름</Text>
+                <View style={[styles.wrapper, styles.btnSpaceBlock]}>
+                  <TextInput
+                    placeholder="이름을 입력하세요."
+                    placeholderTextColor="#7c7c7c"
+                    style={{ flex: 1, width: '100%', color: '#fff' }}
+                    value={name}
+                    onChangeText={setName}
+                  />
+                </View>
+              </View>
+              <View style={[styles.textfield, styles.textfieldFlexBox]}>
+                <Text style={[styles.text1, styles.textTypo]}>이메일</Text>
+                <View style={[styles.container, styles.btnSpaceBlock]}>
+                  <TextInput
+                    placeholder="이메일을 입력하세요."
+                    placeholderTextColor="#7c7c7c"
+                    style={{ flex: 1, width: '100%', color: '#fff' }}
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    multiline={false}
+                    numberOfLines={1}
+                  />
+                </View>
+              </View>
+            </View>
+            <View style={[styles.textfield2, styles.textfieldFlexBox]}>
+              <Text style={[styles.text1, styles.textTypo]}>문의내용</Text>
+              <View style={[styles.frameView, styles.btnSpaceBlock]}>
+                <TextInput
+                  placeholder="문의 내용을 입력해주세요."
+                  placeholderTextColor="#7c7c7c"
+                  style={{
+                    flex: 1,
+                    width: '100%',
+                    color: '#fff',
+                    textAlignVertical: 'top',
+                  }}
+                  value={content}
+                  onChangeText={setContent}
+                  multiline
+                />
+              </View>
+            </View>
+          </View>
+          <TouchableOpacity onPress={handleSubmit} style={styles.buttonWrapper}>
+            <InquiryButton width={335} height={50} />
           </TouchableOpacity>
-          <View style={{ flex: 1, alignItems: 'center' }}>
-            <Text style={styles.text}>문의하기</Text>
-          </View>
         </View>
-        <View style={styles.frameParent}>
-          <View style={styles.textfieldParent}>
-            <View style={[styles.textfield, styles.textfieldFlexBox]}>
-              <Text style={[styles.text1, styles.textTypo]}>이메일</Text>
-              <View style={[styles.wrapper, styles.btnSpaceBlock]}>
-                <Text style={[styles.text2, styles.textTypo]}>
-                  이메일을 입력하세요.
-                </Text>
-              </View>
-            </View>
-            <View style={[styles.textfield, styles.textfieldFlexBox]}>
-              <Text style={[styles.text1, styles.textTypo]}>연락처</Text>
-              <View style={[styles.container, styles.btnSpaceBlock]}>
-                <Text style={[styles.text2, styles.textTypo]}>
-                  휴대폰 번호를 입력하세요.
-                </Text>
-              </View>
-            </View>
-          </View>
-          <View style={[styles.textfield2, styles.textfieldFlexBox]}>
-            <Text style={[styles.text1, styles.textTypo]}>문의내용</Text>
-            <View style={[styles.frameView, styles.btnSpaceBlock]}>
-              <Text style={[styles.text2, styles.textTypo]}>
-                문의 내용을 입력해주세요.
-              </Text>
-            </View>
-          </View>
-        </View>
-        <View style={styles.buttonWrapper}>
-          <InquiryButton width={335} height={50} />
-        </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </TouchableWithoutFeedback>
   );
 };
 
