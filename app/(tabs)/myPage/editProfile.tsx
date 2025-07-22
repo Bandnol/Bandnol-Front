@@ -16,12 +16,14 @@ import EditIcon from '@/assets/icons/edit.svg';
 import ProfileImage from '@/assets/images/profile.png';
 import { Typography } from '@/constants/tyopography';
 
-export default function TopNavBar() {
+export default function EditProfile() {
   const [nickname, setNickname] = useState('');
   const [intro, setIntro] = useState('');
   const [focusedField, setFocusedField] = useState<'nickname' | 'intro' | null>(
     null,
   );
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showBackgroundModal, setShowBackgroundModal] = useState(false);
 
   const handleGoBack = () => {
     router.push('/(tabs)/myPage/myPage');
@@ -60,7 +62,10 @@ export default function TopNavBar() {
           style={styles.backgroundImage}
           resizeMode="cover"
         />
-        <TouchableOpacity style={styles.editIcon}>
+        <TouchableOpacity
+          style={styles.editIcon}
+          onPress={() => setShowBackgroundModal(true)}
+        >
           <View style={styles.editIconCircle}>
             <EditIcon width={18} height={18} />
           </View>
@@ -68,7 +73,9 @@ export default function TopNavBar() {
       </View>
       {/* {프로필 사진 수정} */}
       <View style={styles.profileImageWrapper}>
-        <Image source={ProfileImage} style={styles.profileImage} />
+        <TouchableOpacity onPress={() => setShowProfileModal(true)}>
+          <Image source={ProfileImage} style={styles.profileImage} />
+        </TouchableOpacity>
       </View>
       {/* 텍스트 필드 영역 */}
       <View style={styles.textFieldWrapper}>
