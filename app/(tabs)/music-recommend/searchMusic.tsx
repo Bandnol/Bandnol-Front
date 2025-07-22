@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 
 import DateHeader from '@/components/common/DateHeader';
-import { Typography } from '@/constants/tyopography';
+import { Typography } from '@/constants/Typo';
 
 const mockData = [
   {

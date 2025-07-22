@@ -1,211 +1,182 @@
-import * as React from 'react';
-import { Text, StyleSheet, View, TouchableOpacity } from 'react-native';
-import RoadingIcon from '@/assets/onboarding/roading.svg';
-import { FlatList } from 'react-native';
 import Ellipse from '@/assets/onboarding/Ellipse 1.svg';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import RoadingIcon from '@/assets/onboarding/roading.svg';
 import BackIcon from '@/assets/onboarding/Vector.svg';
+import { Colors } from '@/constants/Colors';
+import { Typography } from '@/constants/Typo';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import * as React from 'react';
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Component = () => {
   const router = useRouter();
-  const artistData = Array.from({ length: 12 }, (_, index) => ({
+  const artistData = Array.from({ length: 36 }, (_, index) => ({
     id: index.toString(),
     name: `가수 ${index + 1}`,
   }));
+
+  const renderHeader = () => (
+    <View>
+      <View>
+        <View>
+          <View>
+            <Text style={[styles.text1, styles.textTitleMargin]}>
+              관심 아티스트 설정
+            </Text>
+            <View style={{ height: 7 }} />
+            <Text style={styles.text2}>
+              {`관심 있는 아티스트의 팬이 되어주세요!
+팬이 되면 커뮤니티를 이용할 수 있어요.`}
+            </Text>
+          </View>
+          <View style={{ height: 27 }} />
+          <View>
+            <Text style={styles.text3}>관심 아티스트</Text>
+          </View>
+        </View>
+        <View>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <Text style={styles.text3}>추천 아티스트</Text>
+            <RoadingIcon width={24} height={24} />
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+
+  const renderFooter = () => <View style={{ height: 120 }} />;
+
   return (
-    <SafeAreaView style={styles.parent}>
+    <SafeAreaView style={styles.viewBg}>
       <View style={styles.view}>
-        <View style={styles.iconWrapper}>
-          <View style={{ paddingLeft: 20 }}>
+        <View style={styles.statusBarLayout}>
+          <View>
             <TouchableOpacity onPress={() => router.back()}>
-              <BackIcon width={24} height={24} style={styles.icon} />
+              <BackIcon width={24} height={24} />
             </TouchableOpacity>
           </View>
-          <View style={{ paddingRight: 20 }}>
+          <View>
             <Text style={styles.skipText}>건너뛰기</Text>
           </View>
         </View>
-        <View style={styles.frameParent}>
-          <View style={styles.frameParent}>
-            <View style={styles.frameGroup}>
-              <View style={styles.frameContainer}>
-                <View style={styles.groupSpaceBlock}>
-                  <Text
-                    style={[
-                      styles.text1,
-                      styles.textTypo,
-                      styles.textTitleMargin,
-                    ]}
-                  >
-                    관심 아티스트 설정
-                  </Text>
-                  <Text
-                    style={[styles.text2, styles.textTypo]}
-                  >{`관심 있는 아티스트의 팬이 되어주세요!
-팬이 되면 커뮤니티를 이용할 수 있어요.`}</Text>
-                </View>
-                <View style={[styles.wrapper, styles.groupSpaceBlock]}>
-                  <Text style={[styles.text3, styles.textTypo]}>
-                    관심 아티스트
-                  </Text>
-                </View>
-              </View>
-              <View style={[styles.frameView, styles.frameViewFlexStart]}>
-                <View style={[styles.group, styles.groupSpaceBlock]}>
-                  <Text style={[styles.text3, styles.textTypo]}>
-                    추천 아티스트
-                  </Text>
-                  <RoadingIcon width={24} height={24} />
-                </View>
-                <FlatList
-                  data={artistData}
-                  horizontal={false}
-                  contentContainerStyle={{
-                    rowGap: 16,
-                  }}
-                  keyExtractor={(item) => item.id}
-                  renderItem={({ item }) => (
-                    <View
-                      style={{
-                        alignItems: 'center',
-                        width: '22%',
-                        marginHorizontal: '1.5%',
-                      }}
-                    >
-                      <Ellipse width={68} height={68} />
-                      <Text
-                        style={{ color: '#fff', fontSize: 12, marginTop: 8 }}
-                      >
-                        {item.name}
-                      </Text>
-                    </View>
-                  )}
-                  numColumns={4}
-                />
-              </View>
+
+        <FlatList
+          data={artistData}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={{ paddingHorizontal: 20 }}
+          renderItem={({ item }) => (
+            <View
+              style={{
+                alignItems: 'center',
+                width: '22%',
+                marginHorizontal: '1.5%',
+                marginBottom: 16,
+              }}
+            >
+              <Ellipse width={68} height={68} />
+              <Text
+                style={[
+                  Typography.body2,
+                  { color: Colors.palette.Gray100, marginTop: 8 },
+                ]}
+              >
+                {item.name}
+              </Text>
             </View>
-          </View>
+          )}
+          numColumns={4}
+          ListHeaderComponent={renderHeader}
+          ListFooterComponent={renderFooter}
+          showsVerticalScrollIndicator={false}
+        />
+        <View style={styles.bottomView}>
           <TouchableOpacity
-            style={styles.btn}
+            style={[styles.btn, { backgroundColor: Colors.palette.point }]}
             onPress={() => router.push('/step3-timesetting')}
           >
-            <Text style={[styles.text21, styles.textTypo]}>다음</Text>
+            <Text style={[Typography.body2, { color: Colors.palette.white }]}>
+              다음
+            </Text>
           </TouchableOpacity>
         </View>
+        <LinearGradient
+          colors={['transparent', Colors.palette.Gray900]}
+          style={styles.fadeOverlay}
+        />
       </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  parent: {
+  viewBg: {
+    backgroundColor: Colors.palette.Gray900,
     flex: 1,
-    backgroundColor: '#121212',
   },
-  groupSpaceBlock: {
-    paddingVertical: 0,
-    alignSelf: 'stretch',
+  statusBarLayout: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    marginTop: 10,
   },
-  textTypo: {
-    textAlign: 'left',
-    fontFamily: 'Pretendard',
-  },
-  icon: {
-    overflow: 'hidden',
-  },
+
   text1: {
-    fontSize: 22,
-    letterSpacing: -0.5,
-    lineHeight: 31,
-    color: '#fff',
-    textAlign: 'left',
-    fontWeight: '600',
+    ...Typography.h1,
+    color: Colors.palette.Gray100,
     alignSelf: 'stretch',
   },
   text2: {
-    color: '#f4f4f4',
-    lineHeight: 20,
-    letterSpacing: -0.3,
-    fontSize: 14,
+    ...Typography.body2,
+    color: Colors.palette.Gray100,
   },
   text3: {
-    fontSize: 18,
-    letterSpacing: -0.4,
-    lineHeight: 25,
-    color: '#fff',
-    textAlign: 'left',
-    fontWeight: '600',
+    ...Typography.subtitle1B,
+    color: Colors.palette.Gray100,
+    paddingBottom: 22,
   },
-  wrapper: {
-    alignItems: 'center',
-    flexDirection: 'row',
-  },
-  frameContainer: {
-    gap: 27,
-    alignSelf: 'stretch',
-  },
-  group: {
-    gap: 0,
-    justifyContent: 'space-between',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  frameView: {
-    alignSelf: 'stretch',
-    gap: 22,
-  },
-  frameViewFlexStart: {
-    alignItems: 'flex-start',
-  },
-  frameGroup: {
-    gap: 42,
-    alignSelf: 'stretch',
-  },
-  frameParent: {
-    width: 335,
-    gap: 123,
-    flex: 1,
-    position: 'relative',
-  },
-  text21: {
-    color: '#b3b3b3',
-    lineHeight: 20,
-    letterSpacing: -0.3,
-    fontSize: 14,
-    fontWeight: '600',
-  },
+
   btn: {
-    backgroundColor: '#1f1f1f',
+    backgroundColor: Colors.palette.Gray800,
     padding: 16,
     height: 50,
-    width: 335,
+    width: '100%',
     borderRadius: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'absolute',
-    bottom: 30,
-    left: 0,
-    right: 0,
-    marginHorizontal: 'auto',
-    alignSelf: 'center',
   },
   view: {
     width: '100%',
-    gap: 35,
     alignItems: 'center',
     flex: 1,
   },
-  iconWrapper: {
-    flexDirection: 'row',
+  bottomView: {
+    position: 'absolute',
+    bottom: 16,
+    left: 20,
+    right: 20,
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    width: '100%',
+    zIndex: 1,
   },
+
   skipText: {
-    color: '#b3b3b3',
+    color: Colors.palette.Gray400,
     fontSize: 14,
     fontWeight: '600',
     lineHeight: 20,
@@ -213,6 +184,14 @@ const styles = StyleSheet.create({
   },
   textTitleMargin: {
     marginTop: 22,
+  },
+  fadeOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 100,
+    zIndex: 0,
   },
 });
 

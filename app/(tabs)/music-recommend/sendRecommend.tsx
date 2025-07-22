@@ -12,11 +12,11 @@ import {
   View,
 } from 'react-native';
 
-import Checkbox from '@/assets/icons/checkbox.svg';
 import Checkboxchecked from '@/assets/icons/checkbox-checked.svg';
+import Checkbox from '@/assets/icons/checkbox.svg';
 import DateHeader from '@/components/common/DateHeader';
 import ModalPopup from '@/components/common/ModalPopup';
-import { Typography } from '@/constants/tyopography';
+import { Typography } from '@/constants/Typo';
 
 export default function SendRecommendPage() {
   const router = useRouter();

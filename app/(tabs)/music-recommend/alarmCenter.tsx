@@ -17,6 +17,7 @@ import {
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
+
 export default function AlarmCenterPage() {
   const router = useRouter();
 
