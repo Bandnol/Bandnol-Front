@@ -1,6 +1,6 @@
 import type { IconType } from '@/components/NotificationIcon';
 import NotificationIcon from '@/components/NotificationIcon';
-import { Typography } from '@/constants/tyopography';
+
 import dayjs from 'dayjs';
 import 'dayjs/locale/ko';
 import { StyleSheet, Text, View } from 'react-native';

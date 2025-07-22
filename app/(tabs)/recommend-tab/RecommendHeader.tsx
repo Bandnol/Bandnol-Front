@@ -3,6 +3,7 @@ import List from '@/assets/icons/size_m/list.svg';
 import Report from '@/assets/icons/size_m/report.svg';
 import Search from '@/assets/icons/size_m/search.svg';
 import dayjs from 'dayjs';
+import { router } from 'expo-router';
 
 import MonthPicker from '@/components/MonthPicker';
 import { useState } from 'react';
@@ -44,14 +45,16 @@ export default function RecommendHeader({
 
       <View style={styles.rightGroup}>
         <TouchableOpacity onPress={onTodayPress}>
-          {' '}
           <View style={styles.todayContainer}>
             <Text style={styles.todayText}>Today</Text>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => router.push('/(tabs)/recommend-tab/RecSearch')}
+        >
           <Search />
         </TouchableOpacity>
+
         <TouchableOpacity>
           <List />
         </TouchableOpacity>
