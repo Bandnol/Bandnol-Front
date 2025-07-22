@@ -45,7 +45,6 @@ export default function RecommendHeader({
       <View style={styles.rightGroup}>
         <TouchableOpacity onPress={onTodayPress}>
           {' '}
-          {/* ✅ 수정 */}
           <View style={styles.todayContainer}>
             <Text style={styles.todayText}>Today</Text>
           </View>

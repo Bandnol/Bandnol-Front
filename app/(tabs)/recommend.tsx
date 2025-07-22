@@ -2,7 +2,7 @@ import Dropdown from '@/assets/icons/size_m/dropdown.svg';
 import dayjs from 'dayjs';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import RecommendCal from '@/components/RecommendCal';
 import RecommendHeader from '@/components/RecommendHeader';
@@ -13,6 +13,9 @@ export default function RecommendScreen() {
   const router = useRouter();
   const [selectedMonth, setSelectedMonth] = useState(dayjs());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
+  const [isTabRecommending, setIsTabRecommending] = useState(true);
+
   const handleTodayPress = () => {
     const today = dayjs();
     setSelectedMonth(today);
@@ -32,10 +35,12 @@ export default function RecommendScreen() {
         </View>
 
         <View style={styles.myrecSection}>
-          <Text style={styles.myrecText}>나의 추천곡</Text>
-          <TouchableOpacity>
+          <Text style={styles.myrecText}>
+            {isTabRecommending ? '나의 추천곡' : '추천 받은 곡'}
+          </Text>
+          <Pressable onPress={() => setIsTabRecommending(!isTabRecommending)}>
             <Dropdown />
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
         <View style={styles.calendarSection}>
@@ -43,6 +48,7 @@ export default function RecommendScreen() {
             selectedMonth={selectedMonth}
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
+            isTabRecommending={isTabRecommending}
           />
         </View>
       </View>

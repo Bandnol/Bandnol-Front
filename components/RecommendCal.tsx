@@ -1,4 +1,9 @@
 import Share from '@/assets/icons/size_m/share.svg';
+import {
+  mockCalendarData,
+  RecommendedItem,
+  RecommendingItem,
+} from '@/components/testdata';
 import { Typography } from '@/constants/tyopography';
 import dayjs from 'dayjs';
 import { useMemo } from 'react';
@@ -16,6 +21,7 @@ type RecommendCalProps = {
   selectedMonth: dayjs.Dayjs;
   selectedDate: string | null;
   setSelectedDate: (date: string | null) => void;
+  isTabRecommending?: boolean;
 };
 
 type CalendarDate = {
@@ -24,31 +30,11 @@ type CalendarDate = {
   fullDate: string; // YYYY-MM-DD
 };
 
-const mockCalendarData = {
-  recommending: [
-    {
-      date: '2025-07-03',
-      comment: '들으니까 행복해졌어요!!',
-      title: 'Blueming',
-      artistName: 'IU',
-      imageUrl:
-        'https://cdnimg.melon.co.kr/cm2/album/images/103/46/650/10346650_1000.jpg',
-    },
-    {
-      date: '2025-07-13',
-      comment: '오늘도 좋은 하루 보내세요~',
-      title: 'Good Day',
-      artistName: 'IU',
-      imageUrl:
-        'https://cdnimg.melon.co.kr/cm/album/images/010/93/562/1093562_500.jpg',
-    },
-  ],
-};
-
 export default function RecommendCal({
   selectedMonth,
   selectedDate,
   setSelectedDate,
+  isTabRecommending,
 }: RecommendCalProps) {
   const dates: CalendarDate[] = useMemo(() => {
     const startOfMonth = selectedMonth.startOf('month');
@@ -94,22 +80,25 @@ export default function RecommendCal({
 
   const today = dayjs().format('YYYY-MM-DD');
 
-  const selectedMusic = mockCalendarData.recommending.find(
-    (rec) => rec.date === selectedDate
-  );
+  const selectedSongData = (
+    mockCalendarData[isTabRecommending ? 'recommending' : 'recommended'] as (
+      | RecommendingItem
+      | RecommendedItem
+    )[]
+  ).find((rec) => rec.date === selectedDate);
 
   return (
     <View style={styles.container}>
       <View style={styles.grid}>
         {dates.map((item, idx) => {
-          const song = mockCalendarData.recommending.find(
-            (rec) => rec.date === item.fullDate
-          );
+          const isSongData = mockCalendarData[
+            isTabRecommending ? 'recommending' : 'recommended'
+          ].find((rec) => rec.date === item.fullDate);
 
-          const CellWrapper = song ? ImageBackground : View;
-          const wrapperProps = song
+          const CellWrapper = isSongData ? ImageBackground : View;
+          const wrapperProps = isSongData
             ? {
-                source: { uri: song.imageUrl },
+                source: { uri: isSongData.imageUrl },
                 style: styles.thumbnailWrapper,
                 imageStyle: styles.thumbnail,
               }
@@ -129,7 +118,7 @@ export default function RecommendCal({
                 <Text
                   style={[
                     styles.dateText,
-                    song && styles.songDateText,
+                    isSongData && styles.songDateText,
                     item.fullDate === today && styles.todayDateText,
                   ]}
                 >
@@ -143,9 +132,9 @@ export default function RecommendCal({
         <Modal
           isVisible={
             !!selectedDate &&
-            !!mockCalendarData.recommending.find(
-              (rec) => rec.date === selectedDate
-            )
+            !!mockCalendarData[
+              isTabRecommending ? 'recommending' : 'recommended'
+            ].find((rec) => rec.date === selectedDate)
           }
           onBackdropPress={() => setSelectedDate(null)}
           style={styles.bottomModal}
@@ -154,26 +143,43 @@ export default function RecommendCal({
         >
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalDateText}>
-                {dayjs(selectedDate).format('MM월 DD일')}
-              </Text>
+              <View
+                style={{
+                  ...styles.modalHeader,
+                  justifyContent: 'flex-start',
+                  paddingHorizontal: 0,
+                }}
+              >
+                <View style={styles.todayContainer}>
+                  <Text style={styles.todayText}>Today</Text>
+                </View>
+                <Text style={styles.modalDateText}>
+                  {dayjs(selectedDate).format('MM월 DD일')}
+                </Text>
+              </View>
               <Pressable onPress={() => setSelectedDate(null)}>
                 <Share />
               </Pressable>
             </View>
             <View style={styles.modalRecInfo}>
-              <Text style={styles.myrecText}>나의 추천곡</Text>
+              <Text style={styles.myrecText}>
+                {isTabRecommending
+                  ? '나의 추천곡'
+                  : `${(selectedSongData as RecommendedItem)?.senderNickname}의 추천곡`}
+              </Text>
 
               <View style={styles.myrecInfo}>
                 <Image
-                  source={{ uri: selectedMusic?.imageUrl }}
+                  source={{ uri: selectedSongData?.imageUrl }}
                   style={{ width: 36, height: 36, padding: 4 }}
                 />
 
                 <View style={styles.myrecSong}>
-                  <Text style={styles.myrecTitle}>{selectedMusic?.title}</Text>
+                  <Text style={styles.myrecTitle}>
+                    {selectedSongData?.title}
+                  </Text>
                   <Text style={styles.myrecArtist}>
-                    {selectedMusic?.artistName}
+                    {selectedSongData?.artistName}
                   </Text>
                 </View>
 
@@ -186,7 +192,7 @@ export default function RecommendCal({
                 ></View>
 
                 <Text style={styles.myrecComment}>
-                  {selectedMusic?.comment}
+                  {selectedSongData?.comment}
                 </Text>
               </View>
             </View>
@@ -278,7 +284,7 @@ const styles = StyleSheet.create({
   modalHeader: {
     flexDirection: 'row',
     paddingHorizontal: 20,
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 10,
     justifyContent: 'space-between',
     alignSelf: 'stretch',
@@ -287,17 +293,18 @@ const styles = StyleSheet.create({
     ...Typography.subtitle1,
     color: '#fff',
     fontWeight: '700',
+    textAlign: 'left',
   },
   modalRecInfo: {
-    flexDirection: 'column', // flex-direction: column
-    paddingVertical: 10, // padding: 10px 20px
+    flexDirection: 'column',
+    paddingVertical: 10,
     paddingHorizontal: 20,
-    alignItems: 'flex-start', // align-items: flex-start
-    gap: 6, // gap: 6px → RN 0.71+ 또는 View 내에서 marginBottom으로 처리
-    alignSelf: 'stretch', // align-self: stretch
-    borderBottomWidth: 0.5, // border-bottom
-    borderBottomColor: '#7C7C7C', // var(--Gray-500)
-    backgroundColor: '#333', // var(--Gray-700)
+    alignItems: 'flex-start',
+    gap: 6,
+    alignSelf: 'stretch',
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#7C7C7C',
+    backgroundColor: '#333',
   },
   myrecText: {
     ...Typography.subtitle4,
@@ -331,5 +338,26 @@ const styles = StyleSheet.create({
     ...Typography.caption2,
     color: '#fff',
     fontWeight: '400',
+  },
+  todayText: {
+    color: '#D9D9D9',
+    textAlign: 'center',
+    fontFamily: 'Pretendard',
+    fontSize: 12,
+    fontStyle: 'normal',
+    fontWeight: '600',
+    lineHeight: 16.8,
+    letterSpacing: -0.3,
+  },
+  todayContainer: {
+    flexDirection: 'row',
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#D9D9D9',
+    gap: 10,
   },
 });
