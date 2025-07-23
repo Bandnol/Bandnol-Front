@@ -191,7 +191,7 @@ export default function MyPage() {
               style={styles.followerImage}
             />
           </View>
-          <Text style={styles.followerText}>팔로워 803</Text>
+          <Text style={styles.followerText}>팔로워 803명</Text>
         </TouchableOpacity>
         {/* 해시태그 */}
         <View style={styles.layoutRow}>
