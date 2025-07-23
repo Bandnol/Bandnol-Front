@@ -1,10 +1,11 @@
-import BackIcon from '@/assets/onboarding/Vector.svg';
+import BottomNextButton from '@/components/common/BottomNextButton';
+import StatusBarHeader from '@/components/common/StatusBarHeader';
 import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
 import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Component = () => {
@@ -24,16 +25,7 @@ const Component = () => {
   return (
     <SafeAreaView style={styles.viewBg}>
       <View style={styles.view}>
-        <View style={styles.statusBarLayout}>
-          <View>
-            <TouchableOpacity onPress={() => router.back()}>
-              <BackIcon width={24} height={24} style={styles.icon} />
-            </TouchableOpacity>
-          </View>
-          <View>
-            <Text style={styles.skipText}>건너뛰기</Text>
-          </View>
-        </View>
+        <StatusBarHeader />
 
         <View style={{ paddingHorizontal: 20, alignSelf: 'stretch' }}>
           <Text style={[styles.text1, styles.textTitleMargin]}>
@@ -80,16 +72,7 @@ const Component = () => {
           </View>
         </View>
 
-        <View style={styles.bottomView}>
-          <TouchableOpacity
-            style={[styles.btn, { backgroundColor: Colors.palette.point }]}
-            onPress={() => router.push('/step4-done')}
-          >
-            <Text style={[Typography.body2, { color: Colors.palette.white }]}>
-              다음
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <BottomNextButton onPress={() => router.push('/step4-done')} />
       </View>
     </SafeAreaView>
   );
@@ -99,23 +82,6 @@ const styles = StyleSheet.create({
   viewBg: {
     backgroundColor: Colors.palette.Gray900,
     flex: 1,
-  },
-  statusBarLayout: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    marginTop: 10,
-  },
-  bottomView: {
-    position: 'absolute',
-    bottom: 16,
-    left: 20,
-    right: 20,
-    alignItems: 'center',
-    zIndex: 1,
   },
   view: {
     width: '100%',
@@ -155,16 +121,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Pretendard-SemiBold',
     letterSpacing: -0.45,
     lineHeight: 18 * 1.4,
-  },
-  btn: {
-    backgroundColor: Colors.palette.Gray800,
-    padding: 16,
-    height: 50,
-    width: '100%',
-    borderRadius: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });
 

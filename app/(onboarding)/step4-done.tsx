@@ -1,22 +1,19 @@
 import Logo from '@/assets/auth/splash/logo.svg';
-import BackIcon from '@/assets/onboarding/Vector.svg';
+import StatusBarHeader from '@/components/common/StatusBarHeader';
 import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 export default function Step4DoneScreen() {
   const router = useRouter();
 
   return (
     <SafeAreaView style={styles.viewBg}>
       <View style={styles.view}>
-        <View style={styles.statusBarLayout}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <BackIcon width={24} height={24} />
-          </TouchableOpacity>
-        </View>
+        <StatusBarHeader />
         <View style={{ height: 200 }} />
 
         <View style={styles.logo}>
@@ -51,15 +48,6 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     flex: 1,
-  },
-  statusBarLayout: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    marginTop: 10,
   },
   bottomView: {
     position: 'absolute',

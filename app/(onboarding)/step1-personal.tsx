@@ -1,5 +1,6 @@
-import BackIcon from '@/assets/onboarding/Vector.svg';
 import Logo from '@/assets/onboarding/logo.svg';
+import BottomNextButton from '@/components/common/BottomNextButton';
+import StatusBarHeader from '@/components/common/StatusBarHeader';
 import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
 import api from '@/store/api'; // axios 인스턴스
@@ -70,9 +71,11 @@ export default function Step1Personal() {
   };
 
   const onNextPress = () => {
+    /* api 연동 후
     if (!isFormFilled || !hasCheckedId || !isIdValid || isDuplicate) {
       return;
     }
+      */
     router.push('/step2-artist');
   };
 
@@ -87,11 +90,7 @@ export default function Step1Personal() {
             showsHorizontalScrollIndicator={false}
             horizontal={false}
           >
-            <View style={styles.statusBarLayout}>
-              <TouchableOpacity onPress={() => router.back()}>
-                <BackIcon width={24} height={24} />
-              </TouchableOpacity>
-            </View>
+            <StatusBarHeader />
 
             <View style={{ height: 35 }} />
 
@@ -368,32 +367,13 @@ export default function Step1Personal() {
             </View>
           </ScrollView>
         </TouchableWithoutFeedback>
-        <View style={styles.bottomView}>
-          <TouchableOpacity
-            style={[
-              styles.btn,
-              isFormFilled &&
-                hasCheckedId &&
-                isIdValid &&
-                !isDuplicate && { backgroundColor: Colors.palette.point },
-            ]}
-            onPress={onNextPress}
-          >
-            <Text
-              style={[
-                Typography.body2,
-                {
-                  color:
-                    isFormFilled && hasCheckedId && isIdValid && !isDuplicate
-                      ? Colors.palette.white
-                      : Colors.palette.Gray400,
-                },
-              ]}
-            >
-              다음
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <BottomNextButton
+          onPress={onNextPress}
+          /*enabled={Boolean(
+            isFormFilled && isIdValid && !isDuplicate && hasCheckedId,
+          )}*/
+          enabled={true}
+        />
         <LinearGradient
           colors={['transparent', Colors.palette.Gray900]}
           style={styles.fadeOverlay}
@@ -414,15 +394,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 150,
-  },
-  statusBarLayout: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    marginTop: 10,
   },
   frameShadowBox: {
     padding: 16,
@@ -492,24 +463,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     alignSelf: 'stretch',
     alignItems: 'center',
-  },
-  btn: {
-    backgroundColor: Colors.palette.Gray800,
-    padding: 16,
-    height: 50,
-    width: '100%',
-    borderRadius: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bottomView: {
-    position: 'absolute',
-    bottom: 16,
-    left: 20,
-    right: 20,
-    alignItems: 'center',
-    zIndex: 1,
   },
   frameParent: {
     paddingHorizontal: 20,

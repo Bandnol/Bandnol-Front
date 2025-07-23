@@ -51,6 +51,10 @@ const Component = () => {
           </View>
 
           <View style={styles.frameParent}>
+            <Text style={[Typography.body2, { color: Colors.palette.Gray100 }]}>
+              {`밴놀 팀에서 문의사항을 확인한 후,
+통상 1~3일 내에 이메일로 답변 드립니다.`}
+            </Text>
             <View style={styles.textfieldParent}>
               <View style={[styles.textfield, styles.textfieldFlexBox]}>
                 <Text style={[styles.text1, styles.textTypo]}>이름</Text>
@@ -159,10 +163,6 @@ const styles = StyleSheet.create({
     color: Colors.palette.Gray500,
     ...Typography.body2,
   },
-  text2: {
-    color: Colors.palette.Gray500,
-    ...Typography.body2,
-  },
   wrapper: {
     borderColor: Colors.palette.Gray600,
     shadowOpacity: 1,
@@ -227,20 +227,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   textfield2: {
-    height: 300,
+    height: 250,
   },
   frameParent: {
     top: 100,
-    left: 20,
-    gap: 42,
-    width: 335,
+    paddingHorizontal: 20,
+    gap: 30,
+    width: '100%',
     position: 'absolute',
   },
   buttonWrapper: {
     position: 'absolute',
     bottom: 26,
-    left: 20,
-    width: 335,
+    paddingHorizontal: 20,
+    width: '100%',
     height: 50,
     justifyContent: 'center',
     alignItems: 'center',
