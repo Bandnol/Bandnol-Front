@@ -2,6 +2,8 @@ import Search from '@/assets/icons/size_m/search.svg';
 import { Typography } from '@/constants/typography';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+import Dropdown from '@/assets/icons/size_m/dropdown.svg';
+
 import {
   FlatList,
   Pressable,
@@ -13,7 +15,7 @@ import {
 
 const mockData = [
   {
-    date: '2025-04-18',
+    date: '2025-05-18',
     recommending: {
       title: 'Blueming',
       artistName: 'IU',
@@ -31,7 +33,7 @@ const mockData = [
     },
   },
   {
-    date: '2025-04-17',
+    date: '2025-07-17',
     recommending: {
       title: '소격동',
       artistName: 'IU',
@@ -57,13 +59,47 @@ const mockData = [
 
       comment: '나폴나폴',
     },
-    // recommended: {
-    //   title: '러브레터',
-    //   artistName: 'IU',
-    //   imageUrl:
-    //     'https://cdnimg.melon.co.kr/cm2/album/images/108/27/816/10827816_20211229143632_500.jpg',
-    //   comment: '편지왔어욤~',
-    // },
+    recommended: {
+      title: '러브레터',
+      artistName: 'IU',
+      imageUrl:
+        'https://cdnimg.melon.co.kr/cm2/album/images/108/27/816/10827816_20211229143632_500.jpg',
+      comment: '편지왔어욤~',
+    },
+  },
+  {
+    date: '2025-05-01',
+    recommending: {
+      title: '뛰어(JUMP)',
+      artistName: 'BLACKPINK',
+      imageUrl:
+        'https://cdnimg.melon.co.kr/cm2/album/images/118/90/480/11890480_20250711095238_500.jpg',
+      comment: '안녕하세요? 5월 1일은 좋은 날입니다!! 뛰어보세요!',
+    },
+    recommended: {
+      title: 'How Sweet',
+      artistName: 'NewJeans',
+      imageUrl:
+        'https://cdnimg.melon.co.kr/cm2/album/images/114/75/749/11475749_20240524105642_500.jpg',
+      comment: '햄버거 먹고싶다',
+    },
+  },
+  {
+    date: '2025-05-20',
+    recommending: {
+      title: '네모네모',
+      artistName: 'YENA (최예나)',
+      imageUrl:
+        'https://cdnimg.melon.co.kr/cm2/album/images/116/03/345/11603345_20240927114551_500.jpg',
+      comment: '네모네모빔을 맞으세요~',
+    },
+    recommended: {
+      title: '하루 끝',
+      artistName: 'IU',
+      imageUrl:
+        'https://cdnimg.melon.co.kr/cm/album/images/021/21/646/2121646_500.jpg',
+      comment: '근본이죠~',
+    },
   },
 ];
 
@@ -105,6 +141,8 @@ export default function RecSearch() {
 
   const handleSubmit = () => handleSearch(query);
 
+  const [isTopOpen, setIsTopOpen] = useState(false);
+
   const renderItem = (
     item: (typeof mockData)[number],
     type: 'recommending' | 'recommended',
@@ -139,35 +177,46 @@ export default function RecSearch() {
             />
           </View>
         </View>
+
         <Pressable onPress={() => router.back()}>
           <View>
             <Text style={styles.cancelText}>취소</Text>
           </View>
         </Pressable>
       </View>
-
+      <View style={styles.sectionTitleBox}>
+        <Text style={styles.sectionTitleText}>나의 추천곡</Text>
+        <Dropdown
+          onPress={() => setIsTopOpen(!isTopOpen)}
+          style={{
+            width: 24,
+            height: 24,
+            transform: [{ rotate: isTopOpen ? '180deg' : '0deg' }],
+          }}
+        />
+      </View>
+      {isTopOpen && (
+        <FlatList
+          data={recommendingResults}
+          keyExtractor={(item, idx) => `rec-${item.date}-${idx}`}
+          contentContainerStyle={styles.listContent}
+          ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+          style={styles.listbox}
+          renderItem={({ item }) => renderItem(item, 'recommending')}
+        />
+      )}
       <FlatList
         data={recommendingResults}
         keyExtractor={(item, idx) => `rec-${item.date}-${idx}`}
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
-          recommendingResults.length > 0 ? (
-            <Text style={styles.sectionTitle}>내가 추천한 곡</Text>
-          ) : null
+          <View style={styles.sectionTitleBox}>
+            <Text style={styles.sectionTitleText}>추천받은 곡</Text>
+          </View>
         }
+        ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+        style={styles.listbox}
         renderItem={({ item }) => renderItem(item, 'recommending')}
-      />
-
-      <FlatList
-        data={recommendedResults}
-        keyExtractor={(item, idx) => `d-${item.date}-${idx}`}
-        contentContainerStyle={styles.listContent}
-        ListHeaderComponent={
-          recommendedResults.length > 0 ? (
-            <Text style={styles.sectionTitle}>내가 추천 받은 곡</Text>
-          ) : null
-        }
-        renderItem={({ item }) => renderItem(item, 'recommended')}
       />
     </View>
   );
@@ -176,9 +225,10 @@ export default function RecSearch() {
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    paddingHorizontal: 20,
+    //paddingHorizontal: 20,
     paddingVertical: 20,
     backgroundColor: '#000',
+    paddingTop: 60,
     flex: 1,
   },
   header: {
@@ -186,6 +236,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
+    paddingHorizontal: 20,
   },
   searchContainer: {
     //justifyContent: 'center',
@@ -209,8 +260,17 @@ const styles = StyleSheet.create({
     color: '#F4F4F4',
     paddingVertical: 2,
   },
+  listbox: {
+    flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    alignSelf: 'stretch',
+  },
   textBox: {
     justifyContent: 'center',
+    borderColor: '#2C2C2C',
+    borderWidth: 1,
+    borderRadius: 8,
   },
   titleText: {
     ...Typography.body2,
@@ -221,11 +281,20 @@ const styles = StyleSheet.create({
     ...Typography.caption1,
     color: '#fff',
   },
-  sectionTitle: {
+  sectionTitleBox: {
+    gap: 10,
+    flexDirection: 'row',
+    marginTop: 10,
+    marginBottom: 10,
+    paddingHorizontal: 20,
+    paddingBottom: 10,
+    borderBottomColor: '#555',
+    borderBottomWidth: 1,
+  },
+
+  sectionTitleText: {
     ...Typography.subtitle2,
     color: '#aaa',
-    marginTop: 10,
-    marginBottom: 6,
   },
   listContent: {
     paddingBottom: 60,
