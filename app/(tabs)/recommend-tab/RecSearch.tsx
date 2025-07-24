@@ -11,12 +11,14 @@ import {
   Text,
   TextInput,
   View,
+  ScrollView,
+  Image,
 } from 'react-native';
 
 const mockData = [
   {
-    date: '2025-05-18',
-    recommending: {
+    date: '2025-02-18',
+    send: {
       title: 'Blueming',
       artistName: 'IU',
       imageUrl:
@@ -24,7 +26,7 @@ const mockData = [
 
       comment: '들으니까 행복해졌어요!!',
     },
-    recommended: {
+    receive: {
       title: '좋은날',
       artistName: 'IU',
       imageUrl:
@@ -33,129 +35,170 @@ const mockData = [
     },
   },
   {
-    date: '2025-07-17',
-    recommending: {
-      title: '소격동',
+    date: '2025-02-18',
+    send: {
+      title: 'Blueming',
       artistName: 'IU',
       imageUrl:
-        'https://cdnimg.melon.co.kr/cm/album/images/022/84/378/2284378_500.jpg',
-      comment: '소격동을 기억하나요~~',
-    },
-    recommended: {
-      title: '빨간 운동화',
-      artistName: 'IU',
-      imageUrl:
-        'https://cdnimg.melon.co.kr/cm2/album/images/118/31/781/11831781_20250526162725_500.jpg',
-      comment: '선물입니당~~',
-    },
-  },
-  {
-    date: '2025-04-29',
-    recommending: {
-      title: '홀씨',
-      artistName: 'IU',
-      imageUrl:
-        'https://cdnimg.melon.co.kr/cm2/album/images/114/04/142/11404142_20240220141548_500.jpg',
+        'https://cdnimg.melon.co.kr/cm2/album/images/103/46/650/10346650_1000.jpg',
 
-      comment: '나폴나폴',
+      comment: '들으니까 행복해졌어요!!',
     },
-    recommended: {
-      title: '러브레터',
+    receive: {
+      title: '좋은날',
       artistName: 'IU',
       imageUrl:
-        'https://cdnimg.melon.co.kr/cm2/album/images/108/27/816/10827816_20211229143632_500.jpg',
-      comment: '편지왔어욤~',
+        'https://cdnimg.melon.co.kr/cm/album/images/010/93/562/1093562_500.jpg',
+      comment: '들으니까 행복해졌어요!!',
     },
   },
   {
-    date: '2025-05-01',
-    recommending: {
-      title: '뛰어(JUMP)',
-      artistName: 'BLACKPINK',
+    date: '2025-02-18',
+    send: {
+      title: 'Blueming',
+      artistName: 'IU',
       imageUrl:
-        'https://cdnimg.melon.co.kr/cm2/album/images/118/90/480/11890480_20250711095238_500.jpg',
-      comment: '안녕하세요? 5월 1일은 좋은 날입니다!! 뛰어보세요!',
+        'https://cdnimg.melon.co.kr/cm2/album/images/103/46/650/10346650_1000.jpg',
+
+      comment: '들으니까 행복해졌어요!!',
     },
-    recommended: {
-      title: 'How Sweet',
-      artistName: 'NewJeans',
+    receive: {
+      title: '좋은날',
+      artistName: 'IU',
       imageUrl:
-        'https://cdnimg.melon.co.kr/cm2/album/images/114/75/749/11475749_20240524105642_500.jpg',
-      comment: '햄버거 먹고싶다',
+        'https://cdnimg.melon.co.kr/cm/album/images/010/93/562/1093562_500.jpg',
+      comment: '들으니까 행복해졌어요!!',
     },
   },
   {
-    date: '2025-05-20',
-    recommending: {
-      title: '네모네모',
-      artistName: 'YENA (최예나)',
-      imageUrl:
-        'https://cdnimg.melon.co.kr/cm2/album/images/116/03/345/11603345_20240927114551_500.jpg',
-      comment: '네모네모빔을 맞으세요~',
-    },
-    recommended: {
-      title: '하루 끝',
+    date: '2025-02-18',
+    send: {
+      title: 'Blueming',
       artistName: 'IU',
       imageUrl:
-        'https://cdnimg.melon.co.kr/cm/album/images/021/21/646/2121646_500.jpg',
-      comment: '근본이죠~',
+        'https://cdnimg.melon.co.kr/cm2/album/images/103/46/650/10346650_1000.jpg',
+
+      comment: '들으니까 행복해졌어요!!',
+    },
+    receive: {
+      title: '좋은날',
+      artistName: 'IU',
+      imageUrl:
+        'https://cdnimg.melon.co.kr/cm/album/images/010/93/562/1093562_500.jpg',
+      comment: '들으니까 행복해졌어요!!',
+    },
+  },
+  {
+    date: '2025-02-18',
+    send: {
+      title: 'Blueming',
+      artistName: 'IU',
+      imageUrl:
+        'https://cdnimg.melon.co.kr/cm2/album/images/103/46/650/10346650_1000.jpg',
+
+      comment: '들으니까 행복해졌어요!!',
+    },
+    receive: {
+      title: '좋은날',
+      artistName: 'IU',
+      imageUrl:
+        'https://cdnimg.melon.co.kr/cm/album/images/010/93/562/1093562_500.jpg',
+      comment: '들으니까 행복해졌어요!!',
     },
   },
 ];
 
 export default function RecSearch() {
   const [query, setQuery] = useState('');
-  const [recommendingResults, setRecommendingResults] = useState<
-    typeof mockData
-  >([]);
-  const [recommendedResults, setRecommendedResults] = useState<typeof mockData>(
-    [],
-  );
+  const [sendResults, setSendResults] = useState<typeof mockData>([]);
+  const [receiveResults, setReceiveResults] = useState<typeof mockData>([]);
   const router = useRouter();
 
   const handleSearch = (text: string) => {
     setQuery(text);
     if (!text.trim()) {
-      setRecommendingResults([]);
-      setRecommendedResults([]);
+      setSendResults([]);
+      setReceiveResults([]);
       return;
     }
 
     const lowerQuery = text.toLowerCase();
 
-    const recommendingFiltered = mockData.filter((item) => {
-      const target =
-        `${item.recommending.title} ${item.recommending.artistName}`.toLowerCase();
+    const sendFiltered = mockData.filter((item) => {
+      const target = `${item.send.title} ${item.send.artistName}`.toLowerCase();
       return target.includes(lowerQuery);
     });
 
-    const recommendedFiltered = mockData.filter((item) => {
+    const receiveFiltered = mockData.filter((item) => {
       const target =
-        `${item.recommended?.title} ${item.recommended?.artistName}`.toLowerCase();
+        `${item.receive?.title} ${item.receive?.artistName}`.toLowerCase();
       return target.includes(lowerQuery);
     });
 
-    setRecommendingResults(recommendingFiltered);
-    setRecommendedResults(recommendedFiltered);
+    setSendResults(sendFiltered);
+    setReceiveResults(receiveFiltered);
   };
 
   const handleSubmit = () => handleSearch(query);
 
-  const [isTopOpen, setIsTopOpen] = useState(false);
+  const [isTopOpen, setIsTopOpen] = useState(true);
+  const [isBottomOpen, setIsBottomOpen] = useState(true);
 
   const renderItem = (
     item: (typeof mockData)[number],
-    type: 'recommending' | 'recommended',
+    type: 'send' | 'receive',
   ) => {
     const song = item[type];
     if (!song) return null;
 
     return (
-      <View style={styles.textBox}>
-        <Text style={styles.titleText}>{song.title}</Text>
-        <Text style={styles.artistText}>{song.artistName}</Text>
+      <View style={styles.modalRecInfo}>
+        <Text style={styles.myrecText}>
+          {/* {
+            ? '나의 추천곡'
+            : `${(songData as ReceiveItem).senderNickname}의 추천곡`} */}
+        </Text>
         <Text style={styles.artistText}>{item.date}</Text>
+        {/* 
+        <View style={styles.fromInfo}>
+          <Text>From. </Text>
+          <Text>{item.send.artistName}</Text>
+        </View> */}
+
+        <View style={styles.myrecInfo}>
+          <Image
+            source={{ uri: song.imageUrl }}
+            style={{
+              width: 28,
+              height: 28,
+              padding: 4,
+              borderRadius: 2,
+              marginRight: 4,
+            }}
+          />
+
+          <View style={styles.myrecSong}>
+            <Text style={styles.myrecTitle}>{song.title}</Text>
+            <Text style={styles.myrecArtist}>{song.artistName}</Text>
+          </View>
+
+          <View
+            style={{
+              width: 1.955,
+              height: 27.37,
+              backgroundColor: '#FB4932',
+            }}
+          ></View>
+
+          <Text style={styles.myrecComment}>{song.comment}</Text>
+        </View>
       </View>
+
+      // <View style={styles.textBox}>
+      //   <Text style={styles.titleText}>{song.title}</Text>
+      //   <Text style={styles.artistText}>{song.artistName}</Text>
+      //   <Text style={styles.artistText}>{item.date}</Text>
+      // </View>
     );
   };
 
@@ -184,40 +227,52 @@ export default function RecSearch() {
           </View>
         </Pressable>
       </View>
-      <View style={styles.sectionTitleBox}>
-        <Text style={styles.sectionTitleText}>나의 추천곡</Text>
-        <Dropdown
-          onPress={() => setIsTopOpen(!isTopOpen)}
-          style={{
-            width: 24,
-            height: 24,
-            transform: [{ rotate: isTopOpen ? '180deg' : '0deg' }],
-          }}
-        />
-      </View>
-      {isTopOpen && (
-        <FlatList
-          data={recommendingResults}
-          keyExtractor={(item, idx) => `rec-${item.date}-${idx}`}
-          contentContainerStyle={styles.listContent}
-          ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
-          style={styles.listbox}
-          renderItem={({ item }) => renderItem(item, 'recommending')}
-        />
-      )}
-      <FlatList
-        data={recommendingResults}
-        keyExtractor={(item, idx) => `rec-${item.date}-${idx}`}
-        contentContainerStyle={styles.listContent}
-        ListHeaderComponent={
-          <View style={styles.sectionTitleBox}>
-            <Text style={styles.sectionTitleText}>추천받은 곡</Text>
-          </View>
-        }
-        ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
-        style={styles.listbox}
-        renderItem={({ item }) => renderItem(item, 'recommending')}
-      />
+
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* 나의 추천곡 */}
+        <View style={styles.sectionTitleBox}>
+          <Text style={styles.sectionTitleText}>나의 추천곡</Text>
+          <Dropdown
+            onPress={() => setIsTopOpen(!isTopOpen)}
+            style={{
+              width: 24,
+              height: 24,
+              transform: [{ rotate: isTopOpen ? '180deg' : '0deg' }],
+            }}
+          />
+        </View>
+        {isTopOpen &&
+          sendResults.map((item, idx) => (
+            <View
+              key={`rec-${item.date}-${idx}`}
+              style={{ marginBottom: 10, paddingHorizontal: 20 }}
+            >
+              {renderItem(item, 'send')}
+            </View>
+          ))}
+
+        {/* 추천 받은 곡 */}
+        <View style={styles.sectionTitleBox}>
+          <Text style={styles.sectionTitleText}>추천 받은 곡</Text>
+          <Dropdown
+            onPress={() => setIsBottomOpen(!isBottomOpen)}
+            style={{
+              width: 24,
+              height: 24,
+              transform: [{ rotate: isBottomOpen ? '180deg' : '0deg' }],
+            }}
+          />
+        </View>
+        {isBottomOpen &&
+          receiveResults.map((item, idx) => (
+            <View
+              key={`rec-${item.date}-${idx}`}
+              style={{ marginBottom: 10, paddingHorizontal: 20 }}
+            >
+              {renderItem(item, 'receive')}
+            </View>
+          ))}
+      </ScrollView>
     </View>
   );
 }
@@ -261,7 +316,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   listbox: {
-    flex: 1,
+    //flex: 1,
     paddingVertical: 14,
     paddingHorizontal: 20,
     alignSelf: 'stretch',
@@ -271,6 +326,11 @@ const styles = StyleSheet.create({
     borderColor: '#2C2C2C',
     borderWidth: 1,
     borderRadius: 8,
+  },
+
+  scrollContent: {
+    paddingBottom: 60,
+    paddingTop: 10,
   },
   titleText: {
     ...Typography.body2,
@@ -316,5 +376,45 @@ const styles = StyleSheet.create({
     color: '#F4F4F4',
     fontWeight: '600',
     paddingLeft: 20,
+  },
+  modalRecInfo: {
+    flexDirection: 'column',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    alignItems: 'flex-start',
+    gap: 6,
+    alignSelf: 'stretch',
+  },
+  myrecText: {
+    ...Typography.subtitle4,
+    color: '#fff',
+    fontWeight: '600',
+  },
+  myrecInfo: {
+    flexDirection: 'row',
+    width: '100%',
+    paddingVertical: 0,
+    alignItems: 'center',
+    gap: 6.843,
+  },
+  myrecSong: {
+    flexDirection: 'column',
+    width: 100,
+    gap: 2,
+  },
+  myrecTitle: {
+    ...Typography.subtitle4,
+    color: '#fff',
+    fontWeight: '600',
+  },
+  myrecArtist: {
+    ...Typography.subtitle4,
+    color: '#fff',
+    fontWeight: '400',
+  },
+  myrecComment: {
+    ...Typography.caption2,
+    color: '#fff',
+    fontWeight: '400',
   },
 });

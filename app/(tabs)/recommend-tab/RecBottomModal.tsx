@@ -71,7 +71,13 @@ export default function RecBottomModal({
             <View style={styles.myrecInfo}>
               <Image
                 source={{ uri: songData.imageUrl }}
-                style={{ width: 36, height: 36, padding: 4 }}
+                style={{
+                  width: 28,
+                  height: 28,
+                  padding: 4,
+                  borderRadius: 2,
+                  marginRight: 4,
+                }}
               />
 
               <View style={styles.myrecSong}>
@@ -130,7 +136,6 @@ const styles = StyleSheet.create({
     ...Typography.subtitle1,
     color: '#fff',
     fontWeight: '700',
-    textAlign: 'left',
   },
   modalRecInfo: {
     flexDirection: 'column',
@@ -152,7 +157,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     width: '100%',
     paddingVertical: 0,
-    paddingHorizontal: 3.91,
     alignItems: 'center',
     gap: 6.843,
   },
