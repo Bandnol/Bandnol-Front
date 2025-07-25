@@ -4,7 +4,6 @@ import { Typography } from '@/constants/typography';
 import dayjs from 'dayjs';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-
 import {
   Image,
   Pressable,
