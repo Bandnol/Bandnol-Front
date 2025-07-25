@@ -1,137 +1,170 @@
+import Dropdown from '@/assets/icons/size_m/dropdown.svg';
 import Search from '@/assets/icons/size_m/search.svg';
 import { Typography } from '@/constants/typography';
+import dayjs from 'dayjs';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import Dropdown from '@/assets/icons/size_m/dropdown.svg';
 
 import {
-  FlatList,
+  Image,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
-  ScrollView,
-  Image,
 } from 'react-native';
 
-const mockData = [
-  {
-    date: '2025-02-18',
-    send: {
-      title: 'Blueming',
-      artistName: 'IU',
-      imageUrl:
-        'https://cdnimg.melon.co.kr/cm2/album/images/103/46/650/10346650_1000.jpg',
+type SendSong = {
+  date: string;
+  comment: string;
+  title: string;
+  artistName: string;
+  imageUrl: string;
+};
 
-      comment: '들으니까 행복해졌어요!!',
-    },
-    receive: {
-      title: '좋은날',
-      artistName: 'IU',
-      imageUrl:
-        'https://cdnimg.melon.co.kr/cm/album/images/010/93/562/1093562_500.jpg',
-      comment: '들으니까 행복해졌어요!!',
-    },
+type ReceiveSong = {
+  date: string;
+  comment: string;
+  title: string;
+  artistName: string;
+  imageUrl: string;
+  senderNickname: string;
+};
+
+const sendMock: SendSong[] = [
+  {
+    date: '2025-04-18',
+    comment: '들으니까 행복해졌어요!!',
+    title: 'Blueming',
+    artistName: 'IU',
+    imageUrl:
+      'https://cdnimg.melon.co.kr/cm2/album/images/103/46/650/10346650_1000.jpg',
   },
   {
-    date: '2025-02-18',
-    send: {
-      title: 'Blueming',
-      artistName: 'IU',
-      imageUrl:
-        'https://cdnimg.melon.co.kr/cm2/album/images/103/46/650/10346650_1000.jpg',
-
-      comment: '들으니까 행복해졌어요!!',
-    },
-    receive: {
-      title: '좋은날',
-      artistName: 'IU',
-      imageUrl:
-        'https://cdnimg.melon.co.kr/cm/album/images/010/93/562/1093562_500.jpg',
-      comment: '들으니까 행복해졌어요!!',
-    },
+    date: '2025-04-18',
+    comment: '들으니까 행복해졌어요!!',
+    title: 'Blueming',
+    artistName: 'IU',
+    imageUrl:
+      'https://cdnimg.melon.co.kr/cm2/album/images/103/46/650/10346650_1000.jpg',
   },
   {
-    date: '2025-02-18',
-    send: {
-      title: 'Blueming',
-      artistName: 'IU',
-      imageUrl:
-        'https://cdnimg.melon.co.kr/cm2/album/images/103/46/650/10346650_1000.jpg',
-
-      comment: '들으니까 행복해졌어요!!',
-    },
-    receive: {
-      title: '좋은날',
-      artistName: 'IU',
-      imageUrl:
-        'https://cdnimg.melon.co.kr/cm/album/images/010/93/562/1093562_500.jpg',
-      comment: '들으니까 행복해졌어요!!',
-    },
+    date: '2025-04-18',
+    comment: '들으니까 행복해졌어요!!',
+    title: 'Blueming',
+    artistName: 'IU',
+    imageUrl:
+      'https://cdnimg.melon.co.kr/cm2/album/images/103/46/650/10346650_1000.jpg',
   },
   {
-    date: '2025-02-18',
-    send: {
-      title: 'Blueming',
-      artistName: 'IU',
-      imageUrl:
-        'https://cdnimg.melon.co.kr/cm2/album/images/103/46/650/10346650_1000.jpg',
-
-      comment: '들으니까 행복해졌어요!!',
-    },
-    receive: {
-      title: '좋은날',
-      artistName: 'IU',
-      imageUrl:
-        'https://cdnimg.melon.co.kr/cm/album/images/010/93/562/1093562_500.jpg',
-      comment: '들으니까 행복해졌어요!!',
-    },
+    date: '2025-04-18',
+    comment: '들으니까 행복해졌어요!!',
+    title: 'Blueming',
+    artistName: 'IU',
+    imageUrl:
+      'https://cdnimg.melon.co.kr/cm2/album/images/103/46/650/10346650_1000.jpg',
   },
   {
-    date: '2025-02-18',
-    send: {
-      title: 'Blueming',
-      artistName: 'IU',
-      imageUrl:
-        'https://cdnimg.melon.co.kr/cm2/album/images/103/46/650/10346650_1000.jpg',
+    date: '2025-04-18',
+    comment: '들으니까 행복해졌어요!!',
+    title: 'Blueming',
+    artistName: 'IU',
+    imageUrl:
+      'https://cdnimg.melon.co.kr/cm2/album/images/103/46/650/10346650_1000.jpg',
+  },
+  {
+    date: '2025-04-18',
+    comment: '들으니까 행복해졌어요!!',
+    title: 'Blueming',
+    artistName: 'IU',
+    imageUrl:
+      'https://cdnimg.melon.co.kr/cm2/album/images/103/46/650/10346650_1000.jpg',
+  },
+  {
+    date: '2025-04-18',
+    comment: '들으니까 행복해졌어요!!',
+    title: 'Blueming',
+    artistName: 'IU',
+    imageUrl:
+      'https://cdnimg.melon.co.kr/cm2/album/images/103/46/650/10346650_1000.jpg',
+  },
+];
 
-      comment: '들으니까 행복해졌어요!!',
-    },
-    receive: {
-      title: '좋은날',
-      artistName: 'IU',
-      imageUrl:
-        'https://cdnimg.melon.co.kr/cm/album/images/010/93/562/1093562_500.jpg',
-      comment: '들으니까 행복해졌어요!!',
-    },
+const receiveMock: ReceiveSong[] = [
+  {
+    date: '2025-04-20',
+    comment: '이 노래는 꼭 들어봐!',
+    title: '좋은날',
+    artistName: 'IU',
+    imageUrl:
+      'https://cdnimg.melon.co.kr/cm/album/images/010/93/562/1093562_500.jpg',
+    senderNickname: 'sunnyday',
+  },
+  {
+    date: '2025-04-20',
+    comment: '이 노래는 꼭 들어봐!',
+    title: '좋은날',
+    artistName: 'IU',
+    imageUrl:
+      'https://cdnimg.melon.co.kr/cm/album/images/010/93/562/1093562_500.jpg',
+    senderNickname: 'sunnyday',
+  },
+  {
+    date: '2025-04-20',
+    comment: '이 노래는 꼭 들어봐!',
+    title: '좋은날',
+    artistName: 'IU',
+    imageUrl:
+      'https://cdnimg.melon.co.kr/cm/album/images/010/93/562/1093562_500.jpg',
+    senderNickname: 'sunnyday',
+  },
+  {
+    date: '2025-04-20',
+    comment: '이 노래는 꼭 들어봐!',
+    title: '좋은날',
+    artistName: 'IU',
+    imageUrl:
+      'https://cdnimg.melon.co.kr/cm/album/images/010/93/562/1093562_500.jpg',
+    senderNickname: 'sunnyday',
+  },
+  {
+    date: '2025-04-20',
+    comment: '이 노래는 꼭 들어봐!',
+    title: '좋은날',
+    artistName: 'IU',
+    imageUrl:
+      'https://cdnimg.melon.co.kr/cm/album/images/010/93/562/1093562_500.jpg',
+    senderNickname: 'sunnyday',
   },
 ];
 
 export default function RecSearch() {
   const [query, setQuery] = useState('');
-  const [sendResults, setSendResults] = useState<typeof mockData>([]);
-  const [receiveResults, setReceiveResults] = useState<typeof mockData>([]);
+  const [sendResults, setSendResults] = useState<SendSong[]>(sendMock);
+  const [receiveResults, setReceiveResults] =
+    useState<ReceiveSong[]>(receiveMock);
+
   const router = useRouter();
 
   const handleSearch = (text: string) => {
     setQuery(text);
     if (!text.trim()) {
-      setSendResults([]);
-      setReceiveResults([]);
+      setSendResults(sendMock);
+      setReceiveResults(receiveMock);
       return;
     }
 
     const lowerQuery = text.toLowerCase();
 
-    const sendFiltered = mockData.filter((item) => {
-      const target = `${item.send.title} ${item.send.artistName}`.toLowerCase();
+    const sendFiltered = sendMock.filter((item) => {
+      const target = `${item.title} ${item.artistName}`.toLowerCase();
       return target.includes(lowerQuery);
     });
 
-    const receiveFiltered = mockData.filter((item) => {
+    const receiveFiltered = receiveMock.filter((item) => {
       const target =
-        `${item.receive?.title} ${item.receive?.artistName}`.toLowerCase();
+        `${item.title} ${item.artistName} ${item.senderNickname}`.toLowerCase();
       return target.includes(lowerQuery);
     });
 
@@ -145,29 +178,22 @@ export default function RecSearch() {
   const [isBottomOpen, setIsBottomOpen] = useState(true);
 
   const renderItem = (
-    item: (typeof mockData)[number],
+    item: SendSong | ReceiveSong,
     type: 'send' | 'receive',
   ) => {
-    const song = item[type];
-    if (!song) return null;
-
     return (
-      <View style={styles.modalRecInfo}>
-        <Text style={styles.myrecText}>
-          {/* {
-            ? '나의 추천곡'
-            : `${(songData as ReceiveItem).senderNickname}의 추천곡`} */}
+      <View style={styles.myRecBox}>
+        <Text style={styles.dateText}>
+          {dayjs(item.date).format('YYYY년 M월 D일 (dd)')}
         </Text>
-        <Text style={styles.artistText}>{item.date}</Text>
-        {/* 
-        <View style={styles.fromInfo}>
-          <Text>From. </Text>
-          <Text>{item.send.artistName}</Text>
-        </View> */}
-
+        {type === 'send' ? null : (
+          <Text style={styles.fromText}>
+            {`From. ${'senderNickname' in item ? item.senderNickname : ''}`}
+          </Text>
+        )}
         <View style={styles.myrecInfo}>
           <Image
-            source={{ uri: song.imageUrl }}
+            source={{ uri: item.imageUrl }}
             style={{
               width: 28,
               height: 28,
@@ -178,27 +204,22 @@ export default function RecSearch() {
           />
 
           <View style={styles.myrecSong}>
-            <Text style={styles.myrecTitle}>{song.title}</Text>
-            <Text style={styles.myrecArtist}>{song.artistName}</Text>
+            <Text style={styles.myrecTitle}>{item.title}</Text>
+            <Text style={styles.myrecArtist}>{item.artistName}</Text>
           </View>
 
           <View
             style={{
-              width: 1.955,
-              height: 27.37,
+              width: 2,
+              height: 27,
               backgroundColor: '#FB4932',
+              marginHorizontal: 6,
             }}
-          ></View>
+          />
 
-          <Text style={styles.myrecComment}>{song.comment}</Text>
+          <Text style={styles.myrecComment}>{item.comment}</Text>
         </View>
       </View>
-
-      // <View style={styles.textBox}>
-      //   <Text style={styles.titleText}>{song.title}</Text>
-      //   <Text style={styles.artistText}>{song.artistName}</Text>
-      //   <Text style={styles.artistText}>{item.date}</Text>
-      // </View>
     );
   };
 
@@ -243,10 +264,7 @@ export default function RecSearch() {
         </View>
         {isTopOpen &&
           sendResults.map((item, idx) => (
-            <View
-              key={`rec-${item.date}-${idx}`}
-              style={{ marginBottom: 10, paddingHorizontal: 20 }}
-            >
+            <View key={`rec-${item.date}-${idx}`}>
               {renderItem(item, 'send')}
             </View>
           ))}
@@ -265,10 +283,7 @@ export default function RecSearch() {
         </View>
         {isBottomOpen &&
           receiveResults.map((item, idx) => (
-            <View
-              key={`rec-${item.date}-${idx}`}
-              style={{ marginBottom: 10, paddingHorizontal: 20 }}
-            >
+            <View key={`rec-${item.date}-${idx}`}>
               {renderItem(item, 'receive')}
             </View>
           ))}
@@ -362,7 +377,7 @@ const styles = StyleSheet.create({
   item: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    //paddingVertical: 12,
     gap: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#2C2C2C',
@@ -377,18 +392,19 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     paddingLeft: 20,
   },
-  modalRecInfo: {
+  myRecBox: {
     flexDirection: 'column',
-    paddingVertical: 10,
+    paddingVertical: 4,
     paddingHorizontal: 20,
     alignItems: 'flex-start',
-    gap: 6,
+    //gap: 6,
     alignSelf: 'stretch',
   },
-  myrecText: {
+  fromText: {
     ...Typography.subtitle4,
     color: '#fff',
     fontWeight: '600',
+    paddingBottom: 10,
   },
   myrecInfo: {
     flexDirection: 'row',
@@ -399,7 +415,7 @@ const styles = StyleSheet.create({
   },
   myrecSong: {
     flexDirection: 'column',
-    width: 100,
+    width: '35%',
     gap: 2,
   },
   myrecTitle: {
@@ -408,7 +424,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   myrecArtist: {
-    ...Typography.subtitle4,
+    ...Typography.caption1,
     color: '#fff',
     fontWeight: '400',
   },
@@ -416,5 +432,11 @@ const styles = StyleSheet.create({
     ...Typography.caption2,
     color: '#fff',
     fontWeight: '400',
+  },
+  dateText: {
+    ...Typography.subtitle4,
+    color: '#F4F4F4',
+    fontWeight: '600',
+    paddingBottom: 10,
   },
 });

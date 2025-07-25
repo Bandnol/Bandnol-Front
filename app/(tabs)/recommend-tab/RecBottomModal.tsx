@@ -52,7 +52,7 @@ export default function RecBottomModal({
                 </View>
               )}
               <Text style={styles.modalDateText}>
-                {dayjs(selectedDate).format(' M월 D일 (dd)')}
+                {dayjs(selectedDate).format('M월 D일 (dd)')}
               </Text>
             </View>
 

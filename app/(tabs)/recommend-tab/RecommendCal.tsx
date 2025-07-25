@@ -3,9 +3,9 @@ import {
   RecommendedItem,
   RecommendingItem,
 } from '@/components/testdata';
-import 'dayjs/locale/ko'; // 꼭 추가
+import 'dayjs/locale/ko';
 import RecBottomModal from './RecBottomModal';
-dayjs.locale('ko'); // 전역 설정
+dayjs.locale('ko');
 
 import { Typography } from '@/constants/typography';
 import dayjs from 'dayjs';
