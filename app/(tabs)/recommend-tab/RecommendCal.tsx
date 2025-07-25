@@ -2,7 +2,7 @@ import {
   mockCalendarData,
   RecommendedItem,
   RecommendingItem,
-} from '@/components/testdata';
+} from '@/components/Caltestdata';
 import 'dayjs/locale/ko';
 import RecBottomModal from './RecBottomModal';
 dayjs.locale('ko');
@@ -147,7 +147,7 @@ export default function RecommendCal({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    //backgroundColor: '#000',
   },
   grid: {
     flex: 1,

@@ -1,4 +1,4 @@
-import { RecommendedItem, RecommendingItem } from '@/components/testdata';
+import { RecommendedItem, RecommendingItem } from '@/components/Caltestdata';
 import { Typography } from '@/constants/typography';
 import { Dimensions, Image, StyleSheet, Text, View } from 'react-native';
 import Modal from 'react-native-modal';

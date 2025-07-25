@@ -6,7 +6,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import RecommendCal from '@/app/(tabs)/recommend-tab/RecommendCal';
 import RecommendHeader from '@/app/(tabs)/recommend-tab/RecommendHeader';
-
+import RecommendList from '@/app/(tabs)/recommend-tab/RecommendList';
+import { Listtestdata } from '@/components/Listtestdata';
 import { Typography } from '@/constants/typography';
 
 export default function RecommendScreen() {
@@ -15,12 +16,16 @@ export default function RecommendScreen() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const [isTabRecommending, setIsTabRecommending] = useState(true);
+  const [isModeCalendar, setIsModeCalendar] = useState(true);
 
   const handleTodayPress = () => {
     const today = dayjs();
     setSelectedMonth(today);
     setSelectedDate(today.format('YYYY-MM-DD'));
   };
+
+  const rawData = Listtestdata || [];
+
   return (
     <>
       <View style={styles.container}>
@@ -30,6 +35,8 @@ export default function RecommendScreen() {
               selectedMonth={selectedMonth}
               onChangeMonth={setSelectedMonth}
               onTodayPress={handleTodayPress}
+              isModeCalendar={isModeCalendar}
+              setIsModeCalendar={setIsModeCalendar}
             />
           </View>
         </View>
@@ -43,13 +50,22 @@ export default function RecommendScreen() {
           </Pressable>
         </View>
 
-        <View style={styles.calendarSection}>
-          <RecommendCal
-            selectedMonth={selectedMonth}
-            selectedDate={selectedDate}
-            setSelectedDate={setSelectedDate}
-            isTabRecommending={isTabRecommending}
-          />
+        <View style={styles.calListSection}>
+          {isModeCalendar ? (
+            <RecommendCal
+              selectedMonth={selectedMonth}
+              selectedDate={selectedDate}
+              setSelectedDate={setSelectedDate}
+              isTabRecommending={isTabRecommending}
+            />
+          ) : (
+            <RecommendList
+              selectedMonth={selectedMonth}
+              selectedDate={selectedDate}
+              setSelectedDate={setSelectedDate}
+              data={rawData}
+            />
+          )}
         </View>
       </View>
     </>
@@ -84,10 +100,8 @@ const styles = StyleSheet.create({
     lineHeight: 19.6,
     letterSpacing: -0.35,
   },
-  calendarSection: {
+  calListSection: {
     flex: 1,
-    backgroundColor: '#111',
-    borderRadius: 10,
   },
   date: {
     alignSelf: 'stretch',

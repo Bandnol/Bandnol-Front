@@ -1,3 +1,4 @@
+import Calendar from '@/assets/icons/size_m/calendar.svg';
 import Dropdown from '@/assets/icons/size_m/dropdown.svg';
 import List from '@/assets/icons/size_m/list.svg';
 import Report from '@/assets/icons/size_m/report.svg';
@@ -13,11 +14,15 @@ type RecommendHeaderProps = {
   selectedMonth: dayjs.Dayjs;
   onChangeMonth: (newMonth: dayjs.Dayjs) => void;
   onTodayPress: () => void;
+  isModeCalendar: boolean;
+  setIsModeCalendar: (isCalendar: boolean) => void;
 };
 export default function RecommendHeader({
   selectedMonth,
   onChangeMonth,
   onTodayPress,
+  isModeCalendar,
+  setIsModeCalendar,
 }: RecommendHeaderProps) {
   const [isMonthPickerVisible, setMonthPickerVisible] = useState(false);
   const isThisMonth = selectedMonth.isSame(dayjs(), 'month');
@@ -55,8 +60,8 @@ export default function RecommendHeader({
           <Search />
         </TouchableOpacity>
 
-        <TouchableOpacity>
-          <List />
+        <TouchableOpacity onPress={() => setIsModeCalendar(!isModeCalendar)}>
+          {isModeCalendar ? <List /> : <Calendar />}
         </TouchableOpacity>
       </View>
 

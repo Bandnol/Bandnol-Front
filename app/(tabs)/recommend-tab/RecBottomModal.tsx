@@ -1,5 +1,5 @@
 import Share from '@/assets/icons/size_m/share.svg';
-import { RecommendedItem, RecommendingItem } from '@/components/testdata';
+import { RecommendedItem, RecommendingItem } from '@/components/Caltestdata';
 import { Typography } from '@/constants/typography';
 import dayjs from 'dayjs';
 import { useState } from 'react';
