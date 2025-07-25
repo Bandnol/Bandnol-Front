@@ -41,14 +41,16 @@ export default function RecommendScreen() {
           </View>
         </View>
 
-        <View style={styles.myrecSection}>
-          <Text style={styles.myrecText}>
-            {isTabRecommending ? '나의 추천곡' : '추천 받은 곡'}
-          </Text>
-          <Pressable onPress={() => setIsTabRecommending(!isTabRecommending)}>
-            <Dropdown />
-          </Pressable>
-        </View>
+        {isModeCalendar ? (
+          <View style={styles.myrecSection}>
+            <Text style={styles.myrecText}>
+              {isTabRecommending ? '나의 추천곡' : '추천 받은 곡'}
+            </Text>
+            <Pressable onPress={() => setIsTabRecommending(!isTabRecommending)}>
+              <Dropdown />
+            </Pressable>
+          </View>
+        ) : null}
 
         <View style={styles.calListSection}>
           {isModeCalendar ? (

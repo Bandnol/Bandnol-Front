@@ -35,7 +35,7 @@ export default function RecommendList({
   const today = dayjs().format('YYYY-MM-DD');
 
   const sectionData = data
-    .filter((item) => dayjs(item.date).isSame(selectedMonth, 'month'))
+    //.filter((item) => dayjs(item.date).isSame(selectedMonth, 'month'))
     .map((item) => {
       const sectionItems: SubItem[] = [];
 
@@ -51,7 +51,7 @@ export default function RecommendList({
         data: sectionItems,
       };
     })
-    .sort((a, b) => dayjs(b.title).diff(dayjs(a.title)));
+    .sort((a, b) => dayjs(a.title).diff(dayjs(b.title)));
 
   return (
     <SectionList
