@@ -1,3 +1,4 @@
+// 서로 팔로우
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -22,9 +23,7 @@ import CloseIcon from '@/assets/icons/close.svg';
 import LikeIcon from '@/assets/icons/heart.svg';
 import MoreIcon from '@/assets/icons/more.svg';
 import SearchIcon from '@/assets/icons/search.svg';
-import SettingIcon2 from '@/assets/icons/setting.svg';
 import ShareIcon from '@/assets/icons/share.svg';
-import WriteIcon from '@/assets/icons/write.svg';
 import DummyImage from '@/assets/images/dummy1.png';
 import ProfileImage from '@/assets/images/profile.png';
 import { Typography } from '@/constants/tyopography';
@@ -56,7 +55,7 @@ const postData = [
   },
 ];
 
-export default function MyPage() {
+export default function FollowingEachOther() {
   const [activeTab, setActiveTab] = useState<'post' | 'media' | 'bookmark'>(
     'post',
   );
@@ -88,7 +87,7 @@ export default function MyPage() {
         />
         {/* 배경 이미지 */}
         <ImageBackground
-          source={require('@/assets/images/profile-background.jpg')}
+          source={require('@/assets/images/background.png')}
           style={styles.topImage}
           resizeMode="cover"
           imageStyle={styles.imageInner}
@@ -105,12 +104,6 @@ export default function MyPage() {
               style={styles.searchButton}
             >
               <SearchIcon width={24} height={24} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => router.push('/myPage/setting/appSetting')}
-              style={styles.settingButton}
-            >
-              <SettingIcon2 width={24} height={24} />
             </TouchableOpacity>
           </View>
         </ImageBackground>
@@ -165,11 +158,8 @@ export default function MyPage() {
             </View>
           </Modal>
           {/* 프로필 편집 버튼 */}
-          <TouchableOpacity
-            onPress={() => router.push('/myPage/editProfile')}
-            style={styles.editButton}
-          >
-            <Text style={styles.editButtonText}>프로필 편집</Text>
+          <TouchableOpacity style={styles.editButton}>
+            <Text style={styles.editButtonText}>팔로잉</Text>
           </TouchableOpacity>
         </View>
         <TouchableOpacity
@@ -192,6 +182,7 @@ export default function MyPage() {
             />
           </View>
           <Text style={styles.followerText}>팔로워 803명</Text>
+          <Text style={styles.followingText}>나를 팔로우합니다</Text>
         </TouchableOpacity>
         {/* 해시태그 */}
         <View style={styles.layoutRow}>
@@ -208,83 +199,6 @@ export default function MyPage() {
 
         {/* 한줄소개 */}
         <Text style={styles.introText}>신나고 재미있게 평생...</Text>
-        {/* // 버튼 레이아웃 (UI 구성용) */}
-        <View style={styles.buttonWrapper}>
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={[
-                styles.tabButton,
-                activeTab === 'post' && styles.activeTabButton,
-              ]}
-              onPress={() => setActiveTab('post')}
-            >
-              <Text
-                style={[
-                  styles.tabButtonText,
-                  activeTab === 'post' && styles.activeTabText,
-                ]}
-              >
-                포스트
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.tabButton,
-                activeTab === 'media' && styles.activeTabButton,
-              ]}
-              onPress={() => setActiveTab('media')}
-            >
-              <Text
-                style={[
-                  styles.tabButtonText,
-                  activeTab === 'media' && styles.activeTabText,
-                ]}
-              >
-                미디어
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.tabButton,
-                activeTab === 'bookmark' && styles.activeTabButton,
-              ]}
-              onPress={() => setActiveTab('bookmark')}
-            >
-              <Text
-                style={[
-                  styles.tabButtonText,
-                  activeTab === 'bookmark' && styles.activeTabText,
-                ]}
-              >
-                북마크
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-        <View style={styles.textFieldContainer}>
-          {/* 프로필  + 글쓰기  */}
-          <View style={styles.textFieldHeader}>
-            <Image
-              source={require('@/assets/images/profile.png')}
-              style={styles.textFieldProfile}
-            />
-            <View style={styles.textFieldTextWrapper}>
-              <Text style={styles.textFieldName}>sayoxx</Text>
-              <View style={styles.textFieldRow}>
-                <WriteIcon
-                  width={18}
-                  height={18}
-                  style={{ marginRight: 5, marginTop: 5 }}
-                />
-                <Text style={styles.textFieldGuide}>
-                  오늘의 밴놀을 공유해주세요!
-                </Text>
-              </View>
-            </View>
-          </View>
-        </View>
         <View contentContainerStyle={styles.scrollContainer}>
           {posts.map((post, i) => (
             <View key={post.id ?? i} style={styles.postContainer}>
@@ -389,6 +303,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: -13, // 배경 이미지와 겹치게
     paddingLeft: 20,
+    justifyContent: 'space-between',
+    paddingRight: 20,
   },
   profileImage: {
     width: 76,
@@ -401,7 +317,6 @@ const styles = StyleSheet.create({
   },
   nicknameBox: {
     marginTop: 15,
-    marginLeft: 15,
     justifyContent: 'center',
   },
   userId: {
@@ -414,9 +329,9 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   editButton: {
-    marginLeft: 20,
+    marginRight: 10,
     marginTop: 13,
-    width: 82,
+    width: 59,
     height: 30,
     backgroundColor: '#121212',
     borderRadius: 10,
@@ -426,8 +341,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   editButtonText: {
-    ...Typography.subtitle4,
-    color: '#fff',
+    fontFamily: 'Pretendard',
+    fontSize: 12,
+    letterSpacing: -0.36,
+    fontWeight: 400,
+    color: '#F4F4F4',
   },
   content: {
     flex: 1,
@@ -508,6 +426,11 @@ const styles = StyleSheet.create({
   },
   followerText: {
     marginLeft: 5.5,
+    ...Typography.caption1,
+    color: '#999',
+  },
+  followingText: {
+    marginLeft: 13,
     ...Typography.caption1,
     color: '#999',
   },
