@@ -1,12 +1,14 @@
+import RecommendList, {
+  RecommendListRef,
+} from '@/app/(tabs)/recommend-tab/RecommendList';
 import Dropdown from '@/assets/icons/size_m/dropdown.svg';
 import dayjs from 'dayjs';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import RecommendCal from '@/app/(tabs)/recommend-tab/RecommendCal';
 import RecommendHeader from '@/app/(tabs)/recommend-tab/RecommendHeader';
-import RecommendList from '@/app/(tabs)/recommend-tab/RecommendList';
 import { Listtestdata } from '@/components/Listtestdata';
 import { Typography } from '@/constants/typography';
 
@@ -17,11 +19,14 @@ export default function RecommendScreen() {
 
   const [isTabRecommending, setIsTabRecommending] = useState(true);
   const [isModeCalendar, setIsModeCalendar] = useState(true);
+  const listRef = useRef<RecommendListRef>(null);
 
   const handleTodayPress = () => {
-    const today = dayjs();
-    setSelectedMonth(today);
-    setSelectedDate(today.format('YYYY-MM-DD'));
+    setSelectedMonth(dayjs());
+    setSelectedDate(dayjs().format('YYYY-MM-DD'));
+    if (!isModeCalendar) {
+      listRef.current?.scrollToToday();
+    }
   };
 
   const rawData = Listtestdata || [];
@@ -62,6 +67,7 @@ export default function RecommendScreen() {
             />
           ) : (
             <RecommendList
+              ref={listRef}
               selectedMonth={selectedMonth}
               selectedDate={selectedDate}
               setSelectedDate={setSelectedDate}

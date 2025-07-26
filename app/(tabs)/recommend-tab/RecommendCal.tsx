@@ -3,13 +3,10 @@ import {
   RecommendedItem,
   RecommendingItem,
 } from '@/components/Caltestdata';
-import 'dayjs/locale/ko';
-import RecBottomModal from './RecBottomModal';
-dayjs.locale('ko');
-
 import { Typography } from '@/constants/typography';
 import dayjs from 'dayjs';
-import { useMemo, useState } from 'react';
+import 'dayjs/locale/ko';
+import { useMemo } from 'react';
 import {
   ImageBackground,
   Pressable,
@@ -17,6 +14,9 @@ import {
   Text,
   View,
 } from 'react-native';
+import RecBottomModal from './RecBottomModal';
+
+dayjs.locale('ko');
 
 type RecommendCalProps = {
   selectedMonth: dayjs.Dayjs;
@@ -87,10 +87,19 @@ export default function RecommendCal({
       | RecommendedItem
     )[]
   ).find((rec) => rec.date === selectedDate);
-  const [isShareModalVisible, setIsShareModalVisible] = useState(false);
 
   return (
     <View style={styles.container}>
+      {/* 요일 헤더 */}
+      <View style={styles.weekHeader}>
+        {['일', '월', '화', '수', '목', '금', '토'].map((day, index) => (
+          <Text key={index} style={styles.weekdayText}>
+            {day}
+          </Text>
+        ))}
+      </View>
+
+      {/* 날짜 그리드 */}
       <View style={styles.grid}>
         {dates.map((item, idx) => {
           const isSongData = mockCalendarData[
@@ -130,16 +139,17 @@ export default function RecommendCal({
             </Pressable>
           );
         })}
-
-        <RecBottomModal
-          visible={!!selectedDate && !!selectedSongData}
-          onClose={() => setSelectedDate(null)}
-          selectedDate={selectedDate}
-          isTabRecommending={isTabRecommending}
-          songData={selectedSongData}
-          isToday={selectedDate === today}
-        />
       </View>
+
+      {/* 모달 */}
+      <RecBottomModal
+        visible={!!selectedDate && !!selectedSongData}
+        onClose={() => setSelectedDate(null)}
+        selectedDate={selectedDate}
+        isTabRecommending={isTabRecommending}
+        songData={selectedSongData}
+        isToday={selectedDate === today}
+      />
     </View>
   );
 }
@@ -147,7 +157,20 @@ export default function RecommendCal({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    //backgroundColor: '#000',
+  },
+  weekHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingVertical: 6,
+  },
+  weekdayText: {
+    ...Typography.caption1,
+    width: `${100 / 7}%`,
+    textAlign: 'center',
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '500',
   },
   grid: {
     flex: 1,
@@ -187,11 +210,9 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'center',
   },
-
   thumbnail: {
     resizeMode: 'cover',
   },
-
   songDateText: {
     backgroundColor: 'white',
     color: '#000',
@@ -205,99 +226,5 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     width: 40,
     alignSelf: 'center',
-  },
-  bottomModal: {
-    justifyContent: 'flex-end',
-    margin: 0,
-  },
-
-  modalContent: {
-    display: 'flex',
-    width: '100%',
-    paddingVertical: 20,
-    paddingHorizontal: 16,
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
-    backgroundColor: '#333',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    alignItems: 'flex-start',
-    gap: 10,
-    justifyContent: 'space-between',
-    alignSelf: 'stretch',
-  },
-  modalDateText: {
-    ...Typography.subtitle1,
-    color: '#fff',
-    fontWeight: '700',
-    textAlign: 'left',
-  },
-  modalRecInfo: {
-    flexDirection: 'column',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    alignItems: 'flex-start',
-    gap: 6,
-    alignSelf: 'stretch',
-    borderBottomWidth: 0.5,
-    borderBottomColor: '#7C7C7C',
-    backgroundColor: '#333',
-  },
-  myrecText: {
-    ...Typography.subtitle4,
-    color: '#fff',
-    fontWeight: '600',
-  },
-  myrecInfo: {
-    flexDirection: 'row',
-    width: '100%',
-    paddingVertical: 0,
-    paddingHorizontal: 3.91,
-    alignItems: 'center',
-    gap: 6.843,
-  },
-  myrecSong: {
-    flexDirection: 'column',
-    width: 100,
-    gap: 2,
-  },
-  myrecTitle: {
-    ...Typography.subtitle4,
-    color: '#fff',
-    fontWeight: '600',
-  },
-  myrecArtist: {
-    ...Typography.subtitle4,
-    color: '#fff',
-    fontWeight: '400',
-  },
-  myrecComment: {
-    ...Typography.caption2,
-    color: '#fff',
-    fontWeight: '400',
-  },
-  todayText: {
-    color: '#D9D9D9',
-    textAlign: 'center',
-    fontFamily: 'Pretendard',
-    fontSize: 12,
-    fontStyle: 'normal',
-    fontWeight: '600',
-    lineHeight: 16.8,
-    letterSpacing: -0.3,
-  },
-  todayContainer: {
-    flexDirection: 'row',
-    paddingVertical: 4,
-    paddingHorizontal: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 10,
-    backgroundColor: '#FB4932',
-    gap: 10,
   },
 });

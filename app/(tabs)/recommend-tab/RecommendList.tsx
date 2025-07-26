@@ -5,6 +5,7 @@ import {
   forwardRef,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -49,10 +50,35 @@ const RecommendList = forwardRef<RecommendListRef, RecommendListProps>(
       dayjs(a.date).diff(dayjs(b.date)),
     );
 
-    // 선택한 월에서 가장 첫 번째 날짜
-    const targetDate = sortedData.find((item) =>
-      dayjs(item.date).isSame(selectedMonth, 'month'),
-    )?.date;
+    const targetDate = useMemo(() => {
+      // 1. 정확히 선택한 날짜가 있으면 그걸 우선
+      const exactMatch = sortedData.find((item) =>
+        dayjs(item.date).isSame(selectedDate, 'day'),
+      )?.date;
+
+      if (exactMatch) return exactMatch;
+
+      // 2. 선택된 월에서 오늘 이후인 것 중 가장 가까운 날짜
+      const afterTodayInMonth = sortedData.find(
+        (item) =>
+          dayjs(item.date).isAfter(dayjs()) &&
+          dayjs(item.date).isSame(selectedMonth, 'month'),
+      )?.date;
+
+      if (afterTodayInMonth) return afterTodayInMonth;
+
+      // 3. 월을 넘어서 오늘 이후 중 가장 가까운 날짜
+      const afterTodayAny = sortedData.find((item) =>
+        dayjs(item.date).isAfter(dayjs()),
+      )?.date;
+
+      if (afterTodayAny) return afterTodayAny;
+
+      // 4. 마지막 fallback - 그냥 마지막 항목
+      return sortedData.length > 0
+        ? sortedData[sortedData.length - 1].date
+        : undefined;
+    }, [sortedData, selectedDate, selectedMonth]);
 
     // 월 선택 시 해당 날짜로 스크롤
     useEffect(() => {
