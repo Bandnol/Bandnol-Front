@@ -1,8 +1,17 @@
 import { Typography } from '@/constants/typography';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ko';
-import { Image, SectionList, StyleSheet, Text, View } from 'react-native';
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react';
+import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+
 dayjs.locale('ko');
+
 type Song = {
   title: string;
   artistName: string;
@@ -16,6 +25,10 @@ type RawData = {
   recommended?: Song;
 };
 
+export type RecommendListRef = {
+  scrollToToday: () => void;
+};
+
 type RecommendListProps = {
   selectedMonth: dayjs.Dayjs;
   selectedDate: string | null;
@@ -23,96 +36,129 @@ type RecommendListProps = {
   data: RawData[];
 };
 
-type SubItem = {
-  type: 'recommending' | 'recommended';
-  song: Song;
-};
+const RecommendList = forwardRef<RecommendListRef, RecommendListProps>(
+  ({ selectedMonth, selectedDate, setSelectedDate, data }, ref) => {
+    const today = dayjs().format('YYYY-MM-DD');
+    const scrollViewRef = useRef<ScrollView>(null);
+    const [sectionLayouts, setSectionLayouts] = useState<
+      Record<string, number>
+    >({});
 
-export default function RecommendList({
-  selectedMonth,
-  data,
-}: RecommendListProps) {
-  const today = dayjs().format('YYYY-MM-DD');
+    // 오름차순 정렬
+    const sortedData = [...data].sort((a, b) =>
+      dayjs(a.date).diff(dayjs(b.date)),
+    );
 
-  const sectionData = data
-    //.filter((item) => dayjs(item.date).isSame(selectedMonth, 'month'))
-    .map((item) => {
-      const sectionItems: SubItem[] = [];
+    // 선택한 월에서 가장 첫 번째 날짜
+    const targetDate = sortedData.find((item) =>
+      dayjs(item.date).isSame(selectedMonth, 'month'),
+    )?.date;
 
-      if (item.recommending) {
-        sectionItems.push({ type: 'recommending', song: item.recommending });
+    // 월 선택 시 해당 날짜로 스크롤
+    useEffect(() => {
+      if (targetDate && sectionLayouts[targetDate] !== undefined) {
+        scrollViewRef.current?.scrollTo({
+          y: sectionLayouts[targetDate],
+          animated: true,
+        });
       }
-      if (item.recommended) {
-        sectionItems.push({ type: 'recommended', song: item.recommended });
+    }, [targetDate, sectionLayouts]);
+
+    // 오늘 날짜로 스크롤 함수
+    const scrollToToday = () => {
+      if (sectionLayouts[today] !== undefined) {
+        scrollViewRef.current?.scrollTo({
+          y: sectionLayouts[today],
+          animated: true,
+        });
       }
+    };
 
-      return {
-        title: item.date,
-        data: sectionItems,
-      };
-    })
-    .sort((a, b) => dayjs(a.title).diff(dayjs(b.title)));
+    // 외부에서 scrollToToday 사용할 수 있도록 ref 노출
+    useImperativeHandle(ref, () => ({
+      scrollToToday,
+    }));
 
-  return (
-    <SectionList
-      sections={sectionData}
-      keyExtractor={(_, index) => index.toString()}
-      renderSectionHeader={({ section: { title } }) => (
-        <View style={styles.dateHeader}>
-          <Text style={styles.dateText}>
-            {dayjs(title).format('YYYY년 M월 D일 (dd)')}
-          </Text>
-          {title === today && (
-            <View style={styles.todayContainer}>
-              <Text style={styles.todayText}>Today</Text>
-            </View>
-          )}
-        </View>
-      )}
-      renderItem={({ item }) => (
-        <View style={styles.songBox}>
-          <Text style={styles.songTypeText}>
-            {item.type === 'recommending' ? '나의 추천곡' : '추천 받은 곡'}
-          </Text>
-          <View style={styles.myrecInfo}>
-            <Image
-              source={{ uri: item.song.imageUrl }}
-              style={{
-                width: 28,
-                height: 28,
-                padding: 4,
-                borderRadius: 2,
-                marginRight: 4,
-              }}
-            />
+    return (
+      <ScrollView ref={scrollViewRef} contentContainerStyle={styles.container}>
+        {sortedData.map((item) => {
+          const subItems = [];
+          if (item.recommending) {
+            subItems.push({ type: 'recommending', song: item.recommending });
+          }
+          if (item.recommended) {
+            subItems.push({ type: 'recommended', song: item.recommended });
+          }
 
-            <View style={styles.myrecSong}>
-              <Text style={styles.myrecTitle}>{item.song.title}</Text>
-              <Text style={styles.myrecArtist}>{item.song.artistName}</Text>
-            </View>
-
+          return (
             <View
-              style={{
-                width: 2,
-                height: 27,
-                backgroundColor: '#FB4932',
-                marginHorizontal: 6,
+              key={item.date}
+              onLayout={(e) => {
+                setSectionLayouts((prev) => ({
+                  ...prev,
+                  [item.date]: e.nativeEvent.layout.y,
+                }));
               }}
-            />
+            >
+              <View style={styles.dateHeader}>
+                <Text style={styles.dateText}>
+                  {dayjs(item.date).format('YYYY년 M월 D일 (dd)')}
+                </Text>
+                {item.date === today && (
+                  <View style={styles.todayContainer}>
+                    <Text style={styles.todayText}>Today</Text>
+                  </View>
+                )}
+              </View>
 
-            <Text style={styles.myrecComment}>{item.song.comment}</Text>
-          </View>
-        </View>
-      )}
-      contentContainerStyle={styles.container}
-    />
-  );
-}
+              {subItems.map((sub, idx) => (
+                <View key={idx} style={styles.songBox}>
+                  <Text style={styles.songTypeText}>
+                    {sub.type === 'recommending'
+                      ? '나의 추천곡'
+                      : '추천 받은 곡'}
+                  </Text>
+                  <View style={styles.myrecInfo}>
+                    <Image
+                      source={{ uri: sub.song.imageUrl }}
+                      style={{
+                        width: 28,
+                        height: 28,
+                        padding: 4,
+                        borderRadius: 2,
+                        marginRight: 4,
+                      }}
+                    />
+                    <View style={styles.myrecSong}>
+                      <Text style={styles.myrecTitle}>{sub.song.title}</Text>
+                      <Text style={styles.myrecArtist}>
+                        {sub.song.artistName}
+                      </Text>
+                    </View>
+                    <View
+                      style={{
+                        width: 2,
+                        height: 27,
+                        backgroundColor: '#FB4932',
+                        marginHorizontal: 6,
+                      }}
+                    />
+                    <Text style={styles.myrecComment}>{sub.song.comment}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          );
+        })}
+      </ScrollView>
+    );
+  },
+);
+
+export default RecommendList;
 
 const styles = StyleSheet.create({
-  container: {
-    //padding: 16,
-  },
+  container: {},
   dateHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -129,13 +175,8 @@ const styles = StyleSheet.create({
   },
   todayText: {
     color: '#D9D9D9',
-    textAlign: 'center',
-    fontFamily: 'Pretendard',
     fontSize: 12,
-    fontStyle: 'normal',
     fontWeight: '600',
-    lineHeight: 16.8,
-    letterSpacing: -0.3,
   },
   todayContainer: {
     flexDirection: 'row',
@@ -145,7 +186,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 10,
     backgroundColor: '#FB4932',
-    gap: 10,
+    marginLeft: 8,
   },
   songBox: {
     marginBottom: 16,
@@ -155,20 +196,6 @@ const styles = StyleSheet.create({
   songTypeText: {
     ...Typography.subtitle4,
     color: '#F4F4F4',
-    //marginBottom: 8,
-  },
-  songRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1a1a1a',
-    borderRadius: 10,
-    padding: 12,
-  },
-  image: {
-    width: 40,
-    height: 40,
-    borderRadius: 6,
-    marginRight: 12,
   },
   myrecInfo: {
     flexDirection: 'row',
@@ -196,28 +223,5 @@ const styles = StyleSheet.create({
     ...Typography.caption2,
     color: '#fff',
     fontWeight: '400',
-  },
-  songInfo: {
-    flex: 1,
-  },
-  songTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#fff',
-  },
-  artistName: {
-    fontSize: 12,
-    color: '#ccc',
-  },
-  commentBar: {
-    width: 1,
-    height: 40,
-    backgroundColor: 'red',
-    marginHorizontal: 8,
-  },
-  commentText: {
-    flexShrink: 1,
-    fontSize: 12,
-    color: '#fff',
   },
 });
