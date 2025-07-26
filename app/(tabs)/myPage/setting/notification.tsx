@@ -1,4 +1,3 @@
-// app/myPage/setting/notification.tsx
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
