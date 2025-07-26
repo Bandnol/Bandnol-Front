@@ -1,4 +1,3 @@
-// app/myPage/setting/appSetting.tsx
 import { useRouter } from 'expo-router';
 import React from 'react';
 import {

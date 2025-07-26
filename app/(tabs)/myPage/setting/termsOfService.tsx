@@ -1,4 +1,3 @@
-// app/(tabs)/settings/termsOfService.tsx
 import { useRouter } from 'expo-router';
 import React from 'react';
 import {
