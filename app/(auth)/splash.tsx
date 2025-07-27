@@ -1,11 +1,32 @@
-import Logo from '@/assets/auth/splash/logo.svg';
-import KakaoIcon from '@/assets/auth/splash/kakao.svg';
-import NaverIcon from '@/assets/auth/splash/naver.svg';
 import GoogleIcon from '@/assets/auth/splash/google.svg';
+import KakaoIcon from '@/assets/auth/splash/kakao.svg';
+import Logo from '@/assets/auth/splash/logo.svg';
+import NaverIcon from '@/assets/auth/splash/naver.svg';
 import GuestIcon from '@/assets/auth/splash/nonlogin.svg';
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Colors } from '@/constants/Colors';
+import { Typography } from '@/constants/typography';
+import api from '@/store/api'; // axios 인스턴스
+import { API_URL } from '@env'; // baseURL 확인용
 import { useRouter } from 'expo-router';
+import React from 'react';
+import {
+  Linking,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+
+const handleGoogleLogin = async () => {
+  try {
+    const res = await api.get('/api/v1/oauth2/login/google');
+    // 서버가 바로 redirect 응답(302)을 하므로, URL은 우리가 직접 열어야 함
+    const loginUrl = `${API_URL}/api/v1/oauth2/login/google`;
+    await Linking.openURL(loginUrl);
+  } catch (err) {
+    console.error('구글 로그인 실패:', err);
+  }
+};
 
 export default function SplashScreen() {
   const router = useRouter();
@@ -36,11 +57,12 @@ export default function SplashScreen() {
   return (
     <View style={styles.container}>
       {/* 앱 로고 */}
+      <View style={{ height: 80 }} />
       <View style={styles.logo}>
-        <Logo width={160} height={160} />
+        <Logo width={100} height={125} />
       </View>
       <Text style={styles.text}>{`하루 한 곡, 음악 취향을 공유하고 
-      밴놀을 즐겨보세요!`}</Text>
+밴놀을 즐겨보세요!`}</Text>
 
       {/* 구글 로그인 */}
       <TouchableOpacity
@@ -77,23 +99,17 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#121212',
-    paddingHorizontal: 24,
+    backgroundColor: Colors.palette.Gray900,
+    paddingHorizontal: 20,
   },
   logo: {
-    width: 160,
-    height: 160,
     marginBottom: 24,
   },
   text: {
-    width: 193,
-    fontSize: 14,
-    letterSpacing: -0.3,
-    lineHeight: 20,
-    fontWeight: '600',
-    fontFamily: 'Pretendard',
-    color: '#f4f4f4',
+    ...Typography.body2,
+    color: Colors.palette.Gray100,
     textAlign: 'center',
+    width: 193,
   },
   Button: {
     width: 335,
@@ -109,13 +125,10 @@ const styles = StyleSheet.create({
     height: 24,
   },
   inquiry: {
-    width: '100%',
-    fontSize: 12,
+    ...Typography.caption1,
     textDecorationLine: 'underline',
-    letterSpacing: -0.3,
-    lineHeight: 17,
-    fontFamily: 'Pretendard',
-    color: '#7c7c7c',
+    color: Colors.palette.Gray500,
     textAlign: 'center',
+    width: '100%',
   },
 });

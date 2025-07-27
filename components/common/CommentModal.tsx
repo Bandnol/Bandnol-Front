@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { Typography } from '@/constants/tyopography';
+import { Typography } from '@/constants/typography';
 
 type CommentModalProps = {
   visible: boolean;

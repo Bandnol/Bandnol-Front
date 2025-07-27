@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { Text, StyleSheet, View, TouchableOpacity } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import BackIcon from '@/assets/onboarding/Vector.svg';
+import { Colors } from '@/constants/Colors';
+import { Typography } from '@/constants/typography';
+import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Component = () => {
   const router = useRouter();
@@ -20,27 +22,31 @@ const Component = () => {
   );
 
   return (
-    <SafeAreaView style={styles.parent}>
-      <View style={styles.container}>
-        <View style={styles.view}>
-          <View style={styles.iconWrapper}>
-            <View style={{ paddingLeft: 20 }}>
-              <TouchableOpacity onPress={() => router.back()}>
-                <BackIcon width={24} height={24} style={styles.icon} />
-              </TouchableOpacity>
-            </View>
-            <View style={{ paddingRight: 20 }}>
-              <Text style={styles.skipText}>건너뛰기</Text>
-            </View>
+    <SafeAreaView style={styles.viewBg}>
+      <View style={styles.view}>
+        <View style={styles.statusBarLayout}>
+          <View>
+            <TouchableOpacity onPress={() => router.back()}>
+              <BackIcon width={24} height={24} style={styles.icon} />
+            </TouchableOpacity>
           </View>
-          <View style={styles.titleWrapper}>
-            <Text style={styles.title}>추천 곡 수신 시간 설정</Text>
-            <Text style={styles.description}>
-              매일 추천 곡을 받을 시간을 알려주세요!{'\n'}나중에 언제든지 변경할
-              수 있습니다.
-            </Text>
+          <View>
+            <Text style={styles.skipText}>건너뛰기</Text>
           </View>
+        </View>
 
+        <View style={{ paddingHorizontal: 20, alignSelf: 'stretch' }}>
+          <Text style={[styles.text1, styles.textTitleMargin]}>
+            추천 곡 수신 시간 설정
+          </Text>
+          <View style={{ height: 7 }} />
+          <Text style={styles.text2}>
+            {`매일 추천 곡을 받을 시간을 알려주세요!
+나중에 언제든지 변경할 수 있습니다.`}
+          </Text>
+        </View>
+        <View style={{ height: 27 }} />
+        <View style={styles.view}>
           <View style={styles.pickerWrapper}>
             <Picker
               selectedValue={ampm}
@@ -74,80 +80,75 @@ const Component = () => {
           </View>
         </View>
 
-        <TouchableOpacity
-          style={styles.btn}
-          onPress={() => router.push('/step4-done')}
-        >
-          <Text style={[styles.text21, styles.textTypo]}>다음</Text>
-        </TouchableOpacity>
+        <View style={styles.bottomView}>
+          <TouchableOpacity
+            style={[styles.btn, { backgroundColor: Colors.palette.point }]}
+            onPress={() => router.push('/step4-done')}
+          >
+            <Text style={[Typography.body2, { color: Colors.palette.white }]}>
+              다음
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  parent: {
+  viewBg: {
+    backgroundColor: Colors.palette.Gray900,
     flex: 1,
-    backgroundColor: '#121212',
   },
-  container: {
-    flex: 1,
-    justifyContent: 'space-between',
-  },
-  view: {
+  statusBarLayout: {
     width: '100%',
-    gap: 35,
-    alignItems: 'center',
-    flex: 1,
-  },
-  iconWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingHorizontal: 20,
     paddingVertical: 10,
+    marginTop: 10,
+  },
+  bottomView: {
+    position: 'absolute',
+    bottom: 16,
+    left: 20,
+    right: 20,
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  view: {
     width: '100%',
+    alignItems: 'center',
+    flex: 1,
   },
   icon: {
     overflow: 'hidden',
   },
   skipText: {
-    color: '#b3b3b3',
-    fontSize: 14,
-    fontWeight: '600',
-    lineHeight: 20,
-    letterSpacing: -0.3,
+    ...Typography.caption1,
+    color: Colors.palette.Gray400,
   },
-  titleWrapper: {
-    paddingHorizontal: 20,
-    gap: 7,
+  text1: {
+    ...Typography.h1,
+    color: Colors.palette.Gray100,
     alignSelf: 'stretch',
   },
-  title: {
-    fontSize: 22,
-    letterSpacing: -0.5,
-    lineHeight: 31,
-    color: '#fff',
-    fontWeight: '600',
-    textAlign: 'left',
-    fontFamily: 'Pretendard',
+  text2: {
+    ...Typography.body2,
+    color: Colors.palette.Gray100,
   },
-  description: {
-    fontSize: 14,
-    letterSpacing: -0.3,
-    lineHeight: 20,
-    color: '#f4f4f4',
-    fontFamily: 'Pretendard',
-    textAlign: 'left',
+  textTitleMargin: {
+    marginTop: 22,
   },
   pickerWrapper: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 10,
   },
   picker: {
     height: 200,
     width: 90,
-    color: '#fff',
+    color: Colors.palette.white,
   },
   pickerItem: {
     fontSize: 18,
@@ -156,27 +157,14 @@ const styles = StyleSheet.create({
     lineHeight: 18 * 1.4,
   },
   btn: {
-    backgroundColor: '#FB4932',
+    backgroundColor: Colors.palette.Gray800,
     padding: 16,
     height: 50,
-    width: 335,
+    width: '100%',
     borderRadius: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    alignSelf: 'center',
-    marginBottom: 30,
-  },
-  text21: {
-    color: '#FFFFFF',
-    lineHeight: 20,
-    letterSpacing: -0.3,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  textTypo: {
-    textAlign: 'left',
-    fontFamily: 'Pretendard',
   },
 });
 
