@@ -9,7 +9,7 @@ import PostActive from '@/components/common/icons/Post-active.svg';
 import PostInactive from '@/components/common/icons/Post-inactive.svg';
 import RecommendActive from '@/components/common/icons/Recommend-active.svg';
 import RecommendInactive from '@/components/common/icons/Recommend-inactive.svg';
-import { Typography } from '@/constants/tyopography';
+import { Typography } from '@/constants/typography';
 
 const TAB_CONFIG = [
   {
