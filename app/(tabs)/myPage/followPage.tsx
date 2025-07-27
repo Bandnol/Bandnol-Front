@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
   Image,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -49,99 +50,107 @@ export default function FollowPage() {
   };
 
   return (
-    <View style={styles.container}>
-      {/* TopBar */}
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={handleBack}>
-          <BackArrowIcon width={24} height={24} />
-        </TouchableOpacity>
-        {/* 팔로잉 팔로워 버튼 */}
-        <View style={styles.tabButtonGroup}>
-          <TouchableOpacity
-            style={[
-              styles.tabButton,
-              styles.tabButtonLeft,
-              activeTab === 'followers' && styles.tabButtonActive,
-            ]}
-            onPress={() => setActiveTab('followers')}
-          >
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === 'followers' && styles.tabTextActive,
-              ]}
-            >
-              팔로워
-            </Text>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        {/* TopBar */}
+        <View style={styles.topBar}>
+          <TouchableOpacity onPress={handleBack}>
+            <BackArrowIcon width={24} height={24} />
           </TouchableOpacity>
+          {/* 팔로잉 팔로워 버튼 */}
+          <View style={styles.tabButtonGroup}>
+            <TouchableOpacity
+              style={[
+                styles.tabButton,
+                styles.tabButtonLeft,
+                activeTab === 'followers' && styles.tabButtonActive,
+              ]}
+              onPress={() => setActiveTab('followers')}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === 'followers' && styles.tabTextActive,
+                ]}
+              >
+                팔로워
+              </Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[
-              styles.tabButton,
-              styles.tabButtonRight,
-              activeTab === 'following' && styles.tabButtonActive,
-            ]}
-            onPress={() => setActiveTab('following')}
-          >
-            <Text
+            <TouchableOpacity
               style={[
-                styles.tabText,
-                activeTab === 'following' && styles.tabTextActive,
+                styles.tabButton,
+                styles.tabButtonRight,
+                activeTab === 'following' && styles.tabButtonActive,
               ]}
+              onPress={() => setActiveTab('following')}
             >
-              팔로잉
-            </Text>
-          </TouchableOpacity>
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === 'following' && styles.tabTextActive,
+                ]}
+              >
+                팔로잉
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
 
-      {/* List */}
-      <ScrollView contentContainerStyle={styles.listWrapper}>
-        {activeTab === 'followers'
-          ? followerList.map((user) => (
-              <View style={styles.userBox} key={user.id}>
-                <Image source={ProfileImage} style={styles.avatar} />
-                <View style={styles.userInfo}>
-                  <Text style={styles.name}>{user.name}</Text>
-                  <Text style={styles.username}>{user.username}</Text>
-                </View>
-                <TouchableOpacity
-                  style={
-                    user.isMutual ? styles.followingButton : styles.mutualButton
-                  }
-                  onPress={() => handleFollowToggle(user.id)}
-                >
-                  <Text
+        {/* List */}
+        <ScrollView contentContainerStyle={styles.listWrapper}>
+          {activeTab === 'followers'
+            ? followerList.map((user) => (
+                <View style={styles.userBox} key={user.id}>
+                  <Image source={ProfileImage} style={styles.avatar} />
+                  <View style={styles.userInfo}>
+                    <Text style={styles.name}>{user.name}</Text>
+                    <Text style={styles.username}>{user.username}</Text>
+                  </View>
+                  <TouchableOpacity
                     style={
-                      user.isMutual ? styles.followingText : styles.mutualText
+                      user.isMutual
+                        ? styles.followingButton
+                        : styles.mutualButton
                     }
+                    onPress={() => handleFollowToggle(user.id)}
                   >
-                    {user.isMutual ? '팔로잉' : '맞팔로우'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            ))
-          : followingList.map((user) => (
-              <View style={styles.userBox} key={user.id}>
-                <Image source={ProfileImage} style={styles.avatar} />
-                <View style={styles.userInfo}>
-                  <Text style={styles.name}>{user.name}</Text>
-                  <Text style={styles.username}>{user.username}</Text>
-                  {user.followsMe === true && (
-                    <Text style={styles.subtext}>나를 팔로우합니다</Text>
-                  )}
+                    <Text
+                      style={
+                        user.isMutual ? styles.followingText : styles.mutualText
+                      }
+                    >
+                      {user.isMutual ? '팔로잉' : '맞팔로우'}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
-                <View style={styles.followingBox}>
-                  <Text style={styles.followButtonText}>팔로잉</Text>
+              ))
+            : followingList.map((user) => (
+                <View style={styles.userBox} key={user.id}>
+                  <Image source={ProfileImage} style={styles.avatar} />
+                  <View style={styles.userInfo}>
+                    <Text style={styles.name}>{user.name}</Text>
+                    <Text style={styles.username}>{user.username}</Text>
+                    {user.followsMe === true && (
+                      <Text style={styles.subtext}>나를 팔로우합니다</Text>
+                    )}
+                  </View>
+                  <View style={styles.followingBox}>
+                    <Text style={styles.followButtonText}>팔로잉</Text>
+                  </View>
                 </View>
-              </View>
-            ))}
-      </ScrollView>
-    </View>
+              ))}
+        </ScrollView>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#121212',
+  },
   container: {
     flex: 1,
     backgroundColor: '#121212',

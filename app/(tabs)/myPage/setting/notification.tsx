@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Easing,
+  SafeAreaView,
   StatusBar,
   StyleSheet,
   Text,
@@ -87,42 +88,48 @@ export default function Notification() {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar
-        translucent
-        backgroundColor="transparent"
-        barStyle="dark-content"
-      />
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <StatusBar
+          translucent
+          backgroundColor="transparent"
+          barStyle="dark-content"
+        />
 
-      {/* Top Nav Bar */}
-      <View style={styles.topNavBar}>
-        <TouchableOpacity
-          onPress={() => router.push('/(tabs)/myPage/setting/appSetting')}
-          style={styles.backBtn}
-        >
-          <BackArrow width={9} height={16} />
-        </TouchableOpacity>
-        <Text style={styles.title}>알림</Text>
-        <View style={{ width: 24, height: 24 }} />
-      </View>
+        {/* Top Nav Bar */}
+        <View style={styles.topNavBar}>
+          <TouchableOpacity
+            onPress={() => router.push('/(tabs)/myPage/setting/appSetting')}
+            style={styles.backBtn}
+          >
+            <BackArrow width={9} height={16} />
+          </TouchableOpacity>
+          <Text style={styles.title}>알림</Text>
+          <View style={{ width: 24, height: 24 }} />
+        </View>
 
-      {/* List */}
-      <View style={styles.listWrapper}>
-        {items.map(({ key, label }) => (
-          <View style={styles.row} key={key}>
-            <Text style={styles.rowText}>{label}</Text>
-            <CustomToggle
-              value={noti[key]}
-              onChange={(v) => onToggle(key, v)}
-            />
-          </View>
-        ))}
+        {/* List */}
+        <View style={styles.listWrapper}>
+          {items.map(({ key, label }) => (
+            <View style={styles.row} key={key}>
+              <Text style={styles.rowText}>{label}</Text>
+              <CustomToggle
+                value={noti[key]}
+                onChange={(v) => onToggle(key, v)}
+              />
+            </View>
+          ))}
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#121212',
+  },
   container: {
     flex: 1,
     backgroundColor: '#121212',

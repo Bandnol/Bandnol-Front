@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import {
   Image,
   Modal,
+  SafeAreaView,
   StatusBar,
   StyleSheet,
   Text,
@@ -19,150 +20,158 @@ export default function UserInfo() {
   const [withdrawVisible, setWithdrawVisible] = useState(false);
 
   return (
-    <View style={styles.container}>
-      <StatusBar
-        translucent
-        backgroundColor="transparent"
-        barStyle="dark-content"
-      />
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <StatusBar
+          translucent
+          backgroundColor="transparent"
+          barStyle="dark-content"
+        />
 
-      {/* Top Nav Bar */}
-      <View style={styles.topNavBar}>
-        <TouchableOpacity
-          onPress={() => router.push('/(tabs)/myPage/setting/appSetting')}
-          style={styles.backBtn}
-        >
-          <BackArrow width={9} height={16} />
-        </TouchableOpacity>
-        <Text style={styles.title}>회원 정보</Text>
-        <View style={{ width: 24, height: 24 }} />
-      </View>
-
-      <View style={styles.content}>
-        {/* 연결된 소셜 로그인 계정 */}
-        <Text style={styles.label}>연결된 소셜 로그인 계정</Text>
-        <View style={styles.textBox}>
-          <Image
-            source={{ uri: 'https://placehold.co/24x24' }} // 임시 이미지
-            style={styles.icon}
-          />
-          <Text style={styles.textValue}>yxxng@soongsil.ac.kr</Text>
+        {/* Top Nav Bar */}
+        <View style={styles.topNavBar}>
+          <TouchableOpacity
+            onPress={() => router.push('/(tabs)/myPage/setting/appSetting')}
+            style={styles.backBtn}
+          >
+            <BackArrow width={9} height={16} />
+          </TouchableOpacity>
+          <Text style={styles.title}>회원 정보</Text>
+          <View style={{ width: 24, height: 24 }} />
         </View>
 
-        {/* 이름 */}
-        <View style={styles.marginBlock}>
-          <Text style={styles.label}>이름</Text>
+        <View style={styles.content}>
+          {/* 연결된 소셜 로그인 계정 */}
+          <Text style={styles.label}>연결된 소셜 로그인 계정</Text>
           <View style={styles.textBox}>
-            <Text style={styles.textValue}>장우영</Text>
+            <Image
+              source={{ uri: 'https://placehold.co/24x24' }} // 임시 이미지
+              style={styles.icon}
+            />
+            <Text style={styles.textValue}>yxxng@soongsil.ac.kr</Text>
           </View>
-        </View>
 
-        {/* 아이디 */}
-        <View style={styles.marginBlock}>
-          <Text style={styles.label}>아이디</Text>
-          <View style={styles.textBoxRow}>
-            <Text style={styles.idtextValue}>sayoxx</Text>
-            <TouchableOpacity onPress={() => {}}>
-              <Text style={styles.linkText}>변경</Text>
-            </TouchableOpacity>
+          {/* 이름 */}
+          <View style={styles.marginBlock}>
+            <Text style={styles.label}>이름</Text>
+            <View style={styles.textBox}>
+              <Text style={styles.textValue}>장우영</Text>
+            </View>
           </View>
-        </View>
 
-        {/* 로그아웃 */}
-        <TouchableOpacity
-          style={styles.marginBlock}
-          onPress={() => setLogoutVisible(true)}
+          {/* 아이디 */}
+          <View style={styles.marginBlock}>
+            <Text style={styles.label}>아이디</Text>
+            <View style={styles.textBoxRow}>
+              <Text style={styles.idtextValue}>sayoxx</Text>
+              <TouchableOpacity onPress={() => {}}>
+                <Text style={styles.linkText}>변경</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* 로그아웃 */}
+          <TouchableOpacity
+            style={styles.marginBlock}
+            onPress={() => setLogoutVisible(true)}
+          >
+            <Text style={styles.signout}>로그아웃</Text>
+          </TouchableOpacity>
+
+          {/* 회원탈퇴 */}
+          <TouchableOpacity onPress={() => setWithdrawVisible(true)}>
+            <Text style={styles.withdrawal}>회원탈퇴</Text>
+          </TouchableOpacity>
+        </View>
+        {/* 로그아웃 모달 */}
+        <Modal
+          transparent
+          animationType="fade"
+          visible={logoutVisible}
+          onRequestClose={() => setLogoutVisible(false)}
         >
-          <Text style={styles.signout}>로그아웃</Text>
-        </TouchableOpacity>
-
-        {/* 회원탈퇴 */}
-        <TouchableOpacity onPress={() => setWithdrawVisible(true)}>
-          <Text style={styles.withdrawal}>회원탈퇴</Text>
-        </TouchableOpacity>
-      </View>
-      {/* 로그아웃 모달 */}
-      <Modal
-        transparent
-        animationType="fade"
-        visible={logoutVisible}
-        onRequestClose={() => setLogoutVisible(false)}
-      >
-        <View style={styles.modalBackground}>
-          <View style={styles.logoutWrapper}>
-            {/* 1. 상단 텍스트 박스 */}
-            <View style={styles.logoutHeaderBox}>
-              <Text style={styles.logoutHeaderText}>로그아웃하시겠습니까?</Text>
-            </View>
-
-            {/* 2. 확인 버튼 */}
-            <TouchableOpacity
-              style={styles.logoutConfirmBtn}
-              onPress={() => {
-                setLogoutVisible(false);
-                router.push('/(auth)/splash');
-              }}
-            >
-              <Text style={styles.logoutConfirmText}>확인</Text>
-            </TouchableOpacity>
-
-            {/* 3. 밑줄 텍스트 (취소) */}
-            <TouchableOpacity
-              style={styles.logoutCancelWrapper}
-              onPress={() => setLogoutVisible(false)}
-            >
-              <Text style={styles.logoutCancelText}>취소</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-      {/* 회원탈퇴 모달 */}
-      <Modal
-        transparent
-        animationType="fade"
-        visible={withdrawVisible}
-        onRequestClose={() => setWithdrawVisible(false)}
-      >
-        <View style={styles.modalBackground}>
-          <View style={styles.withdrawWrapper}>
-            {/* 1. 상단 텍스트 박스 */}
-            <View style={styles.withdrawHeaderBox}>
-              <Text style={styles.withdrawHeaderText}>
-                <Text>회원 탈퇴를 진행하게 되면{'\n'}</Text>
-                <Text style={styles.boldText}>
-                  지금까지의 모든 밴놀 기록이 삭제되며,{'\n'}
-                  이는 복구할 수 없습니다.{'\n'}
+          <View style={styles.modalBackground}>
+            <View style={styles.logoutWrapper}>
+              {/* 1. 상단 텍스트 박스 */}
+              <View style={styles.logoutHeaderBox}>
+                <Text style={styles.logoutHeaderText}>
+                  로그아웃하시겠습니까?
                 </Text>
-                정말 탈퇴하시겠습니까?
-              </Text>
+              </View>
+
+              {/* 2. 확인 버튼 */}
+              <TouchableOpacity
+                style={styles.logoutConfirmBtn}
+                onPress={() => {
+                  setLogoutVisible(false);
+                  router.push('/(auth)/splash');
+                }}
+              >
+                <Text style={styles.logoutConfirmText}>확인</Text>
+              </TouchableOpacity>
+
+              {/* 3. 밑줄 텍스트 (취소) */}
+              <TouchableOpacity
+                style={styles.logoutCancelWrapper}
+                onPress={() => setLogoutVisible(false)}
+              >
+                <Text style={styles.logoutCancelText}>취소</Text>
+              </TouchableOpacity>
             </View>
-
-            {/* 2. 확인 버튼 */}
-            <TouchableOpacity
-              style={styles.logoutConfirmBtn}
-              onPress={() => {
-                setWithdrawVisible(false);
-                router.push('/(auth)/splash');
-              }}
-            >
-              <Text style={styles.logoutConfirmText}>확인</Text>
-            </TouchableOpacity>
-
-            {/* 3. 취소 텍스트 */}
-            <TouchableOpacity
-              style={styles.logoutCancelWrapper}
-              onPress={() => setWithdrawVisible(false)}
-            >
-              <Text style={styles.logoutCancelText}>취소</Text>
-            </TouchableOpacity>
           </View>
-        </View>
-      </Modal>
-    </View>
+        </Modal>
+        {/* 회원탈퇴 모달 */}
+        <Modal
+          transparent
+          animationType="fade"
+          visible={withdrawVisible}
+          onRequestClose={() => setWithdrawVisible(false)}
+        >
+          <View style={styles.modalBackground}>
+            <View style={styles.withdrawWrapper}>
+              {/* 1. 상단 텍스트 박스 */}
+              <View style={styles.withdrawHeaderBox}>
+                <Text style={styles.withdrawHeaderText}>
+                  <Text>회원 탈퇴를 진행하게 되면{'\n'}</Text>
+                  <Text style={styles.boldText}>
+                    지금까지의 모든 밴놀 기록이 삭제되며,{'\n'}
+                    이는 복구할 수 없습니다.{'\n'}
+                  </Text>
+                  정말 탈퇴하시겠습니까?
+                </Text>
+              </View>
+
+              {/* 2. 확인 버튼 */}
+              <TouchableOpacity
+                style={styles.logoutConfirmBtn}
+                onPress={() => {
+                  setWithdrawVisible(false);
+                  router.push('/(auth)/splash');
+                }}
+              >
+                <Text style={styles.logoutConfirmText}>확인</Text>
+              </TouchableOpacity>
+
+              {/* 3. 취소 텍스트 */}
+              <TouchableOpacity
+                style={styles.logoutCancelWrapper}
+                onPress={() => setWithdrawVisible(false)}
+              >
+                <Text style={styles.logoutCancelText}>취소</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#121212',
+  },
   container: {
     flex: 1,
     backgroundColor: '#121212',
