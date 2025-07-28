@@ -24,7 +24,7 @@
 ## ⚙️ 설치 방법
 
 ```bash
-git clone https://github.com/your-org/Bandnol-Front.git
+git clone https://github.com/Bandnol/Bandnol-Front.git
 cd Bandnol-Front
 yarn install
 ```
