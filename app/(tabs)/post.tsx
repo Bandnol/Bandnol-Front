@@ -3,17 +3,116 @@ import Search from '@/assets/icons/size_m/search.svg';
 import { Typography } from '@/constants/typography';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import {
+  FlatList,
+  Image,
+  Pressable,
+  StyleSheet,
+  TextInput,
+  View,
+} from 'react-native';
+type MockData = {
+  comment: string;
+  imageUrl: string;
+};
+const mockdata: MockData[] = [
+  {
+    comment: '좋은게 좋은거죠',
+    imageUrl:
+      'https://cdnimg.melon.co.kr/cm2/album/images/103/46/650/10346650_1000.jpg',
+  },
+  {
+    comment: '좋지 아니한가',
+    imageUrl:
+      'https://cdnimg.melon.co.kr/cm2/album/images/116/03/345/11603345_20240927114551_500.jpg',
+  },
+  {
+    comment: '좋아져요',
+    imageUrl:
+      'https://cdnimg.melon.co.kr/cm2/album/images/114/75/749/11475749_20240524105642_500.jpg',
+  },
+  {
+    comment: '별론데요',
+    imageUrl:
+      'https://cdnimg.melon.co.kr/cm2/album/images/118/31/781/11831781_20250526162725_500.jpg',
+  },
+  {
+    comment: '그냥 그래요',
+    imageUrl:
+      'https://cdnimg.melon.co.kr/cm/album/images/022/84/378/2284378_500.jpg',
+  },
+  {
+    comment: '좋은게 좋은거죠',
+    imageUrl:
+      'https://cdnimg.melon.co.kr/cm2/album/images/103/46/650/10346650_1000.jpg',
+  },
+  {
+    comment: '좋지 아니한가',
+    imageUrl:
+      'https://cdnimg.melon.co.kr/cm2/album/images/116/03/345/11603345_20240927114551_500.jpg',
+  },
+  {
+    comment: '좋아져요',
+    imageUrl:
+      'https://cdnimg.melon.co.kr/cm2/album/images/114/75/749/11475749_20240524105642_500.jpg',
+  },
+  {
+    comment: '별론데요',
+    imageUrl:
+      'https://cdnimg.melon.co.kr/cm2/album/images/118/31/781/11831781_20250526162725_500.jpg',
+  },
+  {
+    comment: '그냥 그래요',
+    imageUrl:
+      'https://cdnimg.melon.co.kr/cm/album/images/022/84/378/2284378_500.jpg',
+  },
+  {
+    comment: '좋은게 좋은거죠',
+    imageUrl:
+      'https://cdnimg.melon.co.kr/cm2/album/images/103/46/650/10346650_1000.jpg',
+  },
+  {
+    comment: '좋지 아니한가',
+    imageUrl:
+      'https://cdnimg.melon.co.kr/cm2/album/images/116/03/345/11603345_20240927114551_500.jpg',
+  },
+  {
+    comment: '좋아져요',
+    imageUrl:
+      'https://cdnimg.melon.co.kr/cm2/album/images/114/75/749/11475749_20240524105642_500.jpg',
+  },
+  {
+    comment: '별론데요',
+    imageUrl:
+      'https://cdnimg.melon.co.kr/cm2/album/images/118/31/781/11831781_20250526162725_500.jpg',
+  },
+  {
+    comment: '그냥 그래요',
+    imageUrl:
+      'https://cdnimg.melon.co.kr/cm/album/images/022/84/378/2284378_500.jpg',
+  },
+];
 export default function ArtistPage() {
   const router = useRouter();
   const [query, setQuery] = useState('');
+  const [results, setResults] = useState<MockData[]>([]);
 
   const handleSearch = (text: string) => {
     setQuery(text);
-    //setResults(mock);
-    return;
+    if (!text.trim()) {
+      setResults(mockdata);
+      return;
+    }
+
+    const lowerQuery = text.toLowerCase();
+    const filtered = mockdata.filter((item) => {
+      const target = `${item.comment}`.toLowerCase();
+      return target.includes(lowerQuery);
+    });
+
+    setResults(filtered);
   };
+
   const handleSubmit = () => handleSearch(query);
 
   return (
@@ -42,6 +141,21 @@ export default function ArtistPage() {
             </View>
           </Pressable>
         </View>
+
+        <FlatList
+          data={results}
+          keyExtractor={(item, index) => `${item.imageUrl}-${index}`}
+          renderItem={({ item }) => (
+            <View style={{ marginBottom: 16 }}>
+              {/* <Text style={{ color: '#fff' }}>{item.comment}</Text> */}
+              <Image
+                source={{ uri: item.imageUrl }}
+                style={{ width: 100, height: 100 }}
+              />
+            </View>
+          )}
+          contentContainerStyle={{ paddingHorizontal: 20 }}
+        />
       </View>
     </>
   );
