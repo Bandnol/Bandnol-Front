@@ -16,7 +16,7 @@ export function ThemedView({
   const backgroundColor =
     lightColor !== undefined
       ? lightColor
-      : (useThemeColor({ light: '#fff' }, 'background') ?? '#fff');
+      : useThemeColor({ light: '#fff' }, 'background') || '#fff';
 
   return <View style={[{ backgroundColor }, style]} {...otherProps} />;
 }
