@@ -22,6 +22,21 @@ const Component = () => {
   const [content, setContent] = useState('');
 
   const handleSubmit = async () => {
+    // 입력값 유효성 검사
+    if (!name.trim() || !email.trim() || !content.trim()) {
+      alert('모든 항목을 입력해주세요.');
+      console.log('전송 데이터', { name, email, content });
+      return;
+    }
+
+    const isValidEmail = (email: string) =>
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+    if (!isValidEmail(email)) {
+      alert('이메일 형식을 확인해주세요.');
+      return;
+    }
+
     try {
       const res = await api.post('/api/v1/users/inquiry', {
         name,
@@ -29,8 +44,19 @@ const Component = () => {
         content,
       });
       console.log('문의 전송 성공:', res.data);
-    } catch (error) {
+      alert('문의가 성공적으로 전송되었습니다.');
+      router.back();
+    } catch (error: any) {
       console.error('문의 전송 실패:', error);
+      if (error.response) {
+        console.error('응답 상태:', error.response.status);
+        console.error('응답 데이터:', error.response.data);
+      } else if (error.request) {
+        console.error('요청 자체가 실패함:', error.request);
+      } else {
+        console.error('기타 오류:', error.message);
+      }
+      alert('문의 전송에 실패했어요. 다시 시도해주세요.');
     }
   };
 

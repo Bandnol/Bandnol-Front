@@ -7,15 +7,49 @@ import { Typography } from '@/constants/typography';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import * as React from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+import api from '@/store/api';
+import * as SecureStore from 'expo-secure-store';
 
 const Component = () => {
   const router = useRouter();
-  const artistData = Array.from({ length: 36 }, (_, index) => ({
-    id: index.toString(),
-    name: `가수 ${index + 1}`,
-  }));
+  const [artistData, setArtistData] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    setLoading(true);
+    (async () => {
+      try {
+        const token = await SecureStore.getItemAsync('accessToken');
+        const res = await api.get('/api/v1/artists/recommended', {
+          params: { sort: 'popular' },
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (!isMounted) return;
+        setArtistData(Array.isArray(res.data) ? res.data : []);
+      } catch (err) {
+        if (!isMounted) return;
+        setError('Failed to fetch artists');
+        console.error('Failed to fetch recommended artists:', err);
+      } finally {
+        if (!isMounted) return;
+        setLoading(false);
+      }
+    })();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const renderHeader = () => (
     <View>
@@ -58,35 +92,49 @@ const Component = () => {
     <SafeAreaView style={styles.viewBg}>
       <View style={styles.view}>
         <StatusBarHeader />
-        <FlatList
-          data={artistData}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingHorizontal: 20 }}
-          renderItem={({ item }) => (
-            <View
-              style={{
-                alignItems: 'center',
-                width: '22%',
-                marginHorizontal: '1.5%',
-                marginBottom: 16,
-              }}
-            >
-              <Ellipse width={68} height={68} />
-              <Text
-                style={[
-                  Typography.body2,
-                  { color: Colors.palette.Gray100, marginTop: 8 },
-                ]}
+        {loading ? (
+          <View
+            style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+          >
+            <ActivityIndicator size="large" color={Colors.palette.Gray100} />
+          </View>
+        ) : error ? (
+          <View
+            style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+          >
+            <Text style={{ color: Colors.palette.Gray100 }}>{error}</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={artistData}
+            keyExtractor={(item) => item.id?.toString?.() ?? String(item.id)}
+            contentContainerStyle={{ paddingHorizontal: 20 }}
+            renderItem={({ item }) => (
+              <View
+                style={{
+                  alignItems: 'center',
+                  width: '22%',
+                  marginHorizontal: '1.5%',
+                  marginBottom: 16,
+                }}
               >
-                {item.name}
-              </Text>
-            </View>
-          )}
-          numColumns={4}
-          ListHeaderComponent={renderHeader}
-          ListFooterComponent={renderFooter}
-          showsVerticalScrollIndicator={false}
-        />
+                <Ellipse width={68} height={68} />
+                <Text
+                  style={[
+                    Typography.body2,
+                    { color: Colors.palette.Gray100, marginTop: 8 },
+                  ]}
+                >
+                  {item.name}
+                </Text>
+              </View>
+            )}
+            numColumns={4}
+            ListHeaderComponent={renderHeader}
+            ListFooterComponent={renderFooter}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
         <BottomNextButton onPress={() => router.push('/step3-timesetting')} />
         <LinearGradient
           colors={['transparent', Colors.palette.Gray900]}

@@ -3,7 +3,7 @@ import BottomNextButton from '@/components/common/BottomNextButton';
 import StatusBarHeader from '@/components/common/StatusBarHeader';
 import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
-import api from '@/store/api'; // axios 인스턴스
+import { useAuth } from '@/hooks/useAuthContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import * as React from 'react';
@@ -21,6 +21,7 @@ import {
 
 export default function Step1Personal() {
   const router = useRouter();
+  const { name, email } = useAuth();
   const [id, setId] = React.useState('');
   const [nickname, setNickname] = React.useState('');
   const [birth, setBirth] = React.useState('');
@@ -28,10 +29,15 @@ export default function Step1Personal() {
     null,
   );
   const [isChecking, setIsChecking] = React.useState(false);
-  // Add isDuplicate state
   const [isDuplicate, setIsDuplicate] = React.useState<boolean | null>(null);
   const [isIdValid, setIsIdValid] = React.useState(true);
   const [hasCheckedId, setHasCheckedId] = React.useState(false);
+
+  React.useEffect(() => {
+    if (name && nickname === '') {
+      setNickname(name);
+    }
+  }, [name]);
 
   const isFormFilled = id && nickname && birth && selectedGender;
 
@@ -52,30 +58,35 @@ export default function Step1Personal() {
     setHasCheckedId(false);
     setIsDuplicate(null);
     if (!valid) return;
-    try {
-      setIsChecking(true);
-      const res = await api.get('/api/v1/users/check-ownId', {
-        params: { ownId: id },
-      });
-      console.log('중복확인 응답:', res.data);
-      // Update isDuplicate based on API response
-      setIsDuplicate(!res.data.success);
+    // Dummy logic: Assume ID is always available
+    setIsChecking(true);
+    setTimeout(() => {
+      setIsDuplicate(false); // not duplicate
       setHasCheckedId(true);
-    } catch (err) {
-      console.error('중복확인 오류:', err);
-      setIsDuplicate(true);
-      setHasCheckedId(true);
-    } finally {
       setIsChecking(false);
-    }
+    }, 300); // simulate async
   };
 
-  const onNextPress = () => {
-    /* api 연동 후
+  const onNextPress = async () => {
     if (!isFormFilled || !hasCheckedId || !isIdValid || isDuplicate) {
       return;
     }
-      */
+    // Dummy: skip token and API call, just navigate
+    // const token = await SecureStore.getItemAsync('accessToken');
+    // await api.patch(
+    //   '/api/v1/users/me/profiles',
+    //   {
+    //     ownId: id,
+    //     nickname,
+    //     gender: selectedGender,
+    //     birth,
+    //   },
+    //   {
+    //     headers: {
+    //       Authorization: token ? `Bearer ${token}` : undefined,
+    //     },
+    //   },
+    // );
     router.push('/step2-artist');
   };
 
@@ -127,9 +138,9 @@ export default function Step1Personal() {
                         styles.inputText,
                         { flex: 1, paddingVertical: 0 },
                       ]}
-                      value={nickname}
-                      onChangeText={setNickname}
-                      placeholder="닉네임 입력"
+                      value={name}
+                      editable={false}
+                      placeholder="이름"
                       placeholderTextColor={Colors.palette.Gray500}
                       numberOfLines={1}
                     />
@@ -150,9 +161,9 @@ export default function Step1Personal() {
                         styles.inputText,
                         { flex: 1, paddingVertical: 0 },
                       ]}
-                      value={nickname}
-                      onChangeText={setNickname}
-                      placeholder="닉네임 입력"
+                      value={email}
+                      editable={false}
+                      placeholder="이메일"
                       placeholderTextColor={Colors.palette.Gray500}
                       numberOfLines={1}
                     />
