@@ -7,7 +7,7 @@
     "paths": {
       "@/*": ["./*"]
     },
-    "types": ["nativewind/types"]
+    "types": ["node"]
   },
   "include": [
   "**/*.ts",
