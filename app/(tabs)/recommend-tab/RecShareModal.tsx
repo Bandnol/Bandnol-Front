@@ -1,4 +1,7 @@
-import { RecommendedItem, RecommendingItem } from '@/components/Caltestdata';
+import {
+  RecommendedItem,
+  RecommendingItem,
+} from '@/components/mockCalendarApi';
 import { Typography } from '@/constants/typography';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import Modal from 'react-native-modal';

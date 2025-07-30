@@ -9,7 +9,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import RecommendCal from '@/app/(tabs)/recommend-tab/RecommendCal';
 import RecommendHeader from '@/app/(tabs)/recommend-tab/RecommendHeader';
-import { Listtestdata } from '@/components/Listtestdata';
+import { Listtestdata } from '@/components/mockListApi';
 import { Typography } from '@/constants/typography';
 
 export default function RecommendScreen() {

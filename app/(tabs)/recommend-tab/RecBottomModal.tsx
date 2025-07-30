@@ -1,5 +1,8 @@
 import Share from '@/assets/icons/size_m/share.svg';
-import { RecommendedItem, RecommendingItem } from '@/components/Caltestdata';
+import {
+  RecommendedItem,
+  RecommendingItem,
+} from '@/components/mockCalendarApi';
 import { Typography } from '@/constants/typography';
 import dayjs from 'dayjs';
 import { useState } from 'react';

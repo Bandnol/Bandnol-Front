@@ -1,8 +1,7 @@
 import {
-  mockCalendarData,
-  RecommendedItem,
-  RecommendingItem,
-} from '@/components/Caltestdata';
+  mockRecommendedResponse,
+  mockRecommendingResponse,
+} from '@/components/mockCalendarApi';
 import { Typography } from '@/constants/typography';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ko';
@@ -81,13 +80,14 @@ export default function RecommendCal({
 
   const today = dayjs().format('YYYY-MM-DD');
 
-  const selectedSongData = (
-    mockCalendarData[isTabRecommending ? 'recommending' : 'recommended'] as (
-      | RecommendingItem
-      | RecommendedItem
-    )[]
-  ).find((rec) => rec.date === selectedDate);
+  const songDataList = isTabRecommending
+    ? mockRecommendingResponse.data
+    : mockRecommendedResponse.data;
 
+  // ✅ 선택된 날짜에 해당하는 곡 찾기
+  const selectedSongData = songDataList.find(
+    (rec) => rec.date === selectedDate,
+  );
   return (
     <View style={styles.container}>
       {/* 요일 헤더 */}
@@ -102,9 +102,9 @@ export default function RecommendCal({
       {/* 날짜 그리드 */}
       <View style={styles.grid}>
         {dates.map((item, idx) => {
-          const isSongData = mockCalendarData[
-            isTabRecommending ? 'recommending' : 'recommended'
-          ].find((rec) => rec.date === item.fullDate);
+          const isSongData = songDataList.find(
+            (rec) => rec.date === item.fullDate,
+          );
 
           const CellWrapper = isSongData ? ImageBackground : View;
           const wrapperProps = isSongData
