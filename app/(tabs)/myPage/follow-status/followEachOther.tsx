@@ -16,8 +16,8 @@ import {
   View,
 } from 'react-native';
 
-import BookmarkIcon from '@/assets/icons/bookmark.svg';
 import BookmarkFillIcon from '@/assets/icons/bookmark-fill.svg';
+import BookmarkIcon from '@/assets/icons/bookmark.svg';
 import ClipIcon from '@/assets/icons/clip.svg';
 import CloseIcon from '@/assets/icons/close.svg';
 import LikeIcon from '@/assets/icons/heart.svg';
@@ -26,7 +26,7 @@ import SearchIcon from '@/assets/icons/search.svg';
 import ShareIcon from '@/assets/icons/share.svg';
 import DummyImage from '@/assets/images/dummy1.png';
 import ProfileImage from '@/assets/images/profile.png';
-import { Typography } from '@/constants/tyopography';
+import { Typography } from '@/constants/typography';
 
 const screenWidth = Dimensions.get('window').width;
 

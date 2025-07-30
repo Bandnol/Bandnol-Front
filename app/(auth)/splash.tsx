@@ -15,7 +15,7 @@ export default function SplashScreen() {
   const { loginWithKakao, loginWithNaver } = useSocialAuth();
 
   const handleGuest = () => {
-    router.replace('/(onboarding)/step1-personal'); // 로그인 없이 바로 홈으로
+    router.replace('/(tabs)/home'); // 로그인 없이 바로 홈으로
   };
 
   const handleInquiry = () => {

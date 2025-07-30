@@ -12,7 +12,7 @@ import {
 
 import BackArrowIcon from '@/assets/icons/back-arrow.svg';
 import ProfileImage from '@/assets/images/profile.png';
-import { Typography } from '@/constants/tyopography';
+import { Typography } from '@/constants/typography';
 
 export default function FollowPage() {
   const [followerList, setFollowerList] = useState([

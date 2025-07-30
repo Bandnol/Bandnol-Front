@@ -14,7 +14,7 @@ import {
 import BackArrowIcon from '@/assets/icons/back-arrow.svg';
 import EditIcon from '@/assets/icons/edit.svg';
 import ProfileImage from '@/assets/images/profile.png';
-import { Typography } from '@/constants/tyopography';
+import { Typography } from '@/constants/typography';
 
 export default function EditProfile() {
   const [nickname, setNickname] = useState('');
