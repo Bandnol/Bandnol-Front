@@ -2,9 +2,11 @@ import BottomNextButton from '@/components/common/BottomNextButton';
 import StatusBarHeader from '@/components/common/StatusBarHeader';
 import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
+import api from '@/store/api';
 import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import * as SecureStore from 'expo-secure-store';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -14,6 +16,14 @@ const Component = () => {
   const [ampm, setAmpm] = useState('오전');
   const [hour, setHour] = useState('10');
   const [minute, setMinute] = useState('00');
+  const [user, setUser] = useState<any>({});
+
+  useEffect(() => {
+    (async () => {
+      const userStr = await SecureStore.getItemAsync('user');
+      setUser(userStr ? JSON.parse(userStr) : {});
+    })();
+  }, []);
 
   const hours = Array.from({ length: 12 }, (_, i) =>
     (i + 1).toString().padStart(2, '0'),
@@ -21,6 +31,43 @@ const Component = () => {
   const minutes = Array.from({ length: 60 }, (_, i) =>
     i.toString().padStart(2, '0'),
   );
+
+  const handleNext = async () => {
+    try {
+      // 24시간 형식 변환
+      let hour24 = parseInt(hour, 10);
+      if (ampm === '오후' && hour24 !== 12) {
+        hour24 += 12;
+      }
+      if (ampm === '오전' && hour24 === 12) {
+        hour24 = 0;
+      }
+      const recomsTime = `${hour24.toString().padStart(2, '0')}${minute}`;
+
+      const token = await SecureStore.getItemAsync('accessToken');
+      console.log('추천곡 시간 PATCH:', recomsTime);
+      await api.patch(
+        '/api/v1/users/me/profiles',
+        {
+          ownId: user.ownId,
+          nickname: user.nickname,
+          gender: user.gender,
+          birth: user.birth,
+          recomsTime,
+          bio: user.bio || '',
+        },
+        {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : undefined,
+          },
+        },
+      );
+
+      router.push('/step4-done');
+    } catch (error) {
+      console.error('추천곡 시간 설정 실패:', error);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.viewBg}>
@@ -72,7 +119,7 @@ const Component = () => {
           </View>
         </View>
 
-        <BottomNextButton onPress={() => router.push('/step4-done')} />
+        <BottomNextButton onPress={handleNext} />
       </View>
     </SafeAreaView>
   );

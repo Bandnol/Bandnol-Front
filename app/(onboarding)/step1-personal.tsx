@@ -4,8 +4,10 @@ import StatusBarHeader from '@/components/common/StatusBarHeader';
 import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
 import { useAuth } from '@/hooks/useAuthContext';
+import api from '@/store/api'; // axios instance 불러오기
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
 import * as React from 'react';
 import {
   Keyboard,
@@ -21,13 +23,17 @@ import {
 
 export default function Step1Personal() {
   const router = useRouter();
-  const { name, email } = useAuth();
+  const { name: authName, email: authEmail } = useAuth();
+  const params = useLocalSearchParams<{ name?: string; email?: string }>();
+  const name = params.name || authName;
+  const email = params.email || authEmail;
   const [id, setId] = React.useState('');
   const [nickname, setNickname] = React.useState('');
   const [birth, setBirth] = React.useState('');
   const [selectedGender, setSelectedGender] = React.useState<string | null>(
     null,
   );
+  const genderValue = selectedGender === '여성' ? 'WOMAN' : 'MAN';
   const [isChecking, setIsChecking] = React.useState(false);
   const [isDuplicate, setIsDuplicate] = React.useState<boolean | null>(null);
   const [isIdValid, setIsIdValid] = React.useState(true);
@@ -58,36 +64,78 @@ export default function Step1Personal() {
     setHasCheckedId(false);
     setIsDuplicate(null);
     if (!valid) return;
-    // Dummy logic: Assume ID is always available
+
     setIsChecking(true);
-    setTimeout(() => {
-      setIsDuplicate(false); // not duplicate
+    try {
+      const token = await SecureStore.getItemAsync('accessToken');
+      const response = await api.get('/api/v1/users/check-ownId', {
+        params: { ownId: id },
+        headers: {
+          Authorization: token ? `Bearer ${token}` : undefined,
+        },
+      });
+
+      if (response.data.success) {
+        setIsDuplicate(false); // 사용 가능
+      } else {
+        setIsDuplicate(true); // 중복
+      }
       setHasCheckedId(true);
+    } catch (error) {
+      console.error('아이디 중복확인 실패:', error);
+      setIsDuplicate(true);
+      setHasCheckedId(true);
+    } finally {
       setIsChecking(false);
-    }, 300); // simulate async
+    }
   };
 
   const onNextPress = async () => {
-    if (!isFormFilled || !hasCheckedId || !isIdValid || isDuplicate) {
-      return;
+    if (!isFormFilled || !hasCheckedId || !isIdValid || isDuplicate) return;
+
+    try {
+      const token = await SecureStore.getItemAsync('accessToken');
+      console.log('PATCH 요청 데이터:', {
+        ownId: id,
+        nickname,
+        gender: genderValue,
+        birth,
+      });
+      console.log('Authorization:', token);
+
+      await api.patch(
+        '/api/v1/users/me/profiles',
+        {
+          ownId: id,
+          nickname,
+          gender: genderValue,
+          birth,
+        },
+        {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : undefined,
+          },
+        },
+      );
+
+      // SecureStore에 user 정보 업데이트
+      const userStr = await SecureStore.getItemAsync('user');
+      const user = userStr ? JSON.parse(userStr) : {};
+      await SecureStore.setItemAsync(
+        'user',
+        JSON.stringify({
+          ...user,
+          ownId: id,
+          nickname,
+          gender: genderValue,
+          birth,
+        }),
+      );
+
+      router.push('/step2-artist');
+    } catch (error) {
+      console.error('프로필 저장 실패:', error);
     }
-    // Dummy: skip token and API call, just navigate
-    // const token = await SecureStore.getItemAsync('accessToken');
-    // await api.patch(
-    //   '/api/v1/users/me/profiles',
-    //   {
-    //     ownId: id,
-    //     nickname,
-    //     gender: selectedGender,
-    //     birth,
-    //   },
-    //   {
-    //     headers: {
-    //       Authorization: token ? `Bearer ${token}` : undefined,
-    //     },
-    //   },
-    // );
-    router.push('/step2-artist');
   };
 
   return (
@@ -378,13 +426,7 @@ export default function Step1Personal() {
             </View>
           </ScrollView>
         </TouchableWithoutFeedback>
-        <BottomNextButton
-          onPress={onNextPress}
-          /*enabled={Boolean(
-            isFormFilled && isIdValid && !isDuplicate && hasCheckedId,
-          )}*/
-          enabled={true}
-        />
+        <BottomNextButton onPress={onNextPress} enabled={true} />
         <LinearGradient
           colors={['transparent', Colors.palette.Gray900]}
           style={styles.fadeOverlay}

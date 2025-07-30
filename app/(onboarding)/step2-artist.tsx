@@ -16,7 +16,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import api from '@/store/api';
 import * as SecureStore from 'expo-secure-store';
 
 const Component = () => {
@@ -31,16 +30,13 @@ const Component = () => {
     (async () => {
       try {
         const token = await SecureStore.getItemAsync('accessToken');
-        const res = await api.get('/api/v1/artists/recommended', {
-          params: { sort: 'popular' },
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
+        console.log('토큰만 확인:', token);
         if (!isMounted) return;
-        setArtistData(Array.isArray(res.data) ? res.data : []);
+        setArtistData([]);
       } catch (err) {
         if (!isMounted) return;
-        setError('Failed to fetch artists');
-        console.error('Failed to fetch recommended artists:', err);
+        setError('아티스트 데이터를 가져올 수 없습니다.');
+        console.error('추천 아티스트 API 미구현:', err);
       } finally {
         if (!isMounted) return;
         setLoading(false);
@@ -52,35 +48,34 @@ const Component = () => {
   }, []);
 
   const renderHeader = () => (
-    <View>
+    <View style={{ paddingHorizontal: 20, alignItems: 'flex-start' }}>
       <View>
         <View>
-          <View>
-            <Text style={[styles.text1, styles.textTitleMargin]}>
-              관심 아티스트 설정
-            </Text>
-            <View style={{ height: 7 }} />
-            <Text style={styles.text2}>
-              {`관심 있는 아티스트의 팬이 되어주세요!
+          <Text style={[styles.text1, styles.textTitleMargin]}>
+            관심 아티스트 설정
+          </Text>
+          <View style={{ height: 7 }} />
+          <Text style={styles.text2}>
+            {`관심 있는 아티스트의 팬이 되어주세요!
 팬이 되면 커뮤니티를 이용할 수 있어요.`}
-            </Text>
-          </View>
-          <View style={{ height: 27 }} />
-          <View>
-            <Text style={styles.text3}>관심 아티스트</Text>
-          </View>
+          </Text>
         </View>
+        <View style={{ height: 27 }} />
         <View>
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <Text style={styles.text3}>추천 아티스트</Text>
-            <RoadingIcon width={24} height={24} />
-          </View>
+          <Text style={styles.text3}>관심 아티스트</Text>
+        </View>
+      </View>
+      <View>
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            width: '100%',
+          }}
+        >
+          <Text style={styles.text3}>추천 아티스트</Text>
+          <RoadingIcon width={24} height={24} />
         </View>
       </View>
     </View>
@@ -107,15 +102,14 @@ const Component = () => {
         ) : (
           <FlatList
             data={artistData}
-            keyExtractor={(item) => item.id?.toString?.() ?? String(item.id)}
-            contentContainerStyle={{ paddingHorizontal: 20 }}
+            contentContainerStyle={{ paddingTop: 20 }}
+            keyExtractor={(item, index) => index.toString()}
             renderItem={({ item }) => (
               <View
                 style={{
-                  alignItems: 'center',
-                  width: '22%',
-                  marginHorizontal: '1.5%',
+                  flex: 1 / 4,
                   marginBottom: 16,
+                  alignItems: 'center',
                 }}
               >
                 <Ellipse width={68} height={68} />
@@ -168,7 +162,7 @@ const styles = StyleSheet.create({
 
   view: {
     width: '100%',
-    alignItems: 'center',
+
     flex: 1,
   },
 
