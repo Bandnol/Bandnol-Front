@@ -1,51 +1,180 @@
+import RecommendList, {
+  RecommendListRef,
+} from '@/app/(tabs)/recommend-tab/RecommendList';
+import Dropdown from '@/assets/icons/size_m/dropdown.svg';
+import dayjs from 'dayjs';
 import { useRouter } from 'expo-router';
-import { Text, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+
+import RecommendCal from '@/app/(tabs)/recommend-tab/RecommendCal';
+import RecommendHeader from '@/app/(tabs)/recommend-tab/RecommendHeader';
+import { Listtestdata } from '@/components/Listtestdata';
+import { Typography } from '@/constants/typography';
 
 export default function RecommendScreen() {
   const router = useRouter();
+  const [selectedMonth, setSelectedMonth] = useState(dayjs());
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
+  const [isTabRecommending, setIsTabRecommending] = useState(true);
+  const [isModeCalendar, setIsModeCalendar] = useState(true);
+  const listRef = useRef<RecommendListRef>(null);
+
+  const handleTodayPress = () => {
+    setSelectedMonth(dayjs());
+    setSelectedDate(dayjs().format('YYYY-MM-DD'));
+    if (!isModeCalendar) {
+      listRef.current?.scrollToToday();
+    }
+  };
+
+  const rawData = Listtestdata || [];
 
   return (
     <>
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: '#fff',
-        }}
-      >
-        <Text
-          style={{
-            fontFamily: 'Pretendard',
-            fontSize: 24,
-            color: '#333',
-          }}
-        >
-          기본 프리탠다드
-        </Text>
+      <View style={styles.container}>
+        <View style={styles.topSection}>
+          <View>
+            <RecommendHeader
+              selectedMonth={selectedMonth}
+              onChangeMonth={setSelectedMonth}
+              onTodayPress={handleTodayPress}
+              isModeCalendar={isModeCalendar}
+              setIsModeCalendar={setIsModeCalendar}
+            />
+          </View>
+        </View>
 
-        <Text
-          style={{
-            fontFamily: 'Pretendard-SemiBold',
-            fontSize: 24,
-            color: '#FB4932',
-            marginTop: 16,
-          }}
-        >
-          세미볼드
-        </Text>
+        {isModeCalendar ? (
+          <View style={styles.myrecSection}>
+            <Text style={styles.myrecText}>
+              {isTabRecommending ? '나의 추천곡' : '추천 받은 곡'}
+            </Text>
+            <Pressable onPress={() => setIsTabRecommending(!isTabRecommending)}>
+              <Dropdown />
+            </Pressable>
+          </View>
+        ) : null}
 
-        <Text
-          style={{
-            fontFamily: 'Pretendard-Bold',
-            fontSize: 24,
-            color: '#1F1F1F',
-            marginTop: 16,
-          }}
-        >
-          볼드
-        </Text>
+        <View style={styles.calListSection}>
+          {isModeCalendar ? (
+            <RecommendCal
+              selectedMonth={selectedMonth}
+              selectedDate={selectedDate}
+              setSelectedDate={setSelectedDate}
+              isTabRecommending={isTabRecommending}
+            />
+          ) : (
+            <RecommendList
+              ref={listRef}
+              selectedMonth={selectedMonth}
+              selectedDate={selectedDate}
+              setSelectedDate={setSelectedDate}
+              data={rawData}
+            />
+          )}
+        </View>
       </View>
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#000',
+    paddingTop: 60,
+  },
+  topSection: {},
+  myrecSection: {
+    flexDirection: 'row',
+    padding: 10,
+    alignItems: 'center',
+    gap: 8,
+    borderRadius: 10,
+    backgroundColor: '#1F1F1F',
+    alignSelf: 'flex-end',
+    marginRight: 20,
+    marginTop: 3,
+    marginBottom: 17,
+  },
+  myrecText: {
+    color: '#FFF',
+    fontFamily: 'Pretendard',
+    fontSize: 14,
+    fontStyle: 'normal',
+    fontWeight: '400',
+    lineHeight: 19.6,
+    letterSpacing: -0.35,
+  },
+  calListSection: {
+    flex: 1,
+  },
+  date: {
+    alignSelf: 'stretch',
+    color: '#FFF',
+    textAlign: 'center',
+    fontFamily: 'Pretendard',
+    fontSize: 12,
+    fontStyle: 'normal',
+    fontWeight: '400',
+    lineHeight: 16.8,
+    letterSpacing: -0.3,
+  },
+  title: {
+    ...Typography.h1,
+    textAlign: 'center',
+    color: '#fff',
+    marginBottom: 60,
+  },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#333333',
+    borderRadius: 30,
+    paddingVertical: 15,
+    paddingHorizontal: 18,
+    gap: 10,
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+    color: '#fff',
+  },
+  iconBox: {
+    paddingHorizontal: 8,
+  },
+  listContent: {
+    paddingBottom: 60,
+  },
+  item: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    gap: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2C2C2C',
+  },
+  itemPressed: {
+    backgroundColor: '#1F1F1F',
+    borderRadius: 8,
+  },
+  album: {
+    width: 48,
+    height: 48,
+    borderRadius: 5,
+  },
+  textBox: {
+    justifyContent: 'center',
+  },
+  titleText: {
+    ...Typography.body2,
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  artistText: {
+    ...Typography.caption1,
+    color: '#fff',
+  },
+});
