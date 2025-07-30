@@ -1,6 +1,5 @@
 import { API_URL } from '@env';
 import { login } from '@react-native-kakao/user';
-import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 
@@ -50,18 +49,5 @@ export function useSocialAuth() {
     }
   };
 
-  const loginWithGoogle = async () => {
-    try {
-      const loginUrl = `${API_URL}/api/v1/oauth2/login/google`;
-      await Linking.openURL(loginUrl);
-    } catch (error) {
-      console.error('구글 로그인 실패:', error);
-    }
-  };
-
-  const loginWithNaver = async () => {
-    router.push('/(onboarding)/step1-personal');
-  };
-
-  return { loginWithKakao, loginWithGoogle, loginWithNaver };
+  return { loginWithKakao };
 }

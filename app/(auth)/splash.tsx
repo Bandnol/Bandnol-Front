@@ -1,6 +1,5 @@
 import KakaoIcon from '@/assets/auth/splash/kakao.svg';
 import Logo from '@/assets/auth/splash/logo.svg';
-import NaverIcon from '@/assets/auth/splash/naver.svg';
 import GuestIcon from '@/assets/auth/splash/nonlogin.svg';
 import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
@@ -12,7 +11,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 export default function SplashScreen() {
   const router = useRouter();
 
-  const { loginWithKakao, loginWithNaver } = useSocialAuth();
+  const { loginWithKakao } = useSocialAuth();
 
   const handleGuest = () => {
     router.replace('/(tabs)/home'); // 로그인 없이 바로 홈으로
@@ -38,11 +37,6 @@ export default function SplashScreen() {
         onPress={loginWithKakao}
       >
         <KakaoIcon />
-      </TouchableOpacity>
-
-      {/* 네이버 로그인 */}
-      <TouchableOpacity style={styles.Button} onPress={loginWithNaver}>
-        <NaverIcon />
       </TouchableOpacity>
 
       {/* 로그인 없이 둘러보기 */}
