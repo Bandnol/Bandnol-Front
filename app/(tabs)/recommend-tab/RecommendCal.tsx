@@ -1,11 +1,9 @@
-import {
-  mockRecommendedResponse,
-  mockRecommendingResponse,
-} from '@/components/mockCalendarApi';
 import { Typography } from '@/constants/typography';
+import axios from 'axios';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ko';
-import { useMemo } from 'react';
+import * as SecureStore from 'expo-secure-store';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ImageBackground,
   Pressable,
@@ -30,12 +28,57 @@ type CalendarDate = {
   fullDate: string; // YYYY-MM-DD
 };
 
+export type CalendarItem = {
+  id: string;
+  date: string;
+  title: string;
+  artistName: string;
+  imageUrl: string;
+  comment: string;
+  senderNickname: string;
+  recevierNickname: string; //오타 수정??
+};
+
 export default function RecommendCal({
   selectedMonth,
   selectedDate,
   setSelectedDate,
   isTabRecommending,
 }: RecommendCalProps) {
+  const [songDataList, setSongDataList] = useState<CalendarItem[]>([]); // ✅ API 데이터 상태
+  const today = dayjs().format('YYYY-MM-DD');
+
+  // ✅ API 호출
+  useEffect(() => {
+    const fetchCalendarData = async () => {
+      try {
+        const token = await SecureStore.getItemAsync('JWTToken');
+        if (!token) throw new Error('JWT 토큰 없음');
+
+        const year = selectedMonth.year();
+        const month = selectedMonth.month() + 1;
+        const status = isTabRecommending ? 'recommending' : 'recommended';
+
+        const response = await axios.get(
+          `https://bandnol.app/api/v1/recoms/calendars?year=${year}&month=${month}&status=${status}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+
+        const data = response.data?.data ?? []; // ✅ null이면 빈 배열 처리
+        setSongDataList(data);
+      } catch (e) {
+        console.error('캘린더 API 에러:', e);
+        setSongDataList([]);
+      }
+    };
+
+    fetchCalendarData();
+  }, [selectedMonth, isTabRecommending]); // ✅ 연동 조건
+
   const dates: CalendarDate[] = useMemo(() => {
     const startOfMonth = selectedMonth.startOf('month');
     const endOfMonth = selectedMonth.endOf('month');
@@ -78,19 +121,12 @@ export default function RecommendCal({
     return temp;
   }, [selectedMonth]);
 
-  const today = dayjs().format('YYYY-MM-DD');
-
-  const songDataList = isTabRecommending
-    ? mockRecommendingResponse.data
-    : mockRecommendedResponse.data;
-
-  // ✅ 선택된 날짜에 해당하는 곡 찾기
   const selectedSongData = songDataList.find(
     (rec) => rec.date === selectedDate,
   );
+
   return (
     <View style={styles.container}>
-      {/* 요일 헤더 */}
       <View style={styles.weekHeader}>
         {['일', '월', '화', '수', '목', '금', '토'].map((day, index) => (
           <Text key={index} style={styles.weekdayText}>
@@ -99,7 +135,6 @@ export default function RecommendCal({
         ))}
       </View>
 
-      {/* 날짜 그리드 */}
       <View style={styles.grid}>
         {dates.map((item, idx) => {
           const isSongData = songDataList.find(
@@ -141,7 +176,6 @@ export default function RecommendCal({
         })}
       </View>
 
-      {/* 모달 */}
       <RecBottomModal
         visible={!!selectedDate && !!selectedSongData}
         onClose={() => setSelectedDate(null)}
@@ -153,7 +187,6 @@ export default function RecommendCal({
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,

@@ -1,5 +1,5 @@
+import type { CalendarItem } from '@/app/(tabs)/recommend-tab/RecommendCal';
 import Share from '@/assets/icons/size_m/share.svg';
-import { CalendarItem } from '@/components/mockCalendarApi';
 import { Typography } from '@/constants/typography';
 import dayjs from 'dayjs';
 import { useState } from 'react';
@@ -12,7 +12,7 @@ type RecBottomModalProps = {
   onClose: () => void;
   selectedDate: string | null;
   isTabRecommending?: boolean;
-  songData: CalendarItem | undefined;
+  songData?: CalendarItem | undefined;
   isToday?: boolean;
 };
 

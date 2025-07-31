@@ -121,9 +121,12 @@ const RecommendList = forwardRef<RecommendListRef, RecommendListProps>(
             <View
               key={item.date}
               onLayout={(e) => {
+                const layout = e?.nativeEvent?.layout;
+                if (!layout) return;
+
                 setSectionLayouts((prev) => ({
                   ...prev,
-                  [item.date]: e.nativeEvent.layout.y,
+                  [item.date]: layout.y,
                 }));
               }}
             >
