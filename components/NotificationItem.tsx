@@ -1,104 +1,109 @@
 import type { IconType } from '@/components/NotificationIcon';
 import NotificationIcon from '@/components/NotificationIcon';
-
 import dayjs from 'dayjs';
 import 'dayjs/locale/ko';
+import relativeTime from 'dayjs/plugin/relativeTime';
 import { StyleSheet, Text, View } from 'react-native';
 
+dayjs.extend(relativeTime);
+dayjs.locale('ko');
+
 type NotificationItemProps = {
-  nickname?: string;
-  artist?: string;
-  date?: string;
-  dayOfWeek?: string;
-  timeStart?: string;
-  timeEnd?: string;
-  reportMonth?: string;
-  time: string;
+  id: string;
+  content: string;
+  createdAt: string;
   type: IconType;
+  isConfirmed: boolean;
+  link: string;
+  sender: {
+    id: string;
+    nickname: string;
+  } | null;
 };
 
 export default function NotificationItem(props: NotificationItemProps) {
-  const {
-    type,
-    time,
-    nickname,
-    artist,
-    reportMonth,
-    date,
-    dayOfWeek,
-    timeStart,
-    timeEnd,
-  } = props;
+  const { id, content, createdAt, type, isConfirmed, link, sender } = props;
 
   let message = null;
 
-  if (type === 'songReceived') {
+  if (type === 'RECOMS_RECEIVED') {
     message = (
       <Text style={styles.cardDescription}>
         띵동~ 오늘의 추천곡이 도착했어요!{'\n'}지금 바로 확인해보세요.
       </Text>
     );
-  } else if (type === 'songSent' && nickname) {
+  } else if (type === 'RECOMS_SENT' && sender) {
     message = (
       <Text style={styles.cardDescription}>
-        내가 추천한 곡이 <Text style={{ fontWeight: 'bold' }}>{nickname}</Text>{' '}
-        님에게 전달됐어요.
+        내가 추천한 곡이{' '}
+        <Text style={{ fontWeight: 'bold' }}>{sender.nickname}</Text> 님에게
+        전달됐어요.
       </Text>
     );
-  } else if (type === 'songUnread' && nickname) {
+  } else if (type === 'RECOMS_UNREAD' && sender) {
     message = (
       <Text style={styles.cardDescription}>
         오늘의 추천곡을 확인해주세요.{'\n'}
-        <Text style={{ fontWeight: 'bold' }}>{nickname}</Text> 님이 애타게
-        기다리고 있어요 ㅜ.ㅜ
+        <Text style={{ fontWeight: 'bold' }}>{sender.nickname}</Text> 님이
+        애타게 기다리고 있어요 ㅜ.ㅜ
       </Text>
     );
-  } else if (type === 'comment' && nickname) {
+  } else if (type === 'COMMENT_ARRIVED' && sender) {
     message = (
       <Text style={styles.cardDescription}>
         띵동~ 오늘의 추천곡에 대한{'\n'}
-        <Text style={{ fontWeight: 'bold' }}>{nickname}</Text> 님의 코멘트가
-        도착했어요!
+        <Text style={{ fontWeight: 'bold' }}>{sender.nickname}</Text> 님의
+        코멘트가 도착했어요!
       </Text>
     );
-  } else if (type === 'announcement' && date && timeStart && timeEnd) {
-    const dateStr = dayjs(date).locale('ko').format('M월 D일 dddd');
+  } else if (
+    type === 'ANNOUNCEMENT'
+    // && date && timeStart && timeEnd
+  ) {
+    // const dateStr = dayjs(date).locale('ko').format('M월 D일 dddd');
     message = (
       <Text style={styles.cardDescription}>
         <Text style={{ fontWeight: 'bold', color: '#fff' }}>
-          {dateStr} {timeStart} ~ {timeEnd}
+          {/* {dateStr} {timeStart} ~ {timeEnd} */}
+          2025년 7월 29일 16:00 ~ 18:00
         </Text>
         {'\n'}밴놀 서비스 점검이 진행됩니다.
       </Text>
     );
-  } else if (type === 'superfan' && artist) {
+  } else if (
+    type === 'SUPERFAN'
+    //&& artist
+  ) {
     message = (
       <Text style={styles.cardDescription}>
         대단해요! {'\n'}
-        <Text style={{ fontWeight: 'bold' }}>{artist}</Text>의 SUPERFAN이
-        되었습니다.
+        {/* <Text style={{ fontWeight: 'bold' }}>{artist}</Text> */}고구마 의
+        SUPERFAN이 되었습니다.
       </Text>
     );
-  } else if (type === 'report' && reportMonth) {
+  } else if (
+    type === 'REPORT'
+    //&& reportMonth
+  ) {
     message = (
       <Text style={styles.cardDescription}>
         지금 바로{'\n'}
-        나의 <Text style={{ fontWeight: 'bold' }}>{reportMonth}</Text> 밴놀
-        리포트를 확인해보세요!
+        나의 <Text style={{ fontWeight: 'bold' }}>{/* {reportMonth} */}</Text>
+        밴놀 리포트를 확인해보세요!
       </Text>
     );
-  } else if (type === 'bookmark' && nickname) {
+  } else if (type === 'BOOKMARK' && sender) {
     message = (
       <Text style={styles.cardDescription}>
-        <Text style={{ fontWeight: 'bold' }}>{nickname}</Text> 님이 내 포스트를
-        북마크했습니다.
+        <Text style={{ fontWeight: 'bold' }}>{sender.nickname}</Text> 님이 내
+        포스트를 북마크했습니다.
       </Text>
     );
-  } else if (type === 'like' && nickname) {
+  } else if (type === 'LIKE' && sender) {
     message = (
       <Text style={styles.cardDescription}>
-        <Text style={{ fontWeight: 'bold' }}>{nickname}</Text> 님이 내 포스트를
-        좋아합니다.
+        <Text style={{ fontWeight: 'bold' }}>{sender.nickname}</Text> 님이 내
+        포스트를 좋아합니다.
       </Text>
     );
   } else {
@@ -107,7 +112,20 @@ export default function NotificationItem(props: NotificationItemProps) {
       <Text style={styles.cardDescription}>유효하지 않은 알림입니다.</Text>
     );
   }
+  const time = (() => {
+    if (!createdAt) return '';
+    const now = dayjs();
+    const created = dayjs(createdAt);
+    const diffMin = now.diff(created, 'minute');
+    const diffHour = now.diff(created, 'hour');
+    const diffDay = now.diff(created, 'day');
 
+    if (diffMin < 1) return '방금 전';
+    if (diffHour < 1) return `${diffMin}분 전`;
+    if (diffDay < 1) return `${diffHour}시간 전`;
+    if (diffDay < 7) return `${diffDay}일 전`;
+    return created.format('M월 D일');
+  })();
   return (
     <View style={styles.card}>
       <NotificationIcon type={type} />
