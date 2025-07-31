@@ -22,7 +22,13 @@ export default function AlarmCenterPage() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backArrow}>
+        <Pressable
+          onPress={() => {
+            router.back();
+            console.log('Back pressed');
+          }}
+          style={styles.backArrow}
+        >
           <Backarrow width={22} height={18} />
         </Pressable>
         <Text style={styles.title}>알림</Text>
@@ -69,6 +75,7 @@ const styles = StyleSheet.create({
     left: 0,
     top: '50%',
     transform: [{ translateY: -9 }],
+    zIndex: 1,
   },
 
   list: {
