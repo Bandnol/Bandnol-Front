@@ -2,13 +2,13 @@
 import { create } from 'zustand';
 
 interface AuthState {
-  accessToken: string | null;
-  setAccessToken: (token: string) => void;
-  clearAccessToken: () => void;
+  JWTToken: string | null;
+  setJWTToken: (token: string) => void;
+  clearJWTToken: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  accessToken: null,
-  setAccessToken: (token) => set({ accessToken: token }),
-  clearAccessToken: () => set({ accessToken: null }),
+  JWTToken: null,
+  setJWTToken: (token) => set({ JWTToken: token }),
+  clearJWTToken: () => set({ JWTToken: null }),
 }));

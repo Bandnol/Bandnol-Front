@@ -67,7 +67,7 @@ export default function Step1Personal() {
 
     setIsChecking(true);
     try {
-      const token = await SecureStore.getItemAsync('accessToken');
+      const token = await SecureStore.getItemAsync('JWTToken');
       const response = await api.get('/api/v1/users/check-ownId', {
         params: { ownId: id },
         headers: {
@@ -94,7 +94,7 @@ export default function Step1Personal() {
     if (!isFormFilled || !hasCheckedId || !isIdValid || isDuplicate) return;
 
     try {
-      const token = await SecureStore.getItemAsync('accessToken');
+      const token = await SecureStore.getItemAsync('JWTToken');
       console.log('PATCH 요청 데이터:', {
         ownId: id,
         nickname,

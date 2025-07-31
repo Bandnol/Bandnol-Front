@@ -44,7 +44,7 @@ const Component = () => {
       }
       const recomsTime = `${hour24.toString().padStart(2, '0')}${minute}`;
 
-      const token = await SecureStore.getItemAsync('accessToken');
+      const token = await SecureStore.getItemAsync('JWTToken');
       console.log('추천곡 시간 PATCH:', recomsTime);
       await api.patch(
         '/api/v1/users/me/profiles',

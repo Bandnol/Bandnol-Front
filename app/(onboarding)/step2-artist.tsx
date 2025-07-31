@@ -37,7 +37,7 @@ const Component = () => {
     if (currentSort === 'popularity' && !hasNext && loadMore) return;
     try {
       setLoading(true);
-      const token = await SecureStore.getItemAsync('accessToken');
+      const token = await SecureStore.getItemAsync('JWTToken');
       const params: any = { sort: currentSort };
       if (currentSort === 'popularity') {
         params.size = 20;
