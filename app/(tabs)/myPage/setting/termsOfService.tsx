@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 
 import BackArrow from '@/assets/icons/back-arrow.svg';
-import { Typography } from '@/constants/tyopography';
+import { Typography } from '@/constants/typography';
 
 export default function TermsOfService() {
   const router = useRouter();

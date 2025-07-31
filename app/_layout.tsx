@@ -1,18 +1,17 @@
+import { initializeKakaoSDK } from '@react-native-kakao/core';
+import { useEffect } from 'react';
 import 'react-native-reanimated';
 
-import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
-} from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Slot } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 
+import { AuthProvider } from '@/hooks/useAuthContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import React from 'react';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const kakaoNativeAppKey = process.env.EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY || '';
 
   const [loaded] = useFonts({
     Pretendard: require('../assets/fonts/Pretendard-Regular.ttf'),
@@ -20,14 +19,21 @@ export default function RootLayout() {
     'Pretendard-Bold': require('../assets/fonts/Pretendard-Bold.ttf'),
   });
 
+  useEffect(() => {
+    if (kakaoNativeAppKey) {
+      initializeKakaoSDK(kakaoNativeAppKey);
+    } else {
+      console.warn('Kakao Native App Key가 설정되지 않았습니다.');
+    }
+  }, [kakaoNativeAppKey]);
+
   if (!loaded) {
-    return null; // or a loading spinner
+    return null;
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <AuthProvider>
       <Slot />
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    </AuthProvider>
   );
 }

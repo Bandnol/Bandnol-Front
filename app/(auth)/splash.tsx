@@ -1,50 +1,17 @@
-import GoogleIcon from '@/assets/auth/splash/google.svg';
 import KakaoIcon from '@/assets/auth/splash/kakao.svg';
 import Logo from '@/assets/auth/splash/logo.svg';
-import NaverIcon from '@/assets/auth/splash/naver.svg';
 import GuestIcon from '@/assets/auth/splash/nonlogin.svg';
 import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
-import api from '@/store/api'; // axios 인스턴스
-import { API_URL } from '@env'; // baseURL 확인용
+import { useSocialAuth } from '@/hooks/useSocialAuth';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import {
-  Linking,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-
-const handleGoogleLogin = async () => {
-  try {
-    const res = await api.get('/api/v1/oauth2/login/google');
-    // 서버가 바로 redirect 응답(302)을 하므로, URL은 우리가 직접 열어야 함
-    const loginUrl = `${API_URL}/api/v1/oauth2/login/google`;
-    await Linking.openURL(loginUrl);
-  } catch (err) {
-    console.error('구글 로그인 실패:', err);
-  }
-};
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function SplashScreen() {
   const router = useRouter();
 
-  const handleKakaoLogin = () => {
-    // TODO: 카카오 로그인 로직
-    router.push('/(onboarding)/step1-personal');
-  };
-
-  const handleNaverLogin = () => {
-    // TODO: 네이버 로그인 로직
-    router.push('/(onboarding)/step1-personal');
-  };
-
-  const handleGoogleLogin = () => {
-    // TODO: 구글 로그인 로직
-    router.push('/(onboarding)/step1-personal');
-  };
+  const { loginWithKakao } = useSocialAuth();
 
   const handleGuest = () => {
     router.replace('/(tabs)/home'); // 로그인 없이 바로 홈으로
@@ -64,22 +31,12 @@ export default function SplashScreen() {
       <Text style={styles.text}>{`하루 한 곡, 음악 취향을 공유하고 
 밴놀을 즐겨보세요!`}</Text>
 
-      {/* 구글 로그인 */}
+      {/* 카카오 로그인 */}
       <TouchableOpacity
         style={[styles.Button, { marginTop: 66 }]}
-        onPress={handleGoogleLogin}
+        onPress={loginWithKakao}
       >
-        <GoogleIcon />
-      </TouchableOpacity>
-
-      {/* 카카오 로그인 */}
-      <TouchableOpacity style={styles.Button} onPress={handleKakaoLogin}>
         <KakaoIcon />
-      </TouchableOpacity>
-
-      {/* 네이버 로그인 */}
-      <TouchableOpacity style={styles.Button} onPress={handleNaverLogin}>
-        <NaverIcon />
       </TouchableOpacity>
 
       {/* 로그인 없이 둘러보기 */}
@@ -112,7 +69,7 @@ const styles = StyleSheet.create({
     width: 193,
   },
   Button: {
-    width: 335,
+    width: '100%',
     height: 50,
     borderRadius: 8,
     marginBottom: 16,

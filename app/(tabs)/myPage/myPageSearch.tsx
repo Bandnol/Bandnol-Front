@@ -11,13 +11,13 @@ import {
   View,
 } from 'react-native';
 
-import BookmarkIcon from '@/assets/icons/bookmark.svg';
 import BookmarkFillIcon from '@/assets/icons/bookmark-fill.svg';
+import BookmarkIcon from '@/assets/icons/bookmark.svg';
 import DeleteIcon from '@/assets/icons/delete.svg';
 import LikeIcon from '@/assets/icons/heart.svg';
 import MoreIcon from '@/assets/icons/more.svg';
 import SearchIcon from '@/assets/icons/search.svg';
-import { Typography } from '@/constants/tyopography';
+import { Typography } from '@/constants/typography';
 
 const postData = [
   {
