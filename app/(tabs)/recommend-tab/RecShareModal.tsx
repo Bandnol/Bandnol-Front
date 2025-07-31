@@ -1,20 +1,19 @@
-import {
-  RecommendedItem,
-  RecommendingItem,
-} from '@/components/mockCalendarApi';
+import { CalendarItem } from '@/components/mockCalendarApi';
 import { Typography } from '@/constants/typography';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Image, LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
 import Modal from 'react-native-modal';
+import Svg, { Circle } from 'react-native-svg'; // Svg도 import 해줘야 함
 
 import Insta from '@/assets/icons/size_m/insta.svg';
 import Link from '@/assets/icons/size_m/link.svg';
+import Quit from '@/assets/icons/size_m/quit.svg';
 import X from '@/assets/icons/size_m/x.svg';
 
-import Quit from '@/assets/icons/size_m/quit.svg';
 type RecShareModalProps = {
   visible: boolean;
   onClose: () => void;
-  recData: RecommendedItem | RecommendingItem | undefined;
+  recData: CalendarItem | undefined;
 };
 
 export default function RecShareModal({
@@ -22,9 +21,17 @@ export default function RecShareModal({
   onClose,
   recData,
 }: RecShareModalProps) {
-  if (!recData) return null;
+  const [containerWidth, setContainerWidth] = useState(0);
 
+  if (!recData) return null;
   const isRecommended = 'senderNickname' in recData;
+
+  const handleLayout = (e: LayoutChangeEvent) => {
+    setContainerWidth(e.nativeEvent.layout.width);
+  };
+
+  const circleSize = containerWidth * 0.28;
+  const bigCircleSize = containerWidth * 0.52;
 
   return (
     <Modal
@@ -34,9 +41,70 @@ export default function RecShareModal({
       style={styles.modal}
     >
       {/* 콘텐츠 박스 */}
-      <View style={styles.container}>
-        <Image source={{ uri: recData.imageUrl }} style={styles.image} />
+      <View style={styles.container} onLayout={handleLayout}>
+        {containerWidth > 0 && (
+          <>
+            <View
+              style={{
+                position: 'relative',
+                width: containerWidth,
+                alignItems: 'center',
+              }}
+            >
+              <Image
+                source={{ uri: recData.imageUrl }}
+                style={{
+                  width: containerWidth * 1.1,
+                  aspectRatio: 1,
+                  borderRadius: 9999,
+                  marginTop: -containerWidth * 0.43,
+                  marginBottom: 8,
+                }}
+                resizeMode="cover"
+              />
 
+              <Svg
+                width={circleSize}
+                height={circleSize}
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: [
+                    { translateX: -circleSize / 2 },
+                    { translateY: -circleSize / 0.9 - 10 },
+                  ],
+                  zIndex: 2,
+                }}
+              >
+                <Circle cx="50%" cy="50%" r="50%" fill="#1F1F1F" />
+              </Svg>
+
+              <Svg
+                width={bigCircleSize}
+                height={bigCircleSize}
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: [
+                    { translateX: -bigCircleSize / 2 },
+                    { translateY: -bigCircleSize / 1.22 - 16 },
+                  ],
+                  zIndex: 1,
+                }}
+              >
+                <Circle
+                  cx="50%"
+                  cy="50%"
+                  r="50%"
+                  fill="black"
+                  fillOpacity={0.4}
+                />
+              </Svg>
+            </View>
+          </>
+        )}
         <Quit
           onPress={onClose}
           style={{
@@ -44,7 +112,6 @@ export default function RecShareModal({
             alignSelf: 'flex-end',
           }}
         />
-
         {isRecommended && (
           <Text style={styles.toText}>
             To. <Text style={{ color: '#F4F4F4' }}>me</Text>
@@ -52,11 +119,9 @@ export default function RecShareModal({
         )}
         <Text style={styles.titleText}>{recData.title}</Text>
         <Text style={styles.artistText}>{recData.artistName}</Text>
-
         <View style={styles.commentBox}>
           <Text style={styles.commentText}>{recData.comment}</Text>
         </View>
-
         <Text style={styles.fromText}>
           From.{' '}
           <Text style={{ color: '#F4F4F4' }}>
@@ -100,19 +165,14 @@ const styles = StyleSheet.create({
   },
   container: {
     width: '90%',
-    height: '50%',
+    aspectRatio: 335 / 489,
+    maxHeight: 489,
+    maxWidth: 335,
     backgroundColor: '#222',
-    borderRadius: 12,
+    borderRadius: 20,
+    overflow: 'hidden',
     alignItems: 'center',
     padding: 20,
-  },
-  image: {
-    maxWidth: '50%',
-    maxHeight: '50%',
-    width: '70%',
-    aspectRatio: 1,
-
-    marginBottom: 8,
   },
   toText: {
     ...Typography.subtitle4,

@@ -1,8 +1,5 @@
 import Share from '@/assets/icons/size_m/share.svg';
-import {
-  RecommendedItem,
-  RecommendingItem,
-} from '@/components/mockCalendarApi';
+import { CalendarItem } from '@/components/mockCalendarApi';
 import { Typography } from '@/constants/typography';
 import dayjs from 'dayjs';
 import { useState } from 'react';
@@ -15,7 +12,7 @@ type RecBottomModalProps = {
   onClose: () => void;
   selectedDate: string | null;
   isTabRecommending?: boolean;
-  songData: RecommendingItem | RecommendedItem | undefined;
+  songData: CalendarItem | undefined;
   isToday?: boolean;
 };
 
@@ -68,7 +65,7 @@ export default function RecBottomModal({
             <Text style={styles.myrecText}>
               {isTabRecommending
                 ? '나의 추천곡'
-                : `${(songData as RecommendedItem).senderNickname}의 추천곡`}
+                : `${(songData as CalendarItem).senderNickname}의 추천곡`}
             </Text>
 
             <View style={styles.myrecInfo}>
@@ -105,7 +102,7 @@ export default function RecBottomModal({
       <RecShareModal
         visible={isShareVisible}
         onClose={() => setIsShareVisible(false)}
-        recData={songData as RecommendedItem | RecommendingItem}
+        recData={songData as CalendarItem}
       />
     </>
   );
