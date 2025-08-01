@@ -3,14 +3,15 @@
   "compilerOptions": {
     "jsx": "react-native",
     "strict": true,
+    "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
     },
-    "types": ["nativewind/types"]
+    "types": ["node"]
   },
   "include": [
   "**/*.ts",
-  "svg.d.ts",
+  "types/svg.d.ts",
   "**/*.tsx",
   ".expo/types/**/*.ts",
   "expo-env.d.ts",

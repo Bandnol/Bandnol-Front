@@ -1,57 +1,133 @@
-import Ellipse from '@/assets/onboarding/Ellipse 1.svg';
 import RoadingIcon from '@/assets/onboarding/roading.svg';
-import BackIcon from '@/assets/onboarding/Vector.svg';
+import BottomNextButton from '@/components/common/BottomNextButton';
+import StatusBarHeader from '@/components/common/StatusBarHeader';
 import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
+import api from '@/store/api'; // axios instance 불러오기
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import * as React from 'react';
 import {
+  ActivityIndicator,
   FlatList,
+  Image,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import * as SecureStore from 'expo-secure-store';
+
 const Component = () => {
   const router = useRouter();
-  const artistData = Array.from({ length: 36 }, (_, index) => ({
-    id: index.toString(),
-    name: `가수 ${index + 1}`,
-  }));
+  const [artistData, setArtistData] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+  const [cursor, setCursor] = React.useState<string | null>(null);
+  const [hasNext, setHasNext] = React.useState(true);
+  const [sortType, setSortType] = React.useState<'random' | 'popularity'>(
+    'popularity',
+  );
+
+  const fetchArtists = async (
+    loadMore = false,
+    currentSort: 'random' | 'popularity' = sortType,
+  ) => {
+    if (currentSort === 'popularity' && !hasNext && loadMore) return;
+    try {
+      setLoading(true);
+      const token = await SecureStore.getItemAsync('accessToken');
+      const params: any = { sort: currentSort };
+      if (currentSort === 'popularity') {
+        params.size = 20;
+        if (loadMore && cursor) {
+          params.cursor = cursor;
+        }
+      }
+      console.log('fetch params:', params);
+      const response = await api.get('/api/v1/artists/recommended', {
+        params,
+        headers: {
+          Authorization: token ? `Bearer ${token}` : undefined,
+        },
+      });
+      console.log('추천 아티스트 API 응답:', response.data);
+      if (response.data.success) {
+        // 데이터 구조가 random/popularity에 따라 다름
+        const newData =
+          currentSort === 'popularity'
+            ? response.data.data?.data || []
+            : response.data.data || [];
+        console.log('가져온 아티스트 배열:', newData);
+        setArtistData((prev) => (loadMore ? [...prev, ...newData] : newData));
+        if (currentSort === 'popularity') {
+          setHasNext(response.data.data?.hasNext || false);
+          setCursor(response.data.data?.nextCursor || null);
+        } else {
+          setHasNext(true); // random도 무한 스크롤 지원
+        }
+        setError(null);
+      } else {
+        console.log('API error object:', response.data.error);
+        setError(
+          response.data.error?.message || '데이터를 불러올 수 없습니다.',
+        );
+      }
+    } catch (err) {
+      setError(
+        '아티스트 데이터를 가져올 수 없습니다. (네트워크나 서버 문제일 수 있습니다.)',
+      );
+      console.error('추천 아티스트 API 호출 실패:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    setSortType('popularity');
+    fetchArtists(false, 'popularity');
+  }, []);
 
   const renderHeader = () => (
-    <View>
+    <View style={{ paddingHorizontal: 20, alignItems: 'flex-start' }}>
       <View>
         <View>
-          <View>
-            <Text style={[styles.text1, styles.textTitleMargin]}>
-              관심 아티스트 설정
-            </Text>
-            <View style={{ height: 7 }} />
-            <Text style={styles.text2}>
-              {`관심 있는 아티스트의 팬이 되어주세요!
+          <Text style={[styles.text1, styles.textTitleMargin]}>
+            관심 아티스트 설정
+          </Text>
+          <View style={{ height: 7 }} />
+          <Text style={styles.text2}>
+            {`관심 있는 아티스트의 팬이 되어주세요!
 팬이 되면 커뮤니티를 이용할 수 있어요.`}
-            </Text>
-          </View>
-          <View style={{ height: 27 }} />
-          <View>
-            <Text style={styles.text3}>관심 아티스트</Text>
-          </View>
+          </Text>
         </View>
+        <View style={{ height: 27 }} />
         <View>
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
+          <Text style={styles.text3}>관심 아티스트</Text>
+        </View>
+      </View>
+      <View>
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            width: '100%',
+          }}
+        >
+          <Text style={styles.text3}>추천 아티스트</Text>
+          <RoadingIcon
+            width={24}
+            height={24}
+            onPress={() => {
+              setError(null);
+              setArtistData([]);
+              setCursor(null);
+              setSortType('random');
+              fetchArtists(false, 'random');
             }}
-          >
-            <Text style={styles.text3}>추천 아티스트</Text>
-            <RoadingIcon width={24} height={24} />
-          </View>
+          />
         </View>
       </View>
     </View>
@@ -62,56 +138,73 @@ const Component = () => {
   return (
     <SafeAreaView style={styles.viewBg}>
       <View style={styles.view}>
-        <View style={styles.statusBarLayout}>
-          <View>
-            <TouchableOpacity onPress={() => router.back()}>
-              <BackIcon width={24} height={24} />
-            </TouchableOpacity>
-          </View>
-          <View>
-            <Text style={styles.skipText}>건너뛰기</Text>
-          </View>
-        </View>
-
-        <FlatList
-          data={artistData}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingHorizontal: 20 }}
-          renderItem={({ item }) => (
-            <View
-              style={{
-                alignItems: 'center',
-                width: '22%',
-                marginHorizontal: '1.5%',
-                marginBottom: 16,
-              }}
-            >
-              <Ellipse width={68} height={68} />
-              <Text
-                style={[
-                  Typography.body2,
-                  { color: Colors.palette.Gray100, marginTop: 8 },
-                ]}
-              >
-                {item.name}
-              </Text>
-            </View>
-          )}
-          numColumns={4}
-          ListHeaderComponent={renderHeader}
-          ListFooterComponent={renderFooter}
-          showsVerticalScrollIndicator={false}
-        />
-        <View style={styles.bottomView}>
-          <TouchableOpacity
-            style={[styles.btn, { backgroundColor: Colors.palette.point }]}
-            onPress={() => router.push('/step3-timesetting')}
+        <StatusBarHeader />
+        {loading && artistData.length === 0 ? (
+          <View
+            style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
           >
-            <Text style={[Typography.body2, { color: Colors.palette.white }]}>
-              다음
-            </Text>
-          </TouchableOpacity>
-        </View>
+            <ActivityIndicator size="large" color={Colors.palette.Gray100} />
+          </View>
+        ) : error ? (
+          <View
+            style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+          >
+            <Text style={{ color: Colors.palette.Gray100 }}>{error}</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={artistData}
+            keyExtractor={(item) => item.id}
+            numColumns={4}
+            columnWrapperStyle={{ justifyContent: 'flex-start' }}
+            renderItem={({ item }) => (
+              <View
+                style={{
+                  flex: 1,
+                  marginBottom: 16,
+                  alignItems: 'center',
+                }}
+              >
+                <View
+                  style={{
+                    width: 68,
+                    height: 68,
+                    borderRadius: 34,
+                    overflow: 'hidden',
+                    backgroundColor: Colors.palette.Gray700,
+                  }}
+                >
+                  <Image
+                    source={{ uri: item.imgUrl }}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      resizeMode: 'cover',
+                    }}
+                  />
+                </View>
+                <Text
+                  style={[
+                    Typography.body2,
+                    {
+                      color: Colors.palette.Gray100,
+                      marginTop: 8,
+                      textAlign: 'center',
+                    },
+                  ]}
+                >
+                  {item.name}
+                </Text>
+              </View>
+            )}
+            ListHeaderComponent={renderHeader}
+            ListFooterComponent={renderFooter}
+            showsVerticalScrollIndicator={false}
+            onEndReached={() => fetchArtists(true, sortType)}
+            onMomentumScrollBegin={() => setError(null)}
+          />
+        )}
+        <BottomNextButton onPress={() => router.push('/step3-timesetting')} />
         <LinearGradient
           colors={['transparent', Colors.palette.Gray900]}
           style={styles.fadeOverlay}
@@ -125,15 +218,6 @@ const styles = StyleSheet.create({
   viewBg: {
     backgroundColor: Colors.palette.Gray900,
     flex: 1,
-  },
-  statusBarLayout: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    marginTop: 10,
   },
 
   text1: {
@@ -151,28 +235,10 @@ const styles = StyleSheet.create({
     paddingBottom: 22,
   },
 
-  btn: {
-    backgroundColor: Colors.palette.Gray800,
-    padding: 16,
-    height: 50,
-    width: '100%',
-    borderRadius: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   view: {
     width: '100%',
-    alignItems: 'center',
+
     flex: 1,
-  },
-  bottomView: {
-    position: 'absolute',
-    bottom: 16,
-    left: 20,
-    right: 20,
-    alignItems: 'center',
-    zIndex: 1,
   },
 
   skipText: {

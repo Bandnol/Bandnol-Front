@@ -1,10 +1,13 @@
-import BackIcon from '@/assets/onboarding/Vector.svg';
+import BottomNextButton from '@/components/common/BottomNextButton';
+import StatusBarHeader from '@/components/common/StatusBarHeader';
 import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
+import api from '@/store/api';
 import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Component = () => {
@@ -13,6 +16,14 @@ const Component = () => {
   const [ampm, setAmpm] = useState('오전');
   const [hour, setHour] = useState('10');
   const [minute, setMinute] = useState('00');
+  const [user, setUser] = useState<any>({});
+
+  useEffect(() => {
+    (async () => {
+      const userStr = await SecureStore.getItemAsync('user');
+      setUser(userStr ? JSON.parse(userStr) : {});
+    })();
+  }, []);
 
   const hours = Array.from({ length: 12 }, (_, i) =>
     (i + 1).toString().padStart(2, '0'),
@@ -21,19 +32,47 @@ const Component = () => {
     i.toString().padStart(2, '0'),
   );
 
+  const handleNext = async () => {
+    try {
+      // 24시간 형식 변환
+      let hour24 = parseInt(hour, 10);
+      if (ampm === '오후' && hour24 !== 12) {
+        hour24 += 12;
+      }
+      if (ampm === '오전' && hour24 === 12) {
+        hour24 = 0;
+      }
+      const recomsTime = `${hour24.toString().padStart(2, '0')}${minute}`;
+
+      const token = await SecureStore.getItemAsync('accessToken');
+      console.log('추천곡 시간 PATCH:', recomsTime);
+      await api.patch(
+        '/api/v1/users/me/profiles',
+        {
+          ownId: user.ownId,
+          nickname: user.nickname,
+          gender: user.gender,
+          birth: user.birth,
+          recomsTime,
+          bio: user.bio || '',
+        },
+        {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : undefined,
+          },
+        },
+      );
+
+      router.push('/step4-done');
+    } catch (error) {
+      console.error('추천곡 시간 설정 실패:', error);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.viewBg}>
       <View style={styles.view}>
-        <View style={styles.statusBarLayout}>
-          <View>
-            <TouchableOpacity onPress={() => router.back()}>
-              <BackIcon width={24} height={24} style={styles.icon} />
-            </TouchableOpacity>
-          </View>
-          <View>
-            <Text style={styles.skipText}>건너뛰기</Text>
-          </View>
-        </View>
+        <StatusBarHeader />
 
         <View style={{ paddingHorizontal: 20, alignSelf: 'stretch' }}>
           <Text style={[styles.text1, styles.textTitleMargin]}>
@@ -80,16 +119,7 @@ const Component = () => {
           </View>
         </View>
 
-        <View style={styles.bottomView}>
-          <TouchableOpacity
-            style={[styles.btn, { backgroundColor: Colors.palette.point }]}
-            onPress={() => router.push('/step4-done')}
-          >
-            <Text style={[Typography.body2, { color: Colors.palette.white }]}>
-              다음
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <BottomNextButton onPress={handleNext} />
       </View>
     </SafeAreaView>
   );
@@ -99,23 +129,6 @@ const styles = StyleSheet.create({
   viewBg: {
     backgroundColor: Colors.palette.Gray900,
     flex: 1,
-  },
-  statusBarLayout: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    marginTop: 10,
-  },
-  bottomView: {
-    position: 'absolute',
-    bottom: 16,
-    left: 20,
-    right: 20,
-    alignItems: 'center',
-    zIndex: 1,
   },
   view: {
     width: '100%',
@@ -155,16 +168,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Pretendard-SemiBold',
     letterSpacing: -0.45,
     lineHeight: 18 * 1.4,
-  },
-  btn: {
-    backgroundColor: Colors.palette.Gray800,
-    padding: 16,
-    height: 50,
-    width: '100%',
-    borderRadius: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });
 
