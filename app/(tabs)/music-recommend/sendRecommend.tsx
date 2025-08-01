@@ -2,16 +2,15 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   Image,
-  Keyboard,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 
+import { fetchAIComment } from '@/api/aiRecommend';
 import Checkboxchecked from '@/assets/icons/checkbox-checked.svg';
 import Checkbox from '@/assets/icons/checkbox.svg';
 import DateHeader from '@/components/common/DateHeader';
@@ -20,11 +19,35 @@ import { Typography } from '@/constants/typography';
 
 export default function SendRecommendPage() {
   const router = useRouter();
-  const { title, artist } = useLocalSearchParams();
+  const { title, artist, image } = useLocalSearchParams();
   const [comment, setComment] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isSendModalVisible, setIsSendModalVisible] = useState(false);
+  const { title: paramTitle, artist: paramArtist } = useLocalSearchParams();
+
+  const handleGenerateComment = async () => {
+    setIsModalVisible(true);
+
+    if (!paramTitle || !paramArtist) return;
+
+    try {
+      const res = await fetchAIComment(
+        paramTitle as string,
+        paramArtist as string,
+      );
+
+      if (res?.success && res.data) {
+        setComment(res.data);
+      } else {
+        console.warn('AI 코멘트 생성 실패');
+      }
+    } catch (e) {
+      console.error('AI COMMENT 오류:', e);
+    } finally {
+      setIsModalVisible(false);
+    }
+  }; // ai 코멘트 api
 
   const handleSend = () => {
     setIsSendModalVisible(true);
@@ -42,112 +65,117 @@ export default function SendRecommendPage() {
   };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={styles.container}>
-        {/* 헤더 */}
-        <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.backArrow}>
-            <Image
-              source={require('@/assets/images/backarrow.png')}
-              style={{ width: 24, height: 24 }}
-            />
-          </Pressable>
-          <Text style={styles.headerTitle}>추천곡 보내기</Text>
-        </View>
-
-        {/* 날짜 */}
-        <Text style={styles.date}>
-          <DateHeader />
-        </Text>
-
-        {/* 추천 곡 카드 */}
-        <View style={styles.card}>
+    // <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+    <View style={styles.container}>
+      {/* 헤더 */}
+      <View style={styles.header}>
+        <Pressable onPress={() => router.back()} style={styles.backArrow}>
           <Image
-            source={require('@/assets/images/album-cover.jpg')}
-            style={styles.cover}
+            source={require('@/assets/images/backarrow.png')}
+            style={{ width: 24, height: 24 }}
           />
-          <View style={styles.songInfo}>
-            <Text style={styles.songTitle}>{title}</Text>
-            <Text style={styles.artist}>{artist}</Text>
-          </View>
-        </View>
-
-        {/* 코멘트 입력 */}
-        <View style={styles.commentBox}>
-          <Text style={styles.commentLabel}>MY COMMENT</Text>
-          <TextInput
-            placeholder="COMMENT를 작성하세요..."
-            placeholderTextColor="#7C7C7C"
-            value={comment}
-            onChangeText={setComment}
-            multiline
-            style={styles.commentInput}
-          />
-          <View style={styles.commentOptions}>
-            <TouchableOpacity
-              onPress={() => setIsAnonymous(!isAnonymous)}
-              style={styles.checkboxRow}
-              activeOpacity={0.8}
-            >
-              <View style={styles.checkbox}>
-                {isAnonymous ? (
-                  <Checkboxchecked width={24} height={24} />
-                ) : (
-                  <Checkbox width={24} height={24} />
-                )}
-              </View>
-              <Text
-                style={[
-                  styles.checkboxLabel,
-                  { color: isAnonymous ? '#FFFFFF' : '#7C7C7C' },
-                ]}
-              >
-                익명으로 보내기
-              </Text>
-            </TouchableOpacity>
-            <Pressable onPress={() => setIsModalVisible(true)}>
-              <View style={styles.aiCommentRow}>
-                <Text style={styles.aiComment}>
-                  <Image
-                    source={require('@/assets/images/ai-comment.png')}
-                    style={{ width: 21, height: 21 }}
-                  />
-                </Text>
-                <Text style={styles.aiCommentLabel}>AI COMMENT</Text>
-              </View>
-            </Pressable>
-          </View>
-        </View>
-
-        {/* 전송 버튼 */}
-        <TouchableOpacity
-          style={[
-            styles.sendButton,
-            comment.trim() ? { backgroundColor: '#FB4932' } : {},
-          ]}
-          onPress={handleSend}
-        >
-          <Text style={styles.sendText}>전송</Text>
-        </TouchableOpacity>
-
-        {/* 공용 모달 컴포넌트 사용 */}
-        <ModalPopup
-          visible={isModalVisible}
-          emoji="😝"
-          text="AI가 코멘트를 작성하고 있어요 ..."
-          duration={2}
-          onClose={() => setIsModalVisible(false)}
-        />
-
-        <ModalPopup
-          visible={isSendModalVisible}
-          emoji="😎"
-          text="오늘의 곡 추천 완료"
-          duration={3}
-          onClose={() => setIsSendModalVisible(false)}
-        />
+        </Pressable>
+        <Text style={styles.headerTitle}>추천곡 보내기</Text>
       </View>
-    </TouchableWithoutFeedback>
+
+      {/* 날짜 */}
+      <Text style={styles.date}>
+        <DateHeader />
+      </Text>
+
+      {/* 추천 곡 카드 */}
+      <View style={styles.card}>
+        <Image
+          source={
+            image
+              ? { uri: image as string }
+              : require('@/assets/images/album-cover.jpg')
+          }
+          style={styles.cover}
+          resizeMode="cover"
+        />
+        <View style={styles.songInfo}>
+          <Text style={styles.songTitle}>{title}</Text>
+          <Text style={styles.artist}>{artist}</Text>
+        </View>
+      </View>
+
+      {/* 코멘트 입력 */}
+      <View style={styles.commentBox}>
+        <Text style={styles.commentLabel}>MY COMMENT</Text>
+        <TextInput
+          placeholder="COMMENT를 작성하세요..."
+          placeholderTextColor="#7C7C7C"
+          value={comment}
+          onChangeText={setComment}
+          multiline
+          style={styles.commentInput}
+        />
+        <View style={styles.commentOptions}>
+          <TouchableOpacity
+            onPress={() => setIsAnonymous(!isAnonymous)}
+            style={styles.checkboxRow}
+            activeOpacity={0.8}
+          >
+            <View style={styles.checkbox}>
+              {isAnonymous ? (
+                <Checkboxchecked width={24} height={24} />
+              ) : (
+                <Checkbox width={24} height={24} />
+              )}
+            </View>
+            <Text
+              style={[
+                styles.checkboxLabel,
+                { color: isAnonymous ? '#FFFFFF' : '#7C7C7C' },
+              ]}
+            >
+              익명으로 보내기
+            </Text>
+          </TouchableOpacity>
+          <Pressable onPress={handleGenerateComment}>
+            <View style={styles.aiCommentRow}>
+              <Text style={styles.aiComment}>
+                <Image
+                  source={require('@/assets/images/ai-comment.png')}
+                  style={{ width: 21, height: 21 }}
+                />
+              </Text>
+              <Text style={styles.aiCommentLabel}>AI COMMENT</Text>
+            </View>
+          </Pressable>
+        </View>
+      </View>
+
+      {/* 전송 버튼 */}
+      <TouchableOpacity
+        style={[
+          styles.sendButton,
+          comment.trim() ? { backgroundColor: '#FB4932' } : {},
+        ]}
+        onPress={handleSend}
+      >
+        <Text style={styles.sendText}>전송</Text>
+      </TouchableOpacity>
+
+      {/* 공용 모달 컴포넌트 사용 */}
+      <ModalPopup
+        visible={isModalVisible}
+        emoji="😝"
+        text="AI가 코멘트를 작성하고 있어요 ..."
+        duration={2}
+        onClose={() => setIsModalVisible(false)}
+      />
+
+      <ModalPopup
+        visible={isSendModalVisible}
+        emoji="😎"
+        text="오늘의 곡 추천 완료"
+        duration={3}
+        onClose={() => setIsSendModalVisible(false)}
+      />
+    </View>
+    // {/* </TouchableWithoutFeedback> */}
   );
 }
 

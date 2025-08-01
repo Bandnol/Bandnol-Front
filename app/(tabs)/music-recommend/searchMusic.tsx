@@ -31,7 +31,7 @@ export default function SearchMusicPage() {
         const res = await searchSpotifySong(text);
         console.log('🔍 최종 받아온 노래 목록:', res.data);
         if (res.success) {
-          setResults(res.data || []); // 이게 배열이면 바로 넣기
+          setResults(res.data || []);
         } else {
           setResults([]);
         }
@@ -39,7 +39,7 @@ export default function SearchMusicPage() {
         console.error('API 오류:', e);
         setResults([]);
       }
-    }, 1000),
+    }, 500),
     [],
   );
 
@@ -54,6 +54,7 @@ export default function SearchMusicPage() {
       params: {
         title: item.title,
         artist: item.artist,
+        image: item.albumImg,
       },
     });
   };
