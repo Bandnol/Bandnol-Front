@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 
+import { fetchAIComment } from '@/api/aiRecommend';
 import Checkboxchecked from '@/assets/icons/checkbox-checked.svg';
 import Checkbox from '@/assets/icons/checkbox.svg';
 import DateHeader from '@/components/common/DateHeader';
@@ -20,25 +21,45 @@ import { Typography } from '@/constants/typography';
 
 export default function SendRecommendPage() {
   const router = useRouter();
-  const { title, artist } = useLocalSearchParams();
+  const { title, artist, image, recomsId } = useLocalSearchParams();
   const [comment, setComment] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isSendModalVisible, setIsSendModalVisible] = useState(false);
+  const { title: paramTitle, artist: paramArtist } = useLocalSearchParams();
+
+  const handleGenerateComment = async () => {
+    setIsModalVisible(true);
+
+    if (!paramTitle || !paramArtist) return;
+
+    try {
+      const res = await fetchAIComment(
+        paramTitle as string,
+        paramArtist as string,
+      );
+
+      if (res?.success && res.data) {
+        setComment(res.data);
+      } else {
+        console.warn('AI 코멘트 생성 실패');
+      }
+    } catch (e) {
+      console.error('AI COMMENT 오류:', e);
+    } finally {
+      setIsModalVisible(false);
+    }
+  }; // ai 코멘트 api
 
   const handleSend = () => {
+    if (!comment.trim()) return;
+
     setIsSendModalVisible(true);
 
     setTimeout(() => {
       setIsSendModalVisible(false);
-      router.push({
-        pathname: '/(tabs)/music-recommend/myRecommend',
-        params: {
-          title,
-          artist,
-        },
-      });
-    }, 5000);
+      router.push('/(tabs)/music-recommend/myRecommend');
+    }, 2000);
   };
 
   return (
@@ -63,8 +84,13 @@ export default function SendRecommendPage() {
         {/* 추천 곡 카드 */}
         <View style={styles.card}>
           <Image
-            source={require('@/assets/images/album-cover.jpg')}
+            source={
+              image
+                ? { uri: image as string }
+                : require('@/assets/images/album-cover.jpg')
+            }
             style={styles.cover}
+            resizeMode="cover"
           />
           <View style={styles.songInfo}>
             <Text style={styles.songTitle}>{title}</Text>
@@ -105,7 +131,7 @@ export default function SendRecommendPage() {
                 익명으로 보내기
               </Text>
             </TouchableOpacity>
-            <Pressable onPress={() => setIsModalVisible(true)}>
+            <Pressable onPress={handleGenerateComment}>
               <View style={styles.aiCommentRow}>
                 <Text style={styles.aiComment}>
                   <Image
