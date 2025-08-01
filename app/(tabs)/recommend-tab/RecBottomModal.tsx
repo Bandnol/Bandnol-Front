@@ -179,6 +179,8 @@ const styles = StyleSheet.create({
     ...Typography.caption2,
     color: '#fff',
     fontWeight: '400',
+    flexShrink: 1,
+    flexWrap: 'wrap',
   },
   todayText: {
     color: '#D9D9D9',
