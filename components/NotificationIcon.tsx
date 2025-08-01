@@ -8,15 +8,15 @@ import Song from '@/assets/icons/size_l/icon=song.svg';
 import Superfan from '@/assets/icons/size_l/icon=thumbsup.svg';
 
 const iconMap = {
-  songReceived: Song,
-  songSent: Song,
-  songUnread: SongUnread,
-  comment: Comment,
-  announcement: Announcement,
-  bookmark: Bookmark,
-  like: Like,
-  superfan: Superfan,
-  report: Report,
+  RECOMS_RECEIVED: Song,
+  RECOMS_SENT: Song,
+  NOT_RECOMS: SongUnread,
+  COMMENT_ARRIVED: Comment,
+  ANNOUNCEMENT: Announcement,
+  BOOKMARK: Bookmark,
+  LIKE: Like,
+  SUPERFAN: Superfan,
+  REPORT: Report,
 } as const;
 
 export type IconType = keyof typeof iconMap;
