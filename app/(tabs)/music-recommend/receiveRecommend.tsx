@@ -50,6 +50,9 @@ export default function ReceiveRecommend() {
     const fetchData = async () => {
       try {
         const res = await getReceivedRecommend();
+        console.log('요청 URL:', `${API_URL}/api/v1/recoms/received`);
+        console.log('서버 응답 상태:', res.success ? '성공' : '실패');
+        console.log('서버 응답 데이터:', JSON.stringify(res.data, null, 2));
         if (res.success) {
           setRecommend(res.data);
         } else {
@@ -145,7 +148,8 @@ export default function ReceiveRecommend() {
 
           {/* 보낸 사람 */}
           <Text style={styles.fromText}>
-            From. <Text style={styles.sender}>{recommend?.sender}</Text>
+            From.{' '}
+            <Text style={styles.sender}>{recommend?.sender?.nickname}</Text>
           </Text>
 
           {/* 좋아요 + 싫어요 */}
