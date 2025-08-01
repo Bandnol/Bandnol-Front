@@ -234,8 +234,6 @@ const styles = StyleSheet.create({
     color: '#F4F4F4',
     fontWeight: '600',
     fontSize: 18,
-
-    flex: 1,
   },
   inputWrapper: {
     gap: 8,
