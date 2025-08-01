@@ -1,18 +1,51 @@
+import RecommendCal from '@/app/(tabs)/recommend-tab/RecommendCal';
+import RecommendHeader from '@/app/(tabs)/recommend-tab/RecommendHeader';
 import RecommendList, {
   RecommendListRef,
 } from '@/app/(tabs)/recommend-tab/RecommendList';
 import Dropdown from '@/assets/icons/size_m/dropdown.svg';
+import { Typography } from '@/constants/typography';
+import { JWT_TOKEN } from '@env';
+import axios from 'axios';
 import dayjs from 'dayjs';
 import { useRouter } from 'expo-router';
-import { useRef, useState } from 'react';
+import * as SecureStore from 'expo-secure-store';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+type RecommendItem = {
+  date: string;
+  recommending: {
+    title: string;
+    artistName: string;
+    imageUrl: string;
+    comment: string;
+  };
+  recommended?: {
+    title: string;
+    artistName: string;
+    imageUrl: string;
+    comment: string;
+  };
+};
+const fetchRecommendList = async (): Promise<RecommendItem[]> => {
+  const token = await SecureStore.getItemAsync('JWTToken');
+  if (!token) throw new Error('JWT 토큰 없음');
 
-import RecommendCal from '@/app/(tabs)/recommend-tab/RecommendCal';
-import RecommendHeader from '@/app/(tabs)/recommend-tab/RecommendHeader';
-import { Listtestdata } from '@/components/Listtestdata';
-import { Typography } from '@/constants/typography';
-
+  const response = await axios.get('https://bandnol.app/api/v1/recoms/lists', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data.data;
+};
 export default function RecommendScreen() {
+  useEffect(() => {
+    const storeDummyToken = async () => {
+      await SecureStore.setItemAsync('JWTToken', JWT_TOKEN);
+    };
+
+    storeDummyToken();
+  }, []);
   const router = useRouter();
   const [selectedMonth, setSelectedMonth] = useState(dayjs());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -20,6 +53,9 @@ export default function RecommendScreen() {
   const [isTabRecommending, setIsTabRecommending] = useState(true);
   const [isModeCalendar, setIsModeCalendar] = useState(true);
   const listRef = useRef<RecommendListRef>(null);
+
+  const [data, setData] = useState<RecommendItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const handleTodayPress = () => {
     setSelectedMonth(dayjs());
@@ -29,7 +65,19 @@ export default function RecommendScreen() {
     }
   };
 
-  const rawData = Listtestdata || [];
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const result = await fetchRecommendList();
+        setData(result);
+      } catch (e) {
+        console.error('API 호출 실패:', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
 
   return (
     <>
@@ -71,7 +119,7 @@ export default function RecommendScreen() {
               selectedMonth={selectedMonth}
               selectedDate={selectedDate}
               setSelectedDate={setSelectedDate}
-              data={rawData}
+              data={data}
             />
           )}
         </View>

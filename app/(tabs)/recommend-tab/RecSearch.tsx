@@ -1,8 +1,10 @@
 import Dropdown from '@/assets/icons/size_m/dropdown.svg';
 import Search from '@/assets/icons/size_m/search.svg';
 import { Typography } from '@/constants/typography';
+import axios from 'axios';
 import dayjs from 'dayjs';
 import { useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
 import { useState } from 'react';
 import {
   Image,
@@ -14,7 +16,7 @@ import {
   View,
 } from 'react-native';
 
-type SendSong = {
+export type SendSong = {
   date: string;
   comment: string;
   title: string;
@@ -22,159 +24,61 @@ type SendSong = {
   imageUrl: string;
 };
 
-type ReceiveSong = {
+export type ReceiveSong = {
   date: string;
   comment: string;
   title: string;
   artistName: string;
   imageUrl: string;
-  senderNickname: string;
+  senderNickname: string | null;
 };
-
-const sendMock: SendSong[] = [
-  {
-    date: '2025-04-18',
-    comment: '들으니까 행복해졌어요!!',
-    title: 'Blueming',
-    artistName: 'IU',
-    imageUrl:
-      'https://cdnimg.melon.co.kr/cm2/album/images/103/46/650/10346650_1000.jpg',
-  },
-  {
-    date: '2025-04-18',
-    comment: '들으니까 행복해졌어요!!',
-    title: 'Blueming',
-    artistName: 'IU',
-    imageUrl:
-      'https://cdnimg.melon.co.kr/cm2/album/images/103/46/650/10346650_1000.jpg',
-  },
-  {
-    date: '2025-04-18',
-    comment: '들으니까 행복해졌어요!!',
-    title: 'Blueming',
-    artistName: 'IU',
-    imageUrl:
-      'https://cdnimg.melon.co.kr/cm2/album/images/103/46/650/10346650_1000.jpg',
-  },
-  {
-    date: '2025-04-18',
-    comment: '들으니까 행복해졌어요!!',
-    title: 'Blueming',
-    artistName: 'IU',
-    imageUrl:
-      'https://cdnimg.melon.co.kr/cm2/album/images/103/46/650/10346650_1000.jpg',
-  },
-  {
-    date: '2025-04-18',
-    comment: '들으니까 행복해졌어요!!',
-    title: 'Blueming',
-    artistName: 'IU',
-    imageUrl:
-      'https://cdnimg.melon.co.kr/cm2/album/images/103/46/650/10346650_1000.jpg',
-  },
-  {
-    date: '2025-04-18',
-    comment: '들으니까 행복해졌어요!!',
-    title: 'Blueming',
-    artistName: 'IU',
-    imageUrl:
-      'https://cdnimg.melon.co.kr/cm2/album/images/103/46/650/10346650_1000.jpg',
-  },
-  {
-    date: '2025-04-18',
-    comment: '들으니까 행복해졌어요!!',
-    title: 'Blueming',
-    artistName: 'IU',
-    imageUrl:
-      'https://cdnimg.melon.co.kr/cm2/album/images/103/46/650/10346650_1000.jpg',
-  },
-];
-
-const receiveMock: ReceiveSong[] = [
-  {
-    date: '2025-04-20',
-    comment: '이 노래는 꼭 들어봐!',
-    title: '좋은날',
-    artistName: 'IU',
-    imageUrl:
-      'https://cdnimg.melon.co.kr/cm/album/images/010/93/562/1093562_500.jpg',
-    senderNickname: 'sunnyday',
-  },
-  {
-    date: '2025-04-20',
-    comment: '이 노래는 꼭 들어봐!',
-    title: '좋은날',
-    artistName: 'IU',
-    imageUrl:
-      'https://cdnimg.melon.co.kr/cm/album/images/010/93/562/1093562_500.jpg',
-    senderNickname: 'sunnyday',
-  },
-  {
-    date: '2025-04-20',
-    comment: '이 노래는 꼭 들어봐!',
-    title: '좋은날',
-    artistName: 'IU',
-    imageUrl:
-      'https://cdnimg.melon.co.kr/cm/album/images/010/93/562/1093562_500.jpg',
-    senderNickname: 'sunnyday',
-  },
-  {
-    date: '2025-04-20',
-    comment: '이 노래는 꼭 들어봐!',
-    title: '좋은날',
-    artistName: 'IU',
-    imageUrl:
-      'https://cdnimg.melon.co.kr/cm/album/images/010/93/562/1093562_500.jpg',
-    senderNickname: 'sunnyday',
-  },
-  {
-    date: '2025-04-20',
-    comment: '이 노래는 꼭 들어봐!',
-    title: '좋은날',
-    artistName: 'IU',
-    imageUrl:
-      'https://cdnimg.melon.co.kr/cm/album/images/010/93/562/1093562_500.jpg',
-    senderNickname: 'sunnyday',
-  },
-];
 
 export default function RecSearch() {
   const [query, setQuery] = useState('');
-  const [sendResults, setSendResults] = useState<SendSong[]>(sendMock);
-  const [receiveResults, setReceiveResults] =
-    useState<ReceiveSong[]>(receiveMock);
+  const [sendResults, setSendResults] = useState<SendSong[]>([]);
+  const [receiveResults, setReceiveResults] = useState<ReceiveSong[]>([]);
+  const [isTopOpen, setIsTopOpen] = useState(true);
+  const [isBottomOpen, setIsBottomOpen] = useState(true);
 
   const router = useRouter();
 
-  const handleSearch = (text: string) => {
+  const handleSearch = async (text: string) => {
     setQuery(text);
+
     if (!text.trim()) {
-      setSendResults(sendMock);
-      setReceiveResults(receiveMock);
+      setSendResults([]);
+      setReceiveResults([]);
       return;
     }
 
-    const lowerQuery = text.toLowerCase();
+    try {
+      const token = await SecureStore.getItemAsync('JWTToken');
+      if (!token) throw new Error('JWT 토큰 없음');
 
-    const sendFiltered = sendMock.filter((item) => {
-      const target = `${item.title} ${item.artistName}`.toLowerCase();
-      return target.includes(lowerQuery);
-    });
+      const response = await axios.get(
+        `https://bandnol.app/api/v1/recoms/search/record?keyword=${encodeURIComponent(
+          text.trim(),
+        )}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
 
-    const receiveFiltered = receiveMock.filter((item) => {
-      const target =
-        `${item.title} ${item.artistName} ${item.senderNickname}`.toLowerCase();
-      return target.includes(lowerQuery);
-    });
+      const send = response.data?.data?.send ?? [];
+      const receive = response.data?.data?.receive ?? [];
 
-    setSendResults(sendFiltered);
-    setReceiveResults(receiveFiltered);
+      setSendResults(send);
+      setReceiveResults(receive);
+    } catch (error) {
+      console.error('🔴 검색 API 실패:', error);
+      setSendResults([]);
+      setReceiveResults([]);
+    }
   };
 
   const handleSubmit = () => handleSearch(query);
-
-  const [isTopOpen, setIsTopOpen] = useState(true);
-  const [isBottomOpen, setIsBottomOpen] = useState(true);
 
   const renderItem = (
     item: SendSong | ReceiveSong,
@@ -187,7 +91,11 @@ export default function RecSearch() {
         </Text>
         {type === 'send' ? null : (
           <Text style={styles.fromText}>
-            {`From. ${'senderNickname' in item ? item.senderNickname : ''}`}
+            {`From. ${
+              'senderNickname' in item && item.senderNickname
+                ? item.senderNickname
+                : '익명'
+            }`}
           </Text>
         )}
         <View style={styles.myrecInfo}>
@@ -226,9 +134,7 @@ export default function RecSearch() {
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.searchContainer}>
-          <View>
-            <Search style={{ width: 24, height: 24 }} />
-          </View>
+          <Search style={{ width: 24, height: 24 }} />
           <View style={styles.searchBox}>
             <TextInput
               value={query}
@@ -242,9 +148,7 @@ export default function RecSearch() {
         </View>
 
         <Pressable onPress={() => router.back()}>
-          <View>
-            <Text style={styles.cancelText}>취소</Text>
-          </View>
+          <Text style={styles.cancelText}>취소</Text>
         </Pressable>
       </View>
 
@@ -312,7 +216,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flex: 1,
     height: 40,
-    paddingVertical: 15,
+    paddingVertical: 0,
     paddingHorizontal: 10,
     alignItems: 'center',
     gap: 10,

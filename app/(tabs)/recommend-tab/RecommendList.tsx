@@ -1,4 +1,5 @@
 import { Typography } from '@/constants/typography';
+
 import dayjs from 'dayjs';
 import 'dayjs/locale/ko';
 import {
@@ -120,9 +121,12 @@ const RecommendList = forwardRef<RecommendListRef, RecommendListProps>(
             <View
               key={item.date}
               onLayout={(e) => {
+                const layout = e?.nativeEvent?.layout;
+                if (!layout) return;
+
                 setSectionLayouts((prev) => ({
                   ...prev,
-                  [item.date]: e.nativeEvent.layout.y,
+                  [item.date]: layout.y,
                 }));
               }}
             >
@@ -249,5 +253,8 @@ const styles = StyleSheet.create({
     ...Typography.caption2,
     color: '#fff',
     fontWeight: '400',
+
+    flexShrink: 1,
+    flexWrap: 'wrap',
   },
 });
