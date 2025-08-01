@@ -55,6 +55,7 @@ export default function SearchMusicPage() {
         title: item.title,
         artist: item.artist,
         image: item.albumImg,
+        recomsId: item.id,
       },
     });
   };
