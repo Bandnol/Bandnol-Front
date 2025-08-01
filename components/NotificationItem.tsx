@@ -10,7 +10,6 @@ dayjs.locale('ko');
 
 type NotificationItemProps = {
   id: string;
-  content: string;
   createdAt: string;
   type: IconType;
   isConfirmed: boolean;
@@ -19,10 +18,11 @@ type NotificationItemProps = {
     id: string;
     nickname: string;
   } | null;
+  content: string | null;
 };
 
 export default function NotificationItem(props: NotificationItemProps) {
-  const { id, content, createdAt, type, isConfirmed, link, sender } = props;
+  const { id, createdAt, type, isConfirmed, link, sender, content } = props;
 
   let message = null;
 
@@ -40,7 +40,7 @@ export default function NotificationItem(props: NotificationItemProps) {
         전달됐어요.
       </Text>
     );
-  } else if (type === 'RECOMS_UNREAD' && sender) {
+  } else if (type === 'NOT_RECOMS' && sender) {
     message = (
       <Text style={styles.cardDescription}>
         오늘의 추천곡을 확인해주세요.{'\n'}
@@ -56,18 +56,10 @@ export default function NotificationItem(props: NotificationItemProps) {
         코멘트가 도착했어요!
       </Text>
     );
-  } else if (
-    type === 'ANNOUNCEMENT'
-    // && date && timeStart && timeEnd
-  ) {
-    // const dateStr = dayjs(date).locale('ko').format('M월 D일 dddd');
+  } else if (type === 'ANNOUNCEMENT') {
     message = (
-      <Text style={styles.cardDescription}>
-        <Text style={{ fontWeight: 'bold', color: '#fff' }}>
-          {/* {dateStr} {timeStart} ~ {timeEnd} */}
-          2025년 7월 29일 16:00 ~ 18:00
-        </Text>
-        {'\n'}밴놀 서비스 점검이 진행됩니다.
+      <Text style={[styles.cardDescription, { width: '71%' }]}>
+        <Text style={{ fontWeight: 'bold', color: '#fff' }}>{content}</Text>
       </Text>
     );
   } else if (
@@ -155,6 +147,8 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     lineHeight: 16.8,
     letterSpacing: -0.3,
+    flexShrink: 1,
+    flexWrap: 'wrap',
   },
   cardTime: {
     color: '#7C7C7C',

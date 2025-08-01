@@ -5,13 +5,13 @@ import RecommendList, {
 } from '@/app/(tabs)/recommend-tab/RecommendList';
 import Dropdown from '@/assets/icons/size_m/dropdown.svg';
 import { Typography } from '@/constants/typography';
+import { JWT_TOKEN } from '@env';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-
 type RecommendItem = {
   date: string;
   recommending: {
@@ -41,10 +41,7 @@ const fetchRecommendList = async (): Promise<RecommendItem[]> => {
 export default function RecommendScreen() {
   useEffect(() => {
     const storeDummyToken = async () => {
-      await SecureStore.setItemAsync(
-        'JWTToken',
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImU2M2JhZTlhLWZjMTQtNDcwZS04YmViLTk3MTNiYmZlZDUyMiIsImlhdCI6MTc1Mzg4NjE4OSwiZXhwIjoxNzU0NDkwOTg5fQ.UnRXUHlpjtaG5q5MQ36zKQAEDYTz_FAGhqg9Mb8ckIs',
-      );
+      await SecureStore.setItemAsync('JWTToken', JWT_TOKEN);
     };
 
     storeDummyToken();

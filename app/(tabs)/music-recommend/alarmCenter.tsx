@@ -1,10 +1,11 @@
-import NotificationItem from '@/components/NotificationItem';
-import { notifications } from '@/constants/notifications';
-import { Typography } from '@/constants/typography';
-
 import Backarrow from '@/assets/icons/size_m/backarrow.svg';
-
+import { IconType } from '@/components/NotificationIcon';
+import NotificationItem from '@/components/NotificationItem';
+import { Typography } from '@/constants/typography';
+import axios from 'axios';
 import { useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
+import { useEffect, useState } from 'react';
 import {
   Dimensions,
   FlatList,
@@ -13,11 +14,51 @@ import {
   Text,
   View,
 } from 'react-native';
-
+type Notification = {
+  id: string;
+  createdAt: string;
+  type: string;
+  isConfirmed: boolean;
+  link: string;
+  sender: {
+    id: string;
+    nickname: string;
+  } | null;
+  content: string | null;
+};
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function AlarmCenterPage() {
   const router = useRouter();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const token = await SecureStore.getItemAsync('JWTToken');
+        if (!token) throw new Error('JWT 토큰 없음');
+
+        const response = await axios.get(
+          'https://bandnol.app/api/v1/users/me/notification',
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+        if (response.data.success) {
+          setNotifications(response.data.data.data); //?
+        } else {
+          console.error('서버 응답 오류:', response.data.error);
+          setNotifications([]);
+        }
+      } catch (error) {
+        console.error('알림 가져오기 실패:', error);
+        setNotifications([]);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -34,11 +75,20 @@ export default function AlarmCenterPage() {
         <Text style={styles.title}>알림</Text>
       </View>
 
-      {/* 알림 리스트 */}
       <FlatList
         data={notifications}
-        keyExtractor={(item) => String(item.id)}
-        renderItem={({ item }) => <NotificationItem {...item} />}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <NotificationItem
+            id={item.id}
+            createdAt={item.createdAt}
+            type={item.type as IconType} // 타입 명시적 변환 필요
+            isConfirmed={item.isConfirmed}
+            link={item.link}
+            sender={item.sender}
+            content={item.content}
+          />
+        )}
         contentContainerStyle={styles.list}
       />
     </View>

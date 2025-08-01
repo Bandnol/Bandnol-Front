@@ -10,7 +10,7 @@ import Superfan from '@/assets/icons/size_l/icon=thumbsup.svg';
 const iconMap = {
   RECOMS_RECEIVED: Song,
   RECOMS_SENT: Song,
-  RECOMS_UNREAD: SongUnread,
+  NOT_RECOMS: SongUnread,
   COMMENT_ARRIVED: Comment,
   ANNOUNCEMENT: Announcement,
   BOOKMARK: Bookmark,

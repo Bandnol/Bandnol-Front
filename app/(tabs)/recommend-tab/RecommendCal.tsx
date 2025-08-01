@@ -71,7 +71,7 @@ export default function RecommendCal({
         const data = response.data?.data ?? []; // ✅ null이면 빈 배열 처리
         setSongDataList(data);
       } catch (e) {
-        console.error('캘린더 API 에러:', e);
+        //console.error('캘린더 API 에러:', e);
         setSongDataList([]);
       }
     };

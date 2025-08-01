@@ -88,7 +88,7 @@ export default function postPage() {
             row.length === 3 && rowIndex % 3 === 2 ? (
               // ✅ 특수 배치: 3개일 때 마지막 줄마다 한 번
               <View key={rowIndex} style={styles.rowWrapper}>
-                <View style={{ width: '66.6666%', aspectRatio: 1 }}>
+                <View style={{ width: '66.666666%', aspectRatio: 1 }}>
                   <Image
                     source={row[0].image}
                     style={styles.image}
@@ -97,9 +97,10 @@ export default function postPage() {
                 </View>
                 <View
                   style={{
-                    width: '33.3333%',
-                    aspectRatio: 1,
+                    width: '33.333333%',
                     justifyContent: 'space-between',
+                    flexDirection: 'column',
+                    flex: 1,
                   }}
                 >
                   <View style={{ flex: 1 }}>
@@ -208,5 +209,6 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: '100%',
+    aspectRatio: 1,
   },
 });
