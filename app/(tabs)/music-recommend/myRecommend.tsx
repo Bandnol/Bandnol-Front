@@ -70,9 +70,9 @@ export default function MyRecommendSwiper() {
             <View style={styles.header}>
               <Text style={styles.headerTitle}>나의 추천곡</Text>
               <Pressable
-                onPress={() =>
-                  router.push('/(tabs)/music-recommend/alarmCenter')
-                }
+                onPress={() => {
+                  router.push('/(tabs)/music-recommend/alarmCenter');
+                }}
                 style={styles.bellWrapper}
               >
                 <AlertIcon width={24} height={24} />
@@ -111,7 +111,17 @@ export default function MyRecommendSwiper() {
         {/* 추천 도착 타이머 */}
         <View style={styles.container}>
           <View style={styles.timeOverlay}>
-            <Text style={styles.recommendHeaderTitle}>추천 받은 곡</Text>
+            <View style={styles.header}>
+              <Text style={styles.headerTitle}>추천 받은 곡</Text>
+              <Pressable
+                onPress={() => {
+                  router.push('/(tabs)/music-recommend/alarmCenter');
+                }}
+                style={styles.bellWrapper}
+              >
+                <AlertIcon width={24} height={24} />
+              </Pressable>
+            </View>
             <Text style={styles.recommendDateText}>
               <DateHeader />
             </Text>
