@@ -1,10 +1,3 @@
-import Logo from '@/assets/onboarding/logo.svg';
-import BottomNextButton from '@/components/common/BottomNextButton';
-import StatusBarHeader from '@/components/common/StatusBarHeader';
-import { Colors } from '@/constants/Colors';
-import { Typography } from '@/constants/typography';
-import { useAuth } from '@/hooks/useAuthContext';
-import api from '@/store/api'; // axios instance 불러오기
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
@@ -20,6 +13,14 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
+
+import Logo from '@/assets/onboarding/logo.svg';
+import BottomNextButton from '@/components/common/BottomNextButton';
+import StatusBarHeader from '@/components/common/StatusBarHeader';
+import { Colors } from '@/constants/Colors';
+import { Typography } from '@/constants/typography';
+import { useAuth } from '@/hooks/useAuthContext';
+import api from '@/store/api'; // axios instance 불러오기
 
 export default function Step1Personal() {
   const router = useRouter();
