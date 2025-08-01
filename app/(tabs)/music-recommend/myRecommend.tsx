@@ -1,6 +1,14 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  Image,
+  ImageBackground,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import Swiper from 'react-native-swiper';
 
 import AlertIcon from '@/assets/icons/alert.svg';
@@ -33,7 +41,7 @@ export default function MyRecommendSwiper() {
         }
         return prev - 1;
       });
-    }, 100000000000); // 작업하기 위해 잠깐 바꿔 둠
+    }, 1000); // 작업하기 위해 잠깐 바꿔 둠
 
     return () => clearInterval(timer);
   }, []);
@@ -65,49 +73,65 @@ export default function MyRecommendSwiper() {
       >
         {/* 나의 추천곡 */}
         <View style={styles.container}>
-          <Image source={albumImage} style={styles.backgroundImage} />
-          <View style={styles.overlay}>
-            <View style={styles.header}>
-              <Text style={styles.headerTitle}>나의 추천곡</Text>
-              <Pressable
-                onPress={() => {
-                  router.push('/(tabs)/music-recommend/alarmCenter');
-                }}
-                style={styles.bellWrapper}
-              >
-                <AlertIcon width={24} height={24} />
-              </Pressable>
-            </View>
-
-            <Text style={styles.dateText}>
-              <DateHeader />
-            </Text>
-            <Text style={styles.songTitle}>{title}</Text>
-            <Text style={styles.artist}>{artist}</Text>
-
-            <View style={styles.albumWrapper}>
-              <Image source={albumImage} style={styles.albumImage} />
-              <PlayIcon width={58.1} height={58.1} />
-            </View>
-
-            <Pressable
-              style={styles.commentButton}
-              onPress={() => setIsMyCommentVisible(true)}
+          <ImageBackground
+            source={albumImage}
+            style={styles.backgroundImage}
+            imageStyle={{ opacity: 0.8 }}
+          >
+            <LinearGradient
+              colors={['rgba(0,0,0,0.9)', 'rgba(0,0,0,0.2)']}
+              style={{ flex: 1 }}
             >
-              <CommentIcon width={16} height={14.37} />
-              <Text style={styles.commentText}>코멘트 확인하기</Text>
-            </Pressable>
+              <View style={styles.overlay}>
+                {/* 헤더 */}
+                <View style={styles.header}>
+                  <Text style={styles.headerTitle}>나의 추천곡</Text>
+                  <Pressable
+                    onPress={() =>
+                      router.push('/(tabs)/music-recommend/alarmCenter')
+                    }
+                    style={styles.bellWrapper}
+                  >
+                    <AlertIcon width={24} height={24} />
+                  </Pressable>
+                </View>
 
-            <Pressable
-              style={styles.replyStatusButton}
-              onPress={() => setIsReplyCommentVisible(true)}
-            >
-              <Text style={styles.replyText}>
-                아직 답장이 도착하지 않았어요
-              </Text>
-            </Pressable>
-          </View>
+                {/* 날짜 + 곡 정보 */}
+                <Text style={styles.dateText}>
+                  <DateHeader />
+                </Text>
+                <Text style={styles.songTitle}>{title}</Text>
+                <Text style={styles.artist}>{artist}</Text>
+
+                {/* 앨범 커버 + 재생버튼 */}
+                <View style={styles.albumWrapper}>
+                  <Image source={albumImage} style={styles.albumImage} />
+                  <PlayIcon width={58.1} height={58.1} />
+                </View>
+
+                {/* 코멘트 버튼 */}
+                <Pressable
+                  style={styles.commentButton}
+                  onPress={() => setIsMyCommentVisible(true)}
+                >
+                  <CommentIcon width={16} height={14} />
+                  <Text style={styles.commentText}>코멘트 확인하기</Text>
+                </Pressable>
+
+                {/* 답장 상태 버튼 */}
+                <Pressable
+                  style={styles.replyStatusButton}
+                  onPress={() => setIsReplyCommentVisible(true)}
+                >
+                  <Text style={styles.replyText}>
+                    아직 답장이 도착하지 않았어요
+                  </Text>
+                </Pressable>
+              </View>
+            </LinearGradient>
+          </ImageBackground>
         </View>
+
         {/* 추천 도착 타이머 */}
         <View style={styles.container}>
           <View style={styles.timeOverlay}>
@@ -125,6 +149,8 @@ export default function MyRecommendSwiper() {
             <Text style={styles.recommendDateText}>
               <DateHeader />
             </Text>
+
+            {/* 원형 타이머 박스 */}
             <View style={styles.circleBox}>
               <View style={styles.BandnolLogo}>
                 <BandnolIcon width={48} height={48} />
@@ -132,6 +158,8 @@ export default function MyRecommendSwiper() {
               <Text style={styles.countdownLabel}>오늘의 추천곡 도착까지</Text>
               <Text style={styles.countdown}>{formatTime(timeLeft)}</Text>
             </View>
+
+            {/* 하단 설정 버튼 */}
             <View style={styles.settingRow}>
               <ErrorIcon width={16} height={16} />
               <Text style={styles.setting}>추천곡 수신시간 설정</Text>
@@ -139,6 +167,7 @@ export default function MyRecommendSwiper() {
           </View>
         </View>
       </Swiper>
+
       <CommentModal
         visible={isMyCommentVisible}
         onClose={() => setIsMyCommentVisible(false)}
@@ -164,8 +193,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
   backgroundImage: {
     ...StyleSheet.absoluteFillObject,
-    width: '100%',
-    height: '100%',
+    flex: 1,
   },
   overlay: {
     flex: 1,
@@ -186,8 +214,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 140,
-    backgroundColor: '#000',
+    height: 120,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -222,18 +249,13 @@ const styles = StyleSheet.create({
   bellWrapper: {
     position: 'absolute',
     right: 24,
-    top: 82,
-  },
-  bellIcon: {
-    width: 24,
-    height: 24,
-    tintColor: '#fff',
+    top: 72,
   },
   dateText: {
     ...Typography.subtitle2,
     color: '#EAEAEA',
     marginTop: 70,
-    marginBottom: 20,
+    marginBottom: 50,
   },
   recommendDateText: {
     ...Typography.subtitle2,
@@ -293,7 +315,7 @@ const styles = StyleSheet.create({
     color: '#B3B3B3',
   },
   circleBox: {
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: '#fff',
     borderRadius: 200,
     width: 224,
@@ -317,11 +339,18 @@ const styles = StyleSheet.create({
   },
   settingRow: {
     flexDirection: 'row',
+    alignItems: 'center',
   },
   setting: {
     ...Typography.body2,
     color: '#B3B3B3',
     textDecorationLine: 'underline',
     marginLeft: 5,
+  },
+  activeDotStyle: {
+    backgroundColor: '#fff',
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
 });

@@ -1,6 +1,14 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  Image,
+  ImageBackground,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 import LikeIcon from '@/assets/icons/like.svg';
 import UnlikeIcon from '@/assets/icons/unlike.svg';
@@ -9,6 +17,7 @@ import DateHeader from '@/components/common/DateHeader';
 import { Typography } from '@/constants/typography';
 
 const albumImage = require('@/assets/images/album-cover.jpg');
+const playButton = require('@/assets/images/play.png');
 
 export default function ReceiveRecommend() {
   const {
@@ -46,94 +55,104 @@ export default function ReceiveRecommend() {
     setIsModalVisible(true);
   };
   return (
-    <View style={styles.container}>
-      {/* 헤더 */}
-      <View style={styles.header}>
-        <Text style={styles.headerText}>추천 받은 곡</Text>
-      </View>
+    <ImageBackground
+      source={albumImage}
+      style={styles.backgroundImage}
+      imageStyle={{ opacity: 0.8 }}
+    >
+      <LinearGradient
+        colors={['rgba(0,0,0,1)', 'rgba(0,0,0,0)']}
+        style={{ flex: 1 }}
+      >
+        <View style={styles.overlay}>
+          {/* 헤더 */}
+          <Text style={styles.headerText}>추천 받은 곡</Text>
 
-      {/* 날짜 */}
-      <Text style={styles.dateText}>
-        <DateHeader />
-      </Text>
-
-      {/* 곡 정보 */}
-      <Text style={styles.songTitle}>{title}</Text>
-      <Text style={styles.artist}>{artist}</Text>
-      <View style={styles.albumWrapper}>
-        <Image source={albumImage} style={styles.albumImage} />
-        <Image
-          source={require('@/assets/images/play.png')}
-          style={{ width: 62, height: 62 }}
-        />
-      </View>
-      <Text style={styles.fromText}>
-        From. <Text style={styles.sender}>{sender}</Text>
-      </Text>
-
-      {/* 버튼 */}
-      <View style={styles.likeOptions}>
-        <View style={styles.likeRow}>
-          <Text style={styles.like}>
-            <LikeIcon width={24} height={24} style={styles.like} />
+          {/* 날짜 */}
+          <Text style={styles.dateText}>
+            <DateHeader />
           </Text>
-          <Text style={styles.likeLabel}>좋아요</Text>
-        </View>
-        <Pressable>
-          <View style={styles.unlikeRow}>
-            <Text style={styles.unlike}>
-              <UnlikeIcon width={21} height={21} style={styles.unlike} />
-            </Text>
-            <Text style={styles.unlikeLabel}>별로예요</Text>
+
+          {/* 곡 정보 */}
+          <Text style={styles.songTitle}>{title}</Text>
+          <Text style={styles.artist}>{artist}</Text>
+
+          {/* 앨범 커버 + 재생 버튼 */}
+          <View style={styles.albumWrapper}>
+            <Image source={albumImage} style={styles.albumImage} />
+            <Image source={playButton} style={styles.playButton} />
           </View>
-        </Pressable>
-      </View>
-      <View style={styles.buttonRow}>
-        <Pressable
-          style={styles.confirmComment}
-          onPress={() => openModal('view')}
-        >
-          <Text style={styles.confirmCommentText}>코멘트 확인하기</Text>
-        </Pressable>
-        <Pressable style={styles.sendReply} onPress={() => openModal('reply')}>
-          <Text style={styles.sendReplyText}>답장 보내기</Text>
-        </Pressable>
-      </View>
-      <CommentModal
-        visible={isModalVisible}
-        onClose={() => setIsModalVisible(false)}
-        title={modalProps.title}
-        description={modalProps.description}
-        closeText={modalProps.closeText}
-        closeColor={modalProps.closeColor}
-      />
-    </View>
+
+          {/* 보낸 사람 */}
+          <Text style={styles.fromText}>
+            From. <Text style={styles.sender}>{sender}</Text>
+          </Text>
+
+          {/* 좋아요 + 싫어요 */}
+          <View style={styles.likeOptions}>
+            <View style={styles.likeRow}>
+              <LikeIcon width={18} height={18} style={styles.like} />
+              <Text style={styles.likeLabel}>좋아요</Text>
+            </View>
+            <Pressable>
+              <View style={styles.likeRow}>
+                <UnlikeIcon width={18} height={18} style={styles.unlike} />
+                <Text style={styles.unlikeLabel}>별로예요</Text>
+              </View>
+            </Pressable>
+          </View>
+
+          {/* 버튼 */}
+          <View style={styles.buttonRow}>
+            <Pressable
+              style={styles.confirmComment}
+              onPress={() => openModal('view')}
+            >
+              <Text style={styles.confirmCommentText}>코멘트 확인하기</Text>
+            </Pressable>
+            <Pressable
+              style={styles.sendReply}
+              onPress={() => openModal('reply')}
+            >
+              <Text style={styles.sendReplyText}>답장 보내기</Text>
+            </Pressable>
+          </View>
+
+          {/* 모달 */}
+          <CommentModal
+            visible={isModalVisible}
+            onClose={() => setIsModalVisible(false)}
+            title={modalProps.title}
+            description={modalProps.description}
+            closeText={modalProps.closeText}
+            closeColor={modalProps.closeColor}
+          />
+        </View>
+      </LinearGradient>
+    </ImageBackground>
   );
 }
-
 const styles = StyleSheet.create({
-  container: {
+  backgroundImage: {
     flex: 1,
-    backgroundColor: '#000',
-    alignItems: 'center',
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     paddingHorizontal: 24,
     paddingTop: 80,
-  },
-  header: {
-    marginBottom: 4,
+    alignItems: 'center',
   },
   headerText: {
-    alignItems: 'center',
-    justifyContent: 'center',
     ...Typography.subtitle1B,
-    textAlign: 'center',
     color: '#fff',
+    //marginBottom: 8,
   },
   dateText: {
     ...Typography.subtitle2,
     color: '#EAEAEA',
     marginTop: 50,
-    marginBottom: 30,
+    marginBottom: 40,
   },
   songTitle: {
     ...Typography.h1,
@@ -148,7 +167,7 @@ const styles = StyleSheet.create({
   fromText: {
     ...Typography.body1,
     color: '#D9D9D9',
-    marginBottom: 10,
+    marginBottom: 20,
   },
   sender: {
     ...Typography.body1,
@@ -170,17 +189,19 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   playButton: {
+    width: 62,
+    height: 62,
     zIndex: 10,
   },
   likeOptions: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    marginBottom: 30,
     alignItems: 'center',
-    marginBottom: 20,
   },
   likeRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginRight: 20,
   },
   like: {
     marginRight: 4,
@@ -188,7 +209,6 @@ const styles = StyleSheet.create({
   likeLabel: {
     ...Typography.body2,
     color: '#7C7C7C',
-    marginRight: 15,
   },
   unlikeRow: {
     flexDirection: 'row',
@@ -196,12 +216,10 @@ const styles = StyleSheet.create({
   },
   unlike: {
     marginRight: 4,
-    marginLeft: 15,
   },
   unlikeLabel: {
     ...Typography.body2,
     color: '#7C7C7C',
-    marginRight: 4,
   },
   buttonRow: {
     flexDirection: 'row',
@@ -213,8 +231,7 @@ const styles = StyleSheet.create({
     height: 50,
     backgroundColor: '#fff',
     borderRadius: 10,
-    paddingVertical: 12,
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
   },
   sendReply: {
@@ -222,18 +239,15 @@ const styles = StyleSheet.create({
     height: 50,
     backgroundColor: '#FB4932',
     borderRadius: 10,
-    paddingVertical: 12,
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
   },
   confirmCommentText: {
     ...Typography.subtitle3,
     color: '#121212',
-    paddingVertical: 4,
   },
   sendReplyText: {
     ...Typography.subtitle3,
     color: '#FFFFFF',
-    paddingVertical: 4,
   },
 });
