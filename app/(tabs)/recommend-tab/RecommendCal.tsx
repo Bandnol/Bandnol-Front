@@ -216,6 +216,7 @@ const styles = StyleSheet.create({
     height: `${100 / 6}%`,
     justifyContent: 'flex-start',
     alignItems: 'center',
+    backgroundColor: 'Gray900',
   },
   selectedCell: {
     backgroundColor: '#333',
@@ -223,7 +224,7 @@ const styles = StyleSheet.create({
     borderColor: '#fff',
   },
   cellDimmed: {
-    backgroundColor: '#121212',
+    backgroundColor: 'Gray900',
     opacity: 0.3,
   },
   dateText: {
