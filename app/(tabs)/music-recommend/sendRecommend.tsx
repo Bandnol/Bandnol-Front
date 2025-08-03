@@ -58,7 +58,15 @@ export default function SendRecommendPage() {
 
     setTimeout(() => {
       setIsSendModalVisible(false);
-      router.push('/(tabs)/music-recommend/myRecommend');
+      router.push({
+        pathname: '/(tabs)/music-recommend/myRecommend',
+        params: {
+          title,
+          artist,
+          image,
+          recomsId,
+        },
+      });
     }, 2000);
   };
 

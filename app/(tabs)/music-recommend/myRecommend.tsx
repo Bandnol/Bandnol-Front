@@ -20,16 +20,20 @@ import CommentModal from '@/components/common/CommentModal';
 import DateHeader from '@/components/common/DateHeader';
 import { Typography } from '@/constants/typography';
 
-const albumImage = require('@/assets/images/album-cover.jpg');
+const defaultAlbumImage = require('@/assets/images/album-cover.jpg'); // 임시 이미지..
 
 export default function MyRecommendSwiper() {
-  const { title = '방학을 기다리던 날들', artist = '문없는집' } =
-    useLocalSearchParams();
+  const { title, artist, image, recomsId } = useLocalSearchParams();
   const router = useRouter();
   const swiperRef = useRef<any>(null);
   const [timeLeft, setTimeLeft] = useState(10);
   const [isMyCommentVisible, setIsMyCommentVisible] = useState(false);
   const [isReplyCommentVisible, setIsReplyCommentVisible] = useState(false);
+
+  const albumSource =
+    typeof image === 'string' && image.length > 0
+      ? { uri: image }
+      : defaultAlbumImage;
 
   // 타이머 시작
   useEffect(() => {
@@ -41,7 +45,7 @@ export default function MyRecommendSwiper() {
         }
         return prev - 1;
       });
-    }, 1000); // 작업하기 위해 잠깐 바꿔 둠
+    }, 10000000); // 작업하기 위해 잠깐 바꿔 둠
 
     return () => clearInterval(timer);
   }, []);
@@ -74,7 +78,7 @@ export default function MyRecommendSwiper() {
         {/* 나의 추천곡 */}
         <View style={styles.container}>
           <ImageBackground
-            source={albumImage}
+            source={albumSource}
             style={styles.backgroundImage}
             imageStyle={{ opacity: 0.8 }}
           >
@@ -105,7 +109,7 @@ export default function MyRecommendSwiper() {
 
                 {/* 앨범 커버 + 재생버튼 */}
                 <View style={styles.albumWrapper}>
-                  <Image source={albumImage} style={styles.albumImage} />
+                  <Image source={albumSource} style={styles.albumImage} />
                   <PlayIcon width={58.1} height={58.1} />
                 </View>
 
