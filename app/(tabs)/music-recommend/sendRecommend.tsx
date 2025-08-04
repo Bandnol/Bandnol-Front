@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 
 import { fetchAIComment } from '@/api/aiRecommend';
+import { postReplyAsRecoms } from '@/api/postReplyAsRecoms';
 import Checkboxchecked from '@/assets/icons/checkbox-checked.svg';
 import Checkbox from '@/assets/icons/checkbox.svg';
 import DateHeader from '@/components/common/DateHeader';
@@ -26,18 +27,16 @@ export default function SendRecommendPage() {
   const [isAnonymous, setIsAnonymous] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isSendModalVisible, setIsSendModalVisible] = useState(false);
-  const { title: paramTitle, artist: paramArtist } = useLocalSearchParams();
+
+  console.log('🎵 추천 정보:', { title, artist, image, recomsId });
 
   const handleGenerateComment = async () => {
     setIsModalVisible(true);
 
-    if (!paramTitle || !paramArtist) return;
+    if (!title || !artist) return;
 
     try {
-      const res = await fetchAIComment(
-        paramTitle as string,
-        paramArtist as string,
-      );
+      const res = await fetchAIComment(title as string, artist as string);
 
       if (res?.success && res.data) {
         setComment(res.data);
@@ -51,23 +50,49 @@ export default function SendRecommendPage() {
     }
   }; // ai 코멘트 api
 
-  const handleSend = () => {
-    if (!comment.trim()) return;
+  const handleSend = async () => {
+    if (isSendModalVisible) {
+      console.warn('⚠️ 이미 전송 중입니다.');
+      return;
+    }
+
+    if (!comment.trim() || !recomsId) return;
 
     setIsSendModalVisible(true);
 
-    setTimeout(() => {
+    try {
+      const res = await postReplyAsRecoms(
+        recomsId,
+        comment,
+        isAnonymous,
+        title as string,
+        artist as string,
+      );
+
+      if (res.success) {
+        setTimeout(() => {
+          setIsSendModalVisible(false);
+          router.push({
+            pathname: '/(tabs)/music-recommend/myRecommend',
+            params: {
+              title,
+              artist,
+              image,
+              recomsId,
+            },
+          });
+        }, 2000);
+      } else if (res.error?.response?.status === 409) {
+        alert('이미 이 추천에 답장한 적이 있어요!');
+        setIsSendModalVisible(false);
+      } else {
+        alert('답장 전송에 실패했어요. 다시 시도해주세요.');
+        setIsSendModalVisible(false);
+      }
+    } catch (err) {
+      console.error('❌ 댓글 전송 중 에러:', err);
       setIsSendModalVisible(false);
-      router.push({
-        pathname: '/(tabs)/music-recommend/myRecommend',
-        params: {
-          title,
-          artist,
-          image,
-          recomsId,
-        },
-      });
-    }, 2000);
+    }
   };
 
   return (
