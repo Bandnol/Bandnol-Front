@@ -23,7 +23,7 @@ import { Typography } from '@/constants/typography';
 const defaultAlbumImage = require('@/assets/images/album-cover.jpg'); // 임시 이미지..
 
 export default function MyRecommendSwiper() {
-  const { title, artist, image, recomsId } = useLocalSearchParams();
+  const { title, artist, image, recomsId, comment } = useLocalSearchParams();
   const router = useRouter();
   const swiperRef = useRef<any>(null);
   const [timeLeft, setTimeLeft] = useState(10);
@@ -176,7 +176,7 @@ export default function MyRecommendSwiper() {
         visible={isMyCommentVisible}
         onClose={() => setIsMyCommentVisible(false)}
         title="MY COMMENT"
-        description="여름에 참 잘 어울리는 노래입니다~ 같은 앨범 수록곡도 다 너무 좋아서 요즘 듣기 딱이에요! 추천합니다 ㅎㅎ"
+        description={comment as string}
         closeColor="#1F1F1F"
         closeText="닫기"
       />

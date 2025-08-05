@@ -79,6 +79,7 @@ export default function SendRecommendPage() {
               artist,
               image,
               recomsId,
+              comment,
             },
           });
         }, 2000);
