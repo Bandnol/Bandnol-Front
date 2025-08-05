@@ -1,6 +1,15 @@
 import { Typography } from '@/constants/typography';
+import * as Clipboard from 'expo-clipboard';
 import { useState } from 'react';
-import { Image, LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
+import {
+  Alert, //나중에 toast로 변경하기
+  Image,
+  LayoutChangeEvent,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import Modal from 'react-native-modal';
 import Svg, { Circle } from 'react-native-svg';
 import type { CalendarItem } from './RecommendCal';
@@ -28,6 +37,13 @@ export default function RecShareModal({
 
   const handleLayout = (e: LayoutChangeEvent) => {
     setContainerWidth(e.nativeEvent.layout.width);
+  };
+
+  const handleCopyLink = async () => {
+    if (!recData) return;
+    const shareUrl = `https://bandnol.app/recoms/${recData.id}`; // 예시 링크
+    await Clipboard.setStringAsync(shareUrl);
+    Alert.alert('링크가 복사되었습니다.');
   };
 
   const circleSize = containerWidth * 0.28;
@@ -151,9 +167,9 @@ export default function RecShareModal({
         </View>
 
         <View style={styles.shareItem}>
-          <View style={styles.shareButton}>
+          <Pressable style={styles.shareButton} onPress={handleCopyLink}>
             <Link />
-          </View>
+          </Pressable>
           <Text style={styles.shareText}>링크 복사</Text>
         </View>
       </View>
@@ -172,7 +188,7 @@ const styles = StyleSheet.create({
   containerWrapper: {
     width: 335,
     height: 489,
-    backgroundColor: '#222', // border color
+    backgroundColor: '#222',
     padding: BORDER_WIDTH,
     borderRadius: OUTER_RADIUS,
     overflow: 'hidden',
