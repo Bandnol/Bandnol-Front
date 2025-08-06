@@ -1,5 +1,8 @@
+import api from '@/store/api'; // <-- import your axios instance
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import * as SecureStore from 'expo-secure-store';
+import { jwtDecode } from 'jwt-decode';
+import React, { useEffect, useState } from 'react';
 import {
   Image,
   Modal,
@@ -18,6 +21,62 @@ export default function UserInfo() {
   const router = useRouter();
   const [logoutVisible, setLogoutVisible] = useState(false);
   const [withdrawVisible, setWithdrawVisible] = useState(false);
+
+  // State variables for email and name
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const token = await SecureStore.getItemAsync('JWTToken');
+        console.log('토큰:', token);
+        if (token) {
+          const decoded: any = jwtDecode(token);
+          console.log('디코딩된 토큰:', decoded);
+          setEmail(decoded.email || '');
+          setName(decoded.name || '');
+        }
+      } catch (error) {
+        console.error('회원 정보 조회 에러:', error);
+      }
+    };
+    fetchUserProfile();
+  }, []);
+
+  const updateUserInfo = async () => {
+    try {
+      const token = await SecureStore.getItemAsync('JWTToken');
+      if (!token) {
+        console.error('토큰이 없습니다.');
+        return;
+      }
+      const response = await api.patch(
+        '/api/v1/users/me/profiles',
+        {
+          nickname: name,
+          ownId: email,
+          gender: 'WOMAN',
+          birth: '2004-03-08',
+          recomsTime: '09:00',
+          bio: '',
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      const data = response.data;
+      console.log('회원 정보 수정 결과:', data);
+      if (data.success) {
+        alert('회원 정보가 수정되었습니다!');
+      } else {
+        alert(`수정 실패: ${data.error.message}`);
+      }
+    } catch (error) {
+      console.error('회원 정보 수정 에러:', error);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -48,14 +107,14 @@ export default function UserInfo() {
               source={{ uri: 'https://placehold.co/24x24' }} // 임시 이미지
               style={styles.icon}
             />
-            <Text style={styles.textValue}>yxxng@soongsil.ac.kr</Text>
+            <Text style={styles.textValue}>{email}</Text>
           </View>
 
           {/* 이름 */}
           <View style={styles.marginBlock}>
             <Text style={styles.label}>이름</Text>
             <View style={styles.textBox}>
-              <Text style={styles.textValue}>장우영</Text>
+              <Text style={styles.textValue}>{name}</Text>
             </View>
           </View>
 
@@ -64,7 +123,7 @@ export default function UserInfo() {
             <Text style={styles.label}>아이디</Text>
             <View style={styles.textBoxRow}>
               <Text style={styles.idtextValue}>sayoxx</Text>
-              <TouchableOpacity onPress={() => {}}>
+              <TouchableOpacity onPress={updateUserInfo}>
                 <Text style={styles.linkText}>변경</Text>
               </TouchableOpacity>
             </View>

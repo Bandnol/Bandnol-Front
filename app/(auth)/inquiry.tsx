@@ -45,7 +45,12 @@ const Component = () => {
       });
       console.log('문의 전송 성공:', res.data);
       alert('문의가 성공적으로 전송되었습니다.');
-      router.back();
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        // 뒤로 갈 화면이 없으면 특정 화면으로 이동
+        router.replace('/(tabs)/myPage/myPage');
+      }
     } catch (error: any) {
       console.error('문의 전송 실패:', error);
       if (error.response) {
@@ -66,7 +71,13 @@ const Component = () => {
         <View style={[styles.view, styles.viewBg]}>
           <View style={styles.statusBarLayout}>
             <TouchableOpacity
-              onPress={() => router.back()}
+              onPress={() => {
+                if (router.canGoBack()) {
+                  router.back();
+                } else {
+                  router.replace('/(tabs)/myPage/myPage');
+                }
+              }}
               style={styles.backIcon}
             >
               <BackIcon width={24} height={24} />
