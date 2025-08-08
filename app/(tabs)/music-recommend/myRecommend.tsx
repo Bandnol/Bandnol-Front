@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import Swiper from 'react-native-swiper';
 
+import { fetchReplyComment } from '@/api/replies';
 import AlertIcon from '@/assets/icons/alert.svg';
 import BandnolIcon from '@/assets/icons/bandnol-logo.svg';
 import CommentIcon from '@/assets/icons/comment.svg';
@@ -23,12 +24,15 @@ import { Typography } from '@/constants/typography';
 const defaultAlbumImage = require('@/assets/images/album-cover.jpg'); // 임시 이미지..
 
 export default function MyRecommendSwiper() {
-  const { title, artist, image, recomsId, comment } = useLocalSearchParams();
+  const { title, artist, image, recomsId, comment, content } =
+    useLocalSearchParams();
   const router = useRouter();
   const swiperRef = useRef<any>(null);
   const [timeLeft, setTimeLeft] = useState(10);
   const [isMyCommentVisible, setIsMyCommentVisible] = useState(false);
   const [isReplyCommentVisible, setIsReplyCommentVisible] = useState(false);
+  const [replyComment, setReplyComment] = useState<string | null>(null);
+  const [replySender, setReplySender] = useState<string | null>(null); // 보낸 사람 이름
 
   const albumSource =
     typeof image === 'string' && image.length > 0
@@ -65,6 +69,20 @@ export default function MyRecommendSwiper() {
     const secRemain = String(sec % 60).padStart(2, '0');
     return `00:${min}:${secRemain}`;
   };
+  useEffect(() => {
+    const getReply = async () => {
+      const replyData = await fetchReplyComment(recomsId, 'received');
+      console.log('📦 replyData:', replyData);
+
+      if (replyData) {
+        setReplyComment(replyData.content);
+        setReplySender(replyData.senderName);
+      } else {
+        setReplyComment(null);
+      }
+    };
+    getReply();
+  }, []);
 
   return (
     <>
@@ -124,11 +142,23 @@ export default function MyRecommendSwiper() {
 
                 {/* 답장 상태 버튼 */}
                 <Pressable
-                  style={styles.replyStatusButton}
-                  onPress={() => setIsReplyCommentVisible(true)}
+                  style={[
+                    styles.replyStatusButton,
+                    replyComment && { backgroundColor: '#F4F4F4' }, // 답장이 오면 배경 흰색
+                  ]}
+                  onPress={() => {
+                    if (replyComment) setIsReplyCommentVisible(true);
+                  }}
                 >
-                  <Text style={styles.replyText}>
-                    아직 답장이 도착하지 않았어요
+                  <Text
+                    style={[
+                      styles.replyText,
+                      replyComment && { color: '#000000' },
+                    ]}
+                  >
+                    {replyComment
+                      ? `${replySender} 님의 답장 확인하기`
+                      : '아직 답장이 도착하지 않았어요'}
                   </Text>
                 </Pressable>
               </View>
