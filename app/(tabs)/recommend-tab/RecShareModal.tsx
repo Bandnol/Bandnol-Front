@@ -2,6 +2,9 @@ import { Typography } from '@/constants/typography';
 import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
 import { useRef, useState } from 'react'; // ⬅️ 수정: useRef 추가
+// 상단 import 구역에 추가
+import Share, { Social } from 'react-native-share'; // ⬅️ 인스타 스토리 공유용
+import { Platform } from 'react-native'; // ⬅️ 안내용(오류 핸들링)
 
 import {
   Alert, //나중에 toast로 변경하기
@@ -93,6 +96,44 @@ export default function RecShareModal({
 
   const circleSize = containerWidth * 0.28;
   const bigCircleSize = containerWidth * 0.52;
+  // 컴포넌트 내부, handleSaveImage 아래에 추가
+  // ⬇️ 인스타 스토리 공유: ViewShot으로 캡처 → react-native-share로 열기
+  const handleShareToInstagramStory = async () => {
+    try {
+      if (!recData) return;
+
+      // 1) ViewShot으로 현재 카드(=containerInner 포함 영역) 캡처
+      //  - format/png + quality 1로 고화질
+      //  - 기본 반환은 파일 URI (예: file:///var/...) 이고, IG 스토리의 backgroundImage로 바로 사용 가능
+      const uri = await viewShotRef.current?.capture?.();
+      if (!uri) throw new Error('이미지 캡처 실패');
+
+      // 2) 스토리 딥링크/출처 URL (선택)
+      const deepLink = `https://bandnol.app/recoms/${recData.id}`;
+
+      // 3) 페이스북 앱 ID (⚠️ 2023.01부터 IG Stories에 필수)
+      //    실제 발급받은 Facebook App ID로 교체하세요.
+      const FACEBOOK_APP_ID = 'YOUR_FB_APP_ID'; // ⬅️ TODO: 실제 앱 ID로 교체
+
+      // 4) react-native-share: 특정 앱(IG Stories)로 바로 공유
+      await Share.shareSingle({
+        social: Social.InstagramStories,
+        appId: FACEBOOK_APP_ID, // ⬅️ 필수
+        backgroundImage: uri, // ⬅️ 방금 캡처한 이미지 전체를 배경으로
+        // stickerImage: uri,  // ⬅️ 스티커로 쓰고 싶으면 주석 해제
+        backgroundTopColor: '#000000',
+        backgroundBottomColor: '#000000',
+        attributionURL: deepLink, // ⬅️ 선택: 스토리에서 출처 링크
+      });
+    } catch (error: any) {
+      // IG 미설치, 사용자가 닫기, Expo Go 사용 등 케이스
+      const msg =
+        Platform.OS === 'ios'
+          ? '인스타그램 앱이 설치되어 있고 Dev Client/EAS 빌드에서만 동작합니다. (Expo Go에서는 동작하지 않음)'
+          : (error?.message ?? String(error));
+      Alert.alert('공유 실패', msg);
+    }
+  };
 
   return (
     <Modal
