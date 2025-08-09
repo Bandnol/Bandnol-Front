@@ -28,7 +28,7 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>bandnol</string>
-          <string>com.bandnol.Bandnol</string>
+          <string>com.bhyn.bandnol</string>
         </array>
       </dict>
       <dict>

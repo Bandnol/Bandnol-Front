@@ -20,7 +20,6 @@ import Svg, { Circle } from 'react-native-svg';
 import type { CalendarItem } from './RecommendCal';
 
 import ViewShot from 'react-native-view-shot'; // ⬅️ 추가
-import * as MediaLibrary from 'expo-media-library'; // ⬅️ 추가
 
 import Insta from '@/assets/icons/size_m/insta.svg';
 import Link from '@/assets/icons/size_m/link.svg';
@@ -55,73 +54,17 @@ export default function RecShareModal({
     Alert.alert('링크가 복사되었습니다.');
   };
 
-  // 기존 handleShareToX 교체
-  const handleShareToX = async () => {
-    try {
-      if (!recData) return;
+  const handleShareToX = () => {
+    if (!recData) return;
+    const shareUrl = `https://bandnol.app/recoms/${recData.id}`;
+    const text = encodeURIComponent(
+      `${recData.title} - ${recData.artistName}\n${shareUrl}`,
+    );
 
-      // 1) ViewShot으로 현재 카드 캡처 (용량 줄이고 싶으면 width/quality 조정)
-      const uri = await viewShotRef.current?.capture?.();
-      if (!uri) throw new Error('이미지 캡처 실패');
-
-      const shareUrl = `https://bandnol.app/recoms/${recData.id}`;
-      const message = `${recData.title} - ${recData.artistName}\n${shareUrl}`;
-
-      if (Platform.OS === 'ios') {
-        // 2) iOS: X 앱에 이미지 + 텍스트로 바로 공유
-        await Share.shareSingle({
-          social: Social.Twitter, // ✅ iOS에서만 지원
-          url: uri, // 캡처 이미지 파일 URI
-          type: 'image/png', // 또는 'image/*'
-          message, // 텍스트(링크 포함)
-        });
-      } else {
-        // 3) Android: 트위터 앱에 이미지 직접 붙이기는 공식 지원 없음
-        //    폴백 1) 시스템 공유 시트로 열어 사용자가 X를 선택해 붙이기
-        try {
-          await Share.open({
-            url: uri,
-            type: 'image/png',
-            message,
-            failOnCancel: false,
-          });
-        } catch {
-          // 4) 폴백 2) 웹 인텐트(이미지 첨부 불가, 텍스트/링크만)
-          const text = encodeURIComponent(message);
-          await Linking.openURL(
-            `https://twitter.com/intent/tweet?text=${text}`,
-          );
-        }
-      }
-    } catch (e: any) {
-      Alert.alert('공유 실패', e?.message ?? String(e));
-    }
-  };
-
-  // ⬅️ 추가: containerInner만 캡처해서 저장
-  const handleSaveImage = async () => {
-    try {
-      // 권한 요청
-      const perm = await MediaLibrary.requestPermissionsAsync();
-      if (!perm.granted) {
-        Alert.alert('권한 필요', '사진 보관함 저장 권한을 허용해주세요.');
-        return;
-      }
-
-      // ViewShot 캡처
-      const uri = await viewShotRef.current?.capture?.();
-      if (!uri) throw new Error('이미지 캡처에 실패했습니다.');
-
-      // 갤러리에 저장
-      const asset = await MediaLibrary.createAssetAsync(uri);
-      // 없으면 앨범 생성 시도 (이미 있으면 catch로 무시)
-      await MediaLibrary.createAlbumAsync('Bandnol', asset, false).catch(
-        () => {},
-      );
-      Alert.alert('저장 완료', '갤러리에 이미지가 저장되었습니다.');
-    } catch (e: any) {
-      Alert.alert('저장 실패', e?.message ?? String(e));
-    }
+    // X 앱 열기 (앱이 없으면 웹으로 이동)
+    Linking.openURL(`twitter://post?message=${text}`).catch(() => {
+      Linking.openURL(`https://twitter.com/intent/tweet?text=${text}`);
+    });
   };
 
   const circleSize = containerWidth * 0.28;
@@ -149,13 +92,11 @@ export default function RecShareModal({
       await Share.shareSingle({
         social: Social.InstagramStories,
         appId: FACEBOOK_APP_ID, // ⬅️ 필수
-        backgroundImage: uri, // ⬅️ 방금 캡처한 이미지 전체를 배경으로
-        //stickerImage: uri, // ⬅️ 스티커로 쓰고 싶으면 주석 해제
+        //backgroundImage: uri, // ⬅️ 방금 캡처한 이미지 전체를 배경으로
+        stickerImage: uri, // ⬅️ 스티커로 쓰고 싶으면 주석 해제
         backgroundTopColor: '#000000',
         backgroundBottomColor: '#000000',
-        attributionURL: deepLink, // ⬅️ 선택: 스토리에서 출처 링크
-        linkUrl: `https://bandnol.app/recoms/${recData.id}`,
-        linkText: '보기',
+        //attributionURL: deepLink, // ⬅️ 선택: 스토리에서 출처 링크
       });
     } catch (error: any) {
       // IG 미설치, 사용자가 닫기, Expo Go 사용 등 케이스
@@ -261,12 +202,19 @@ export default function RecShareModal({
               </Text>
             </Text>
           </View>
+          <Quit
+            onPress={onClose}
+            style={{
+              position: 'absolute',
+              alignSelf: 'flex-end',
+              top: 20,
+              right: 20,
+            }}
+          />
         </View>
       </ViewShot>
 
-      {/* 공유 버튼 그룹 */}
       <View style={styles.buttonGroup}>
-        {/* ⬇️ 버튼을 Pressable로 바꾸고 onPress 연결 */}
         <Pressable
           style={styles.shareItem}
           onPress={handleShareToInstagramStory}
@@ -291,17 +239,6 @@ export default function RecShareModal({
           <Text style={styles.shareText}>링크 복사</Text>
         </View>
       </View>
-
-      {/* 닫기 버튼은 캡처 영역 바깥(= wrapper)에 둬서 이미지에 안 찍히도록 유지 */}
-      <Quit
-        onPress={onClose}
-        style={{
-          position: 'absolute',
-          alignSelf: 'flex-end',
-          top: 20,
-          right: 20,
-        }}
-      />
     </Modal>
   );
 }

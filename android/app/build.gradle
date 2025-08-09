@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.bandnol.Bandnol'
+    namespace 'com.bhyn.bandnol'
     defaultConfig {
-        applicationId 'com.bandnol.Bandnol'
+        applicationId 'com.bhyn.bandnol'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

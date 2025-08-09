@@ -1,4 +1,4 @@
-package com.bandnol.Bandnol
+package com.bhyn.bandnol
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build
