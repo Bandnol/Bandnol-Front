@@ -1,9 +1,18 @@
-import { CalendarItem } from '@/components/mockCalendarApi';
 import { Typography } from '@/constants/typography';
+import * as Clipboard from 'expo-clipboard';
 import { useState } from 'react';
-import { Image, LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
+import {
+  Alert, //나중에 toast로 변경하기
+  Image,
+  LayoutChangeEvent,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import Modal from 'react-native-modal';
-import Svg, { Circle } from 'react-native-svg'; // Svg도 import 해줘야 함
+import Svg, { Circle } from 'react-native-svg';
+import type { CalendarItem } from './RecommendCal';
 
 import Insta from '@/assets/icons/size_m/insta.svg';
 import Link from '@/assets/icons/size_m/link.svg';
@@ -30,6 +39,13 @@ export default function RecShareModal({
     setContainerWidth(e.nativeEvent.layout.width);
   };
 
+  const handleCopyLink = async () => {
+    if (!recData) return;
+    const shareUrl = `https://bandnol.app/recoms/${recData.id}`; // 예시 링크
+    await Clipboard.setStringAsync(shareUrl);
+    Alert.alert('링크가 복사되었습니다.');
+  };
+
   const circleSize = containerWidth * 0.28;
   const bigCircleSize = containerWidth * 0.52;
 
@@ -40,10 +56,10 @@ export default function RecShareModal({
       backdropOpacity={0.8}
       style={styles.modal}
     >
-      {/* 콘텐츠 박스 */}
-      <View style={styles.container} onLayout={handleLayout}>
-        {containerWidth > 0 && (
-          <>
+      {/* 테두리 wrapper */}
+      <View style={styles.containerWrapper}>
+        <View style={styles.containerInner} onLayout={handleLayout}>
+          {containerWidth > 0 && (
             <View
               style={{
                 position: 'relative',
@@ -103,31 +119,35 @@ export default function RecShareModal({
                 />
               </Svg>
             </View>
-          </>
-        )}
-        <Quit
-          onPress={onClose}
-          style={{
-            position: 'absolute',
-            alignSelf: 'flex-end',
-          }}
-        />
-        {isRecommended && (
-          <Text style={styles.toText}>
-            To. <Text style={{ color: '#F4F4F4' }}>me</Text>
+          )}
+
+          <Quit
+            onPress={onClose}
+            style={{
+              position: 'absolute',
+              alignSelf: 'flex-end',
+              top: 20,
+              right: 20,
+            }}
+          />
+
+          {isRecommended && (
+            <Text style={styles.toText}>
+              To. <Text style={{ color: '#F4F4F4' }}>me</Text>
+            </Text>
+          )}
+          <Text style={styles.titleText}>{recData.title}</Text>
+          <Text style={styles.artistText}>{recData.artistName}</Text>
+          <View style={styles.commentBox}>
+            <Text style={styles.commentText}>{recData.comment}</Text>
+          </View>
+          <Text style={styles.fromText}>
+            From.{' '}
+            <Text style={{ color: '#F4F4F4' }}>
+              {isRecommended ? recData.senderNickname : 'me'}
+            </Text>
           </Text>
-        )}
-        <Text style={styles.titleText}>{recData.title}</Text>
-        <Text style={styles.artistText}>{recData.artistName}</Text>
-        <View style={styles.commentBox}>
-          <Text style={styles.commentText}>{recData.comment}</Text>
         </View>
-        <Text style={styles.fromText}>
-          From.{' '}
-          <Text style={{ color: '#F4F4F4' }}>
-            {isRecommended ? recData.senderNickname : 'me'}
-          </Text>
-        </Text>
       </View>
 
       {/* 공유 버튼 그룹 */}
@@ -147,15 +167,17 @@ export default function RecShareModal({
         </View>
 
         <View style={styles.shareItem}>
-          <View style={styles.shareButton}>
+          <Pressable style={styles.shareButton} onPress={handleCopyLink}>
             <Link />
-          </View>
+          </Pressable>
           <Text style={styles.shareText}>링크 복사</Text>
         </View>
       </View>
     </Modal>
   );
 }
+const BORDER_WIDTH = 5;
+const OUTER_RADIUS = 20;
 
 const styles = StyleSheet.create({
   modal: {
@@ -163,14 +185,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  container: {
-    width: '90%',
-    aspectRatio: 335 / 489,
-    maxHeight: 489,
-    maxWidth: 335,
+  containerWrapper: {
+    width: 335,
+    height: 489,
     backgroundColor: '#222',
-    borderRadius: 20,
+    padding: BORDER_WIDTH,
+    borderRadius: OUTER_RADIUS,
     overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  containerInner: {
+    width: 319,
+    height: 480,
+    flex: 1,
+    backgroundColor: '#222',
+    borderRadius: OUTER_RADIUS - BORDER_WIDTH,
+    borderColor: '#7C7C7C',
+    borderWidth: 1,
     alignItems: 'center',
     padding: 20,
   },
@@ -209,8 +241,7 @@ const styles = StyleSheet.create({
     color: '#D9D9D9',
   },
   buttonGroup: {
-    position: 'absolute',
-    bottom: 80,
+    marginTop: 20,
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 25,
@@ -233,5 +264,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 12,
     textAlign: 'center',
+    lineHeight: 18,
   },
 });
