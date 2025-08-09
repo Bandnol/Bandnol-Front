@@ -1,7 +1,9 @@
+import { API_URL, TEST_TOKEN } from '@env';
+import axios from 'axios';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   Image,
   ImageBackground,
   Pressable,
@@ -16,15 +18,24 @@ import CommentModal from '@/components/common/CommentModal';
 import DateHeader from '@/components/common/DateHeader';
 import { Typography } from '@/constants/typography';
 
-const albumImage = require('@/assets/images/album-cover.jpg');
 const playButton = require('@/assets/images/play.png');
 
+const api = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${TEST_TOKEN}`, // .env에 있는 토큰
+  },
+});
+
+const getReceivedRecommend = async () => {
+  const res = await api.get(`/api/v1/recoms/received`);
+  return res.data; // { success, data, error }
+};
+
 export default function ReceiveRecommend() {
-  const {
-    title = '파도',
-    artist = '고고학',
-    sender = '익명의 사자',
-  } = useLocalSearchParams();
+  const [loading, setLoading] = useState(true);
+  const [recommend, setRecommend] = useState<any>(null);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [modalProps, setModalProps] = useState({
@@ -34,7 +45,45 @@ export default function ReceiveRecommend() {
     closeColor: '',
   });
 
+  // API 호출 로직
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await getReceivedRecommend();
+        console.log('요청 URL:', `${API_URL}/api/v1/recoms/received`);
+        console.log('서버 응답 상태:', res.success ? '성공' : '실패');
+        console.log('서버 응답 데이터:', JSON.stringify(res.data, null, 2));
+        if (res.success) {
+          setRecommend(res.data);
+        } else {
+          console.warn('API 응답 에러:', res.error);
+        }
+      } catch (e) {
+        console.error('API 호출 실패:', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // 모달
   const openModal = (type: 'view' | 'reply') => {
+    setModalProps({
+      title:
+        type === 'view'
+          ? `From. ${recommend?.sender?.nickname}`
+          : `To. ${recommend?.sender?.nickname}`,
+      description:
+        type === 'view'
+          ? recommend?.recomsSong?.comment || '추천 이유가 없습니다.'
+          : '답장을 작성해주세요.',
+      closeText: type === 'view' ? '닫기' : '답장 보내기',
+      closeColor: type === 'view' ? '#1F1F1F' : '#FB4932',
+    });
+    setIsModalVisible(true);
+    {
+      /*
     if (type === 'view') {
       setModalProps({
         title: 'From. noshel',
@@ -53,10 +102,21 @@ export default function ReceiveRecommend() {
       });
     }
     setIsModalVisible(true);
+    */
+    }
   };
+
+  if (loading) {
+    return (
+      <View style={[styles.overlay, { justifyContent: 'center' }]}>
+        <ActivityIndicator size="large" color="#fff" />
+      </View>
+    );
+  }
+
   return (
     <ImageBackground
-      source={albumImage}
+      source={{ uri: recommend?.recomsSong?.imgUrl }}
       style={styles.backgroundImage}
       imageStyle={{ opacity: 0.8 }}
     >
@@ -74,18 +134,22 @@ export default function ReceiveRecommend() {
           </Text>
 
           {/* 곡 정보 */}
-          <Text style={styles.songTitle}>{title}</Text>
-          <Text style={styles.artist}>{artist}</Text>
+          <Text style={styles.songTitle}>{recommend?.recomsSong?.title}</Text>
+          <Text style={styles.artist}>{recommend?.recomsSong?.artistName}</Text>
 
           {/* 앨범 커버 + 재생 버튼 */}
           <View style={styles.albumWrapper}>
-            <Image source={albumImage} style={styles.albumImage} />
+            <Image
+              source={{ uri: recommend?.recomsSong?.imgUrl }}
+              style={styles.albumImage}
+            />
             <Image source={playButton} style={styles.playButton} />
           </View>
 
           {/* 보낸 사람 */}
           <Text style={styles.fromText}>
-            From. <Text style={styles.sender}>{sender}</Text>
+            From.{' '}
+            <Text style={styles.sender}>{recommend?.sender?.nickname}</Text>
           </Text>
 
           {/* 좋아요 + 싫어요 */}
