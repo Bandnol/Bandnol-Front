@@ -1,12 +1,12 @@
-import api from '@/store/api'; // <-- import your axios instance
+import KaKao from '@/assets/icons/size_s/kakao.svg';
+import { Colors } from '@/constants/Colors';
+import { useUpdateOwnId } from '@/hooks/useUpdateOwnId';
+import api from '@/store/api';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { jwtDecode } from 'jwt-decode';
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
-  Image,
-  Modal,
   SafeAreaView,
   StatusBar,
   StyleSheet,
@@ -19,36 +19,66 @@ import {
 import BackArrow from '@/assets/icons/back-arrow.svg';
 import { Typography } from '@/constants/typography';
 
+import ConfirmModal from '@/components/common/ConfirmModal';
+import {
+  logout as kakaoLogout,
+  unlink as kakaoUnlink,
+} from '@react-native-kakao/user';
+
 export default function UserInfo() {
   const router = useRouter();
   const [logoutVisible, setLogoutVisible] = useState(false);
   const [withdrawVisible, setWithdrawVisible] = useState(false);
 
-  // State variables for email and name
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [ownId, setOwnId] = useState('');
-  const [editOwnIdVisible, setEditOwnIdVisible] = useState(false);
-  const [ownIdInput, setOwnIdInput] = useState('');
+  const [id, setId] = useState('');
+  const [isChecking, setIsChecking] = useState(false);
+  const [isDuplicate, setIsDuplicate] = useState<boolean | null>(null);
+  const [isIdValid, setIsIdValid] = useState(true);
+  const [hasCheckedId, setHasCheckedId] = useState(false);
+  const [idDirty, setIdDirty] = useState(false);
+
+  const validateId = (value: string) => /^[a-zA-Z0-9._]{1,20}$/.test(value);
+
+  const updateOwnId = useUpdateOwnId();
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        // 1) 로그인 시 저장해 둔 프로필 먼저 시도 (oauth 콜백 응답 그대로 저장했다고 가정)
-        const saved = await SecureStore.getItemAsync('UserProfile');
+        // 1) 로그인 시 SecureStore('user')에 저장해둔 사용자 정보 사용
+        const saved = await SecureStore.getItemAsync('user');
         if (saved) {
           try {
             const parsed = JSON.parse(saved);
-            // 저장 형태가 { user: { name, email } } 또는 { name, email } 둘 다 대응
-            const userObj = parsed?.user ?? parsed;
+            // 저장 형태가 { user: {...} } 와 { ... }가 섞여 있을 수 있어 머지 처리
+            const root = parsed && typeof parsed === 'object' ? parsed : {};
+            const inner =
+              root && typeof (root as any).user === 'object'
+                ? (root as any).user
+                : {};
+            const userObj = { ...root, ...inner } as any; // inner가 우선, 없으면 root 값 사용
+
             if (userObj?.email) setEmail(userObj.email);
             if (userObj?.name) setName(userObj.name);
             if (userObj?.ownId) setOwnId(userObj.ownId);
-            console.log('[회원정보] SecureStore(UserProfile)에서 로드 완료');
+            if (userObj?.ownId) setId(userObj.ownId);
+
+            console.log('[회원정보] SecureStore(user)에서 로드 완료');
+            console.log('[회원정보] SecureStore raw:', saved);
+            console.log('[회원정보] parsed:', parsed);
+            console.log('[회원정보] merged userObj:', userObj);
+            console.log(
+              '[회원정보] email:',
+              userObj?.email,
+              'name:',
+              userObj?.name,
+              'ownId:',
+              userObj?.ownId,
+            );
             return; // 저장된 프로필을 우선 사용
           } catch (e) {
-            console.log(
-              '[회원정보] 저장된 UserProfile 파싱 실패, 다음 단계로 진행',
-            );
+            console.log('[회원정보] 저장된 user 파싱 실패, 다음 단계로 진행');
           }
         }
 
@@ -62,33 +92,7 @@ export default function UserInfo() {
           if (decoded?.email) setEmail(decoded.email);
           if (decoded?.name) setName(decoded.name);
         }
-
-        // 3) 마지막 시도로 서버에서 me 정보 조회 (GET 지원 시)
-        //    서버가 GET /api/v1/users/me/profiles 를 제공하지 않으면 이 호출은 실패해도 무시합니다.
-        if (token) {
-          try {
-            const res = await api.get('/api/v1/users/me/profiles', {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-            const payload = res?.data?.data ?? res?.data; // 백엔드 응답 형태 유연 대응
-            const userObj = payload?.user ?? payload;
-            if (userObj?.email) setEmail(userObj.email);
-            if (userObj?.name) setName(userObj.name);
-            if (userObj?.ownId) setOwnId(userObj.ownId);
-            if (userObj?.email || userObj?.name) {
-              console.log('[회원정보] 서버에서 me 프로필 불러오기 성공');
-            }
-          } catch (e) {
-            const status = (e as any)?.response?.status;
-            if (status !== 404) {
-              const msg = e instanceof Error ? e.message : String(e);
-              console.log(
-                '[회원정보] 서버 me 프로필 조회 실패(무시 가능):',
-                msg,
-              );
-            }
-          }
-        }
+        // (step 3: 서버 me 조회는 제거됨)
       } catch (error) {
         console.error('회원 정보 조회 에러:', error);
       }
@@ -96,151 +100,42 @@ export default function UserInfo() {
     fetchUserProfile();
   }, []);
 
-  // 회원 정보 수정 API 호출 (명세 기반 에러 코드 + SecureStore 프로필 동기화)
-  const updateUserInfo = async (overrides?: {
-    ownId?: string;
-    name?: string;
-  }) => {
-    const nextOwnId = (overrides?.ownId ?? ownId).trim();
-    const nextName = (overrides?.name ?? name).trim();
+  // 아이디 변경: 검증 → 중복체크 → 업데이트
+  const handleChangeId = async () => {
+    if (!id) return; // 공란이면 반응 없음 요구사항
+
+    // 형식 검증
+    const valid = validateId(id);
+    setIsIdValid(valid);
+    setIsDuplicate(null);
+    setHasCheckedId(false);
+    if (!valid) return; // 메시지는 상태에 따라 이미 표시됨
+
+    // 중복 체크
+    setIsChecking(true);
     try {
       const token = await SecureStore.getItemAsync('JWTToken');
-      if (!token) {
-        console.error('토큰이 없습니다.');
-        Alert.alert(
-          '로그인이 필요해요',
-          '세션이 만료되었거나 로그인 정보가 없어요. 다시 로그인해 주세요.',
-        );
-        return;
-      }
+      const res = await api.get('/api/v1/users/check-ownId', {
+        params: { ownId: id },
+        headers: { Authorization: token ? `Bearer ${token}` : undefined },
+      });
+      const ok = !!res?.data?.success;
+      setIsDuplicate(!ok); // success=true → 사용 가능 → duplicate=false
+      setHasCheckedId(true);
+      if (!ok) return; // 중복이면 여기서 끝, 메시지 표시
 
-      const response = await api.patch(
-        '/api/v1/users/me/profiles',
-        {
-          // ⚠️ 서버 스펙에 맞춰 필드 전송
-          nickname: nextName,
-          ownId: nextOwnId,
-          gender: 'WOMAN',
-          birth: '2004-03-08',
-          recomsTime: '09:00',
-          bio: '',
+      // 사용 가능하면 실제 업데이트
+      await updateOwnId(id, {
+        onSuccess: (serverOwnId: string) => {
+          setOwnId(serverOwnId);
         },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      const data = response?.data;
-      console.log('회원 정보 수정 결과:', data);
-
-      if (data?.success) {
-        // 로컬 상태 업데이트
-        setOwnId(nextOwnId);
-        setName(nextName);
-
-        // SecureStore(UserProfile) 동기화: 저장된 프로필이 있다면 ownId/name 갱신
-        try {
-          const saved = await SecureStore.getItemAsync('UserProfile');
-          if (saved) {
-            const parsed = JSON.parse(saved);
-            const userObj = parsed?.user ?? parsed ?? {};
-            const updated = {
-              ...parsed,
-              user: {
-                ...userObj,
-                ownId: nextOwnId,
-                name: nextName,
-              },
-            };
-            await SecureStore.setItemAsync(
-              'UserProfile',
-              JSON.stringify(updated),
-            );
-          }
-        } catch (e) {
-          console.log('[회원정보] UserProfile 동기화 실패(무시 가능)');
-        }
-
-        Alert.alert('완료', '회원 정보가 수정되었습니다!');
-        return;
-      }
-
-      // success=false 인 경우 서버의 에러코드를 점검
-      const code = data?.error?.code;
-      const message = data?.error?.message;
-
-      if (
-        typeof code === 'string' &&
-        (code.includes('U1000') || code.includes('R1000'))
-      ) {
-        // 날짜/시간 형식 오류
-        const parts: string[] = [];
-        if (code.includes('U1000'))
-          parts.push('생년월일 형식(YYYY-MM-DD)을 확인해 주세요.');
-        if (code.includes('R1000'))
-          parts.push('추천 시간 형식(HH:mm)을 확인해 주세요.');
-        Alert.alert('형식 오류', parts.join('\n'));
-        return;
-      }
-
-      if (code === 'T1201') {
-        Alert.alert('세션 만료', '토큰을 확인해 주세요. 다시 로그인해 주세요.');
-        return;
-      }
-
-      if (code === 'E1300') {
-        Alert.alert(
-          '수정할 데이터 없음',
-          '변경된 내용이 없어요. 값을 수정한 뒤 다시 시도해 주세요.',
-        );
-        return;
-      }
-
-      // 그 외 서버 에러 메시지 처리
-      Alert.alert('수정 실패', message || '알 수 없는 오류가 발생했어요.');
-    } catch (error: any) {
-      console.error('회원 정보 수정 에러:', error);
-      // Axios 에러 응답 분기 (HTTP 상태코드 기반)
-      const status = error?.response?.status;
-      const code = error?.response?.data?.error?.code;
-      const message = error?.response?.data?.error?.message;
-
-      if (
-        status === 400 ||
-        (typeof code === 'string' &&
-          (code.includes('U1000') || code.includes('R1000')))
-      ) {
-        const parts: string[] = [];
-        if (typeof code === 'string' && code.includes('U1000'))
-          parts.push('생년월일 형식(YYYY-MM-DD)을 확인해 주세요.');
-        if (typeof code === 'string' && code.includes('R1000'))
-          parts.push('추천 시간 형식(HH:mm)을 확인해 주세요.');
-        Alert.alert(
-          '형식 오류',
-          parts.join('\n') || message || '날짜/시간 형식을 확인해 주세요.',
-        );
-        return;
-      }
-
-      if (status === 401 || code === 'T1201') {
-        Alert.alert('세션 만료', '토큰을 확인해 주세요. 다시 로그인해 주세요.');
-        return;
-      }
-
-      if (status === 404 || code === 'E1300') {
-        Alert.alert(
-          '수정할 데이터 없음',
-          '변경된 내용이 없어요. 값을 수정한 뒤 다시 시도해 주세요.',
-        );
-        return;
-      }
-
-      Alert.alert(
-        '네트워크 오류',
-        '일시적인 문제일 수 있어요. 잠시 후 다시 시도해 주세요.',
-      );
+      });
+    } catch (e) {
+      console.error('아이디 중복확인 실패:', e);
+      setIsDuplicate(true);
+      setHasCheckedId(true);
+    } finally {
+      setIsChecking(false);
     }
   };
 
@@ -269,34 +164,111 @@ export default function UserInfo() {
           {/* 연결된 소셜 로그인 계정 */}
           <Text style={styles.label}>연결된 소셜 로그인 계정</Text>
           <View style={styles.textBox}>
-            <Image
-              source={{ uri: 'https://placehold.co/24x24' }} // 임시 이미지
-              style={styles.icon}
-            />
-            <Text style={styles.textValue}>{email}</Text>
+            <KaKao width={20} height={20} style={{ marginRight: 10 }} />
+            <Text
+              style={[styles.textValue, { flex: 1 }]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {email}
+            </Text>
           </View>
 
           {/* 이름 */}
           <View style={styles.marginBlock}>
             <Text style={styles.label}>이름</Text>
             <View style={styles.textBox}>
-              <Text style={styles.textValue}>{name}</Text>
+              <Text
+                style={[styles.textValue, { flex: 1 }]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {name}
+              </Text>
             </View>
           </View>
 
           {/* 아이디 */}
           <View style={styles.marginBlock}>
             <Text style={styles.label}>아이디</Text>
-            <View style={styles.textBoxRow}>
-              <Text style={styles.idtextValue}>{ownId || '-'}</Text>
+            <View style={styles.frameGroupFlexBox}>
+              <View style={[{ flex: 1 }, styles.frameShadowBox]}>
+                <TextInput
+                  style={[styles.inputText, { flex: 1, paddingVertical: 0 }]}
+                  value={id}
+                  onChangeText={(text) => {
+                    setIdDirty(true);
+                    setId(text);
+                    const valid = validateId(text);
+                    setIsIdValid(valid);
+                    setHasCheckedId(false);
+                    setIsDuplicate(null);
+                  }}
+                  placeholder="아이디 입력"
+                  placeholderTextColor={Colors.palette.Gray500}
+                  numberOfLines={1}
+                />
+              </View>
               <TouchableOpacity
-                onPress={() => {
-                  setOwnIdInput(ownId);
-                  setEditOwnIdVisible(true);
-                }}
+                onPress={handleChangeId}
+                disabled={!id || id === ownId || isChecking}
               >
-                <Text style={styles.linkText}>변경</Text>
+                <View
+                  style={[
+                    styles.frameView,
+                    !id || id === ownId || isChecking
+                      ? { backgroundColor: Colors.palette.Gray800 }
+                      : { backgroundColor: Colors.palette.point },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      Typography.body2,
+                      {
+                        color:
+                          !id || id === ownId || isChecking
+                            ? Colors.palette.Gray500
+                            : Colors.palette.white,
+                      },
+                    ]}
+                  >
+                    변경
+                  </Text>
+                </View>
               </TouchableOpacity>
+            </View>
+
+            {/* 메시지 영역: 처음엔 표시하지 않고, 수정 이후에만 표시. 높이를 고정해 레이아웃 흔들림 방지 */}
+            <View style={styles.messagePlaceholder}>
+              {idDirty &&
+                (!isIdValid && !!id ? (
+                  <Text
+                    style={[
+                      Typography.body2,
+                      { color: Colors.palette.point, alignSelf: 'flex-start' },
+                    ]}
+                  >
+                    형식에 맞지 않는 아이디입니다.
+                  </Text>
+                ) : isIdValid && hasCheckedId && isDuplicate === true ? (
+                  <Text
+                    style={[
+                      Typography.body2,
+                      { color: Colors.palette.point, alignSelf: 'flex-start' },
+                    ]}
+                  >
+                    이미 사용 중인 아이디입니다.
+                  </Text>
+                ) : isIdValid && hasCheckedId && isDuplicate === false ? (
+                  <Text
+                    style={[
+                      Typography.body2,
+                      { color: '#2C64FF', alignSelf: 'flex-start' },
+                    ]}
+                  >
+                    사용 가능한 아이디입니다.
+                  </Text>
+                ) : null)}
             </View>
           </View>
 
@@ -313,148 +285,52 @@ export default function UserInfo() {
             <Text style={styles.withdrawal}>회원탈퇴</Text>
           </TouchableOpacity>
         </View>
-        {/* 아이디 수정 모달 */}
-        <Modal
-          transparent
-          animationType="fade"
-          visible={editOwnIdVisible}
-          onRequestClose={() => setEditOwnIdVisible(false)}
-        >
-          <View style={styles.modalBackground}>
-            <View style={styles.withdrawWrapper}>
-              <View style={styles.withdrawHeaderBox}>
-                <Text style={styles.withdrawHeaderText}>
-                  아이디를 입력해 주세요
-                </Text>
-              </View>
-              <View
-                style={{
-                  width: 324,
-                  backgroundColor: '#333',
-                  paddingHorizontal: 16,
-                  paddingBottom: 16,
-                }}
-              >
-                <TextInput
-                  value={ownIdInput}
-                  onChangeText={setOwnIdInput}
-                  placeholder="아이디"
-                  placeholderTextColor="#888"
-                  style={{
-                    height: 44,
-                    borderRadius: 8,
-                    borderWidth: 1,
-                    borderColor: '#555',
-                    paddingHorizontal: 12,
-                    color: '#F4F4F4',
-                    backgroundColor: '#121212',
-                  }}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                />
-              </View>
-              <TouchableOpacity
-                style={styles.logoutConfirmBtn}
-                onPress={async () => {
-                  const trimmed = ownIdInput.trim();
-                  if (!trimmed) {
-                    Alert.alert('입력 필요', '아이디를 입력해 주세요.');
-                    return;
-                  }
-                  setEditOwnIdVisible(false);
-                  await updateUserInfo({ ownId: trimmed });
-                }}
-              >
-                <Text style={styles.logoutConfirmText}>확인</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.logoutCancelWrapper}
-                onPress={() => setEditOwnIdVisible(false)}
-              >
-                <Text style={styles.logoutCancelText}>취소</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
         {/* 로그아웃 모달 */}
-        <Modal
-          transparent
-          animationType="fade"
+        <ConfirmModal
           visible={logoutVisible}
-          onRequestClose={() => setLogoutVisible(false)}
-        >
-          <View style={styles.modalBackground}>
-            <View style={styles.logoutWrapper}>
-              {/* 1. 상단 텍스트 박스 */}
-              <View style={styles.logoutHeaderBox}>
-                <Text style={styles.logoutHeaderText}>
-                  로그아웃하시겠습니까?
-                </Text>
-              </View>
-
-              {/* 2. 확인 버튼 */}
-              <TouchableOpacity
-                style={styles.logoutConfirmBtn}
-                onPress={() => {
-                  setLogoutVisible(false);
-                  router.push('/(auth)/splash');
-                }}
-              >
-                <Text style={styles.logoutConfirmText}>확인</Text>
-              </TouchableOpacity>
-
-              {/* 3. 밑줄 텍스트 (취소) */}
-              <TouchableOpacity
-                style={styles.logoutCancelWrapper}
-                onPress={() => setLogoutVisible(false)}
-              >
-                <Text style={styles.logoutCancelText}>취소</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
+          variant="logout"
+          headerText={'로그아웃하시겠습니까?'}
+          onConfirm={async () => {
+            try {
+              try {
+                await kakaoLogout();
+              } catch {}
+            } finally {
+              try {
+                await SecureStore.deleteItemAsync('JWTToken');
+                await SecureStore.deleteItemAsync('JWTRefreshToken');
+                await SecureStore.deleteItemAsync('user');
+              } catch {}
+              setLogoutVisible(false);
+              router.push('/(auth)/splash');
+            }
+          }}
+          onCancel={() => setLogoutVisible(false)}
+        />
         {/* 회원탈퇴 모달 */}
-        <Modal
-          transparent
-          animationType="fade"
+        <ConfirmModal
           visible={withdrawVisible}
-          onRequestClose={() => setWithdrawVisible(false)}
-        >
-          <View style={styles.modalBackground}>
-            <View style={styles.withdrawWrapper}>
-              {/* 1. 상단 텍스트 박스 */}
-              <View style={styles.withdrawHeaderBox}>
-                <Text style={styles.withdrawHeaderText}>
-                  <Text>회원 탈퇴를 진행하게 되면{'\n'}</Text>
-                  <Text style={styles.boldText}>
-                    지금까지의 모든 밴놀 기록이 삭제되며,{'\n'}
-                    이는 복구할 수 없습니다.{'\n'}
-                  </Text>
-                  정말 탈퇴하시겠습니까?
-                </Text>
-              </View>
-
-              {/* 2. 확인 버튼 */}
-              <TouchableOpacity
-                style={styles.logoutConfirmBtn}
-                onPress={() => {
-                  setWithdrawVisible(false);
-                  router.push('/(auth)/splash');
-                }}
-              >
-                <Text style={styles.logoutConfirmText}>확인</Text>
-              </TouchableOpacity>
-
-              {/* 3. 취소 텍스트 */}
-              <TouchableOpacity
-                style={styles.logoutCancelWrapper}
-                onPress={() => setWithdrawVisible(false)}
-              >
-                <Text style={styles.logoutCancelText}>취소</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
+          variant="withdraw"
+          headerText={
+            '회원 탈퇴를 진행하게 되면\n지금까지의 모든 밴놀 기록이 삭제되며, 이는 복구할 수 없습니다.\n정말 탈퇴하시겠습니까?'
+          }
+          onConfirm={async () => {
+            try {
+              try {
+                await kakaoUnlink();
+              } catch {}
+            } finally {
+              try {
+                await SecureStore.deleteItemAsync('JWTToken');
+                await SecureStore.deleteItemAsync('JWTRefreshToken');
+                await SecureStore.deleteItemAsync('user');
+              } catch {}
+              setWithdrawVisible(false);
+              router.push('/(auth)/splash');
+            }
+          }}
+          onCancel={() => setWithdrawVisible(false)}
+        />
       </View>
     </SafeAreaView>
   );
@@ -463,11 +339,11 @@ export default function UserInfo() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: Colors.palette.Gray900,
   },
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: Colors.palette.Gray900,
   },
   topNavBar: {
     width: '100%',
@@ -487,7 +363,7 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'center',
     ...Typography.subtitle1B,
-    color: '#F4F4F4',
+    color: Colors.palette.Gray100,
   },
   content: {
     paddingTop: 24,
@@ -495,43 +371,43 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   label: {
-    color: '#7C7C7C',
+    color: Colors.palette.Gray500,
     marginBottom: 8,
     ...Typography.body1,
   },
   textBox: {
-    height: 50,
+    minHeight: 50,
     borderRadius: 10,
-    backgroundColor: '#121212',
+    backgroundColor: Colors.palette.Gray900,
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
     borderWidth: 1,
-    borderColor: '#555',
+    borderColor: Colors.palette.Gray600,
   },
   textBoxRow: {
-    height: 48,
+    height: 50,
     borderRadius: 10,
-    backgroundColor: '#121212',
+    backgroundColor: Colors.palette.Gray900,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 16,
     borderWidth: 1,
-    borderColor: '#555',
+    borderColor: Colors.palette.Gray600,
   },
   textValue: {
-    color: '#555',
+    color: Colors.palette.Gray400,
     fontFamily: 'Pretendard',
     fontSize: 14,
-    lineHeight: 140,
+    lineHeight: 20,
     letterSpacing: -0.21,
   },
   idtextValue: {
-    color: '#F4F4F4',
+    color: Colors.palette.Gray100,
     fontFamily: 'Pretendard',
     fontSize: 14,
-    lineHeight: 140,
+    lineHeight: 20,
     letterSpacing: -0.21,
   },
   icon: {
@@ -546,7 +422,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     lineHeight: 19.6,
     letterSpacing: -0.21,
-    color: '#555',
+    color: Colors.palette.Gray600,
     textDecorationLine: 'underline',
     textDecorationStyle: 'solid',
   },
@@ -559,7 +435,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     lineHeight: 19.6,
     letterSpacing: -0.21,
-    color: '#555',
+    color: Colors.palette.Gray600,
     textDecorationLine: 'underline',
     textDecorationStyle: 'solid',
     paddingTop: 20,
@@ -571,93 +447,53 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     lineHeight: 19.6,
     letterSpacing: -0.21,
-    color: '#555',
+    color: Colors.palette.Gray600,
     textDecorationLine: 'underline',
     textDecorationStyle: 'solid',
     paddingTop: 30,
     textAlign: 'center',
-  }, // ----로그아웃 모달 ------
-  modalBackground: {
-    flex: 1,
-    backgroundColor: 'transparent',
-    justifyContent: 'center',
+  },
+  frameGroupFlexBox: {
+    gap: 10,
+    flexDirection: 'row',
+    alignSelf: 'stretch',
     alignItems: 'center',
   },
-  logoutWrapper: {
-    width: 324,
-    height: 194,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-  },
-  logoutHeaderBox: {
-    width: 324,
-    backgroundColor: '#333',
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
-    paddingVertical: 40,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoutHeaderText: {
-    color: '#FFF',
-    fontFamily: 'Pretendard',
-    fontSize: 16,
-    letterSpacing: -0.48,
-  },
-  logoutConfirmBtn: {
-    width: 324,
+  frameShadowBox: {
+    padding: 16,
     height: 50,
-    backgroundColor: '#FB4932',
-    borderBottomLeftRadius: 10,
-    borderBottomRightRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.palette.Gray700,
+    borderStyle: 'solid',
+    backgroundColor: Colors.palette.Gray800,
+    borderRadius: 10,
+    shadowOpacity: 1,
+    elevation: 1,
+    shadowRadius: 1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowColor: 'rgba(0, 0, 0, 0.25)',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  inputText: {
+    color: Colors.palette.white,
+  },
+  frameView: {
+    width: 80,
     justifyContent: 'center',
+    backgroundColor: Colors.palette.Gray700,
+    padding: 16,
+    borderRadius: 10,
+    shadowOpacity: 1,
+    elevation: 1,
+    shadowRadius: 1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowColor: 'rgba(0, 0, 0, 0.25)',
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  logoutConfirmText: {
-    color: '#FFF',
-    ...Typography.subtitle3,
-  },
-  logoutCancelWrapper: {
-    marginTop: 25,
-  },
-  logoutCancelText: {
-    ...Typography.subtitle3,
-    color: '#FFF',
-    textDecorationLine: 'underline',
-    textDecorationStyle: 'solid',
-  },
-  // ----회원탈퇴 모달 ------
-  withdrawWrapper: {
-    width: 324,
-    height: 251,
-    alignItems: 'center',
-  },
-  withdrawHeaderBox: {
-    width: 324,
-    paddingHorizontal: 16,
-    paddingVertical: 40,
-    backgroundColor: '#333',
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
-    alignItems: 'center',
-  },
-  withdrawHeaderText: {
-    color: '#F4F4F4',
-    fontSize: 16,
-    textAlign: 'center',
-    fontWeight: 400,
-    letterSpacing: -0.48,
-    fontFamily: 'Pretendard',
-    fontStyle: 'normal',
-  },
-  boldText: {
-    color: '#F4F4F4',
-    fontSize: 16,
-    textAlign: 'center',
-    fontWeight: 700,
-    letterSpacing: -0.48,
-    fontFamily: 'Pretendard',
-    fontStyle: 'normal',
+  messagePlaceholder: {
+    minHeight: 20,
+    // Ensures space is reserved even when no message is shown
   },
 });
