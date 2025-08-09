@@ -55,17 +55,47 @@ export default function RecShareModal({
     Alert.alert('링크가 복사되었습니다.');
   };
 
-  const handleShareToX = () => {
-    if (!recData) return;
-    const shareUrl = `https://bandnol.app/recoms/${recData.id}`;
-    const text = encodeURIComponent(
-      `${recData.title} - ${recData.artistName}\n${shareUrl}`,
-    );
+  // 기존 handleShareToX 교체
+  const handleShareToX = async () => {
+    try {
+      if (!recData) return;
 
-    // X 앱 열기 (앱이 없으면 웹으로 이동)
-    Linking.openURL(`twitter://post?message=${text}`).catch(() => {
-      Linking.openURL(`https://twitter.com/intent/tweet?text=${text}`);
-    });
+      // 1) ViewShot으로 현재 카드 캡처 (용량 줄이고 싶으면 width/quality 조정)
+      const uri = await viewShotRef.current?.capture?.();
+      if (!uri) throw new Error('이미지 캡처 실패');
+
+      const shareUrl = `https://bandnol.app/recoms/${recData.id}`;
+      const message = `${recData.title} - ${recData.artistName}\n${shareUrl}`;
+
+      if (Platform.OS === 'ios') {
+        // 2) iOS: X 앱에 이미지 + 텍스트로 바로 공유
+        await Share.shareSingle({
+          social: Social.Twitter, // ✅ iOS에서만 지원
+          url: uri, // 캡처 이미지 파일 URI
+          type: 'image/png', // 또는 'image/*'
+          message, // 텍스트(링크 포함)
+        });
+      } else {
+        // 3) Android: 트위터 앱에 이미지 직접 붙이기는 공식 지원 없음
+        //    폴백 1) 시스템 공유 시트로 열어 사용자가 X를 선택해 붙이기
+        try {
+          await Share.open({
+            url: uri,
+            type: 'image/png',
+            message,
+            failOnCancel: false,
+          });
+        } catch {
+          // 4) 폴백 2) 웹 인텐트(이미지 첨부 불가, 텍스트/링크만)
+          const text = encodeURIComponent(message);
+          await Linking.openURL(
+            `https://twitter.com/intent/tweet?text=${text}`,
+          );
+        }
+      }
+    } catch (e: any) {
+      Alert.alert('공유 실패', e?.message ?? String(e));
+    }
   };
 
   // ⬅️ 추가: containerInner만 캡처해서 저장
@@ -120,10 +150,12 @@ export default function RecShareModal({
         social: Social.InstagramStories,
         appId: FACEBOOK_APP_ID, // ⬅️ 필수
         backgroundImage: uri, // ⬅️ 방금 캡처한 이미지 전체를 배경으로
-        // stickerImage: uri,  // ⬅️ 스티커로 쓰고 싶으면 주석 해제
+        //stickerImage: uri, // ⬅️ 스티커로 쓰고 싶으면 주석 해제
         backgroundTopColor: '#000000',
         backgroundBottomColor: '#000000',
         attributionURL: deepLink, // ⬅️ 선택: 스토리에서 출처 링크
+        linkUrl: `https://bandnol.app/recoms/${recData.id}`,
+        linkText: '보기',
       });
     } catch (error: any) {
       // IG 미설치, 사용자가 닫기, Expo Go 사용 등 케이스
@@ -145,7 +177,7 @@ export default function RecShareModal({
       {/* 테두리 wrapper */}
       <ViewShot
         ref={viewShotRef} // ⬅️ 추가
-        options={{ format: 'png', quality: 1 }} // ⬅️ 추가: 고화질 PNG
+        options={{ format: 'png', quality: 1, width: 300 }} // ⬅️ 추가: 고화질 PNG
         style={{ borderRadius: OUTER_RADIUS - BORDER_WIDTH }} // 시각 통일
       >
         <View style={styles.containerWrapper}>
@@ -235,11 +267,14 @@ export default function RecShareModal({
       {/* 공유 버튼 그룹 */}
       <View style={styles.buttonGroup}>
         {/* ⬇️ 버튼을 Pressable로 바꾸고 onPress 연결 */}
-        <Pressable style={styles.shareItem} onPress={handleSaveImage}>
+        <Pressable
+          style={styles.shareItem}
+          onPress={handleShareToInstagramStory}
+        >
           <View style={styles.shareButton}>
             <Insta />
           </View>
-          <Text style={styles.shareText}>이미지 저장</Text>
+          <Text style={styles.shareText}>인스타그램으로 공유</Text>
         </Pressable>
 
         <View style={styles.shareItem}>

@@ -11,11 +11,11 @@ export default {
     userInterfaceStyle: 'automatic',
     newArchEnabled: true,
     ios: {
-      bundleIdentifier: 'com.bandnol.Bandnol',
+      bundleIdentifier: 'com.bandnol.bandnol',
       supportsTablet: true,
     },
     android: {
-      package: 'com.bandnol.Bandnol',
+      package: 'com.bandnol.bandnol',
       adaptiveIcon: {
         foregroundImage: './assets/images/adaptive-icon.png',
         backgroundColor: '#ffffff',
