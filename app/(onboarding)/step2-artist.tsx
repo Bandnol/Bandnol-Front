@@ -1,20 +1,15 @@
 import RoadingIcon from '@/assets/onboarding/roading.svg';
 import BottomNextButton from '@/components/common/BottomNextButton';
+import InterestedArtistList from '@/components/common/InterestedArtistList';
+import RecommendedArtistList from '@/components/common/RecommendedArtistList';
 import StatusBarHeader from '@/components/common/StatusBarHeader';
 import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
 import api from '@/store/api'; // axios instance 불러오기
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import * as React from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import React, { useCallback } from 'react';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import * as SecureStore from 'expo-secure-store';
@@ -29,64 +24,81 @@ const Component = () => {
   const [sortType, setSortType] = React.useState<'random' | 'popularity'>(
     'popularity',
   );
+  const [selectedArtists, setSelectedArtists] = React.useState<any[]>([]);
 
-  const fetchArtists = async (
-    loadMore = false,
+  const toggleSelectArtist = useCallback(
+    (artist: any) => {
+      setSelectedArtists((prev) => {
+        const exists = prev.some((a) => a.id === artist.id);
+        if (exists) return prev;
+        if (prev.length >= 6) return prev; // 최대 6개 제한
+        return [...prev, artist];
+      });
+    },
+    [setSelectedArtists],
+  );
+
+  const fetchMoreArtists = async (
+    nextCursor: string | null = cursor,
     currentSort: 'random' | 'popularity' = sortType,
+    loadMore = true,
   ) => {
+    // 인기순에서 추가 데이터가 없으면 더 이상 요청하지 않음
     if (currentSort === 'popularity' && !hasNext && loadMore) return;
     try {
-      setLoading(true);
-      const token = await SecureStore.getItemAsync('accessToken');
+      if (!loadMore) setLoading(true);
+      const token = await SecureStore.getItemAsync('JWTToken');
       const params: any = { sort: currentSort };
       if (currentSort === 'popularity') {
         params.size = 20;
-        if (loadMore && cursor) {
-          params.cursor = cursor;
-        }
+        //커서 기반 페이지네이션. 데이터 20개씩 불러옴
+        if (loadMore && nextCursor) params.cursor = nextCursor;
       }
-      console.log('fetch params:', params);
+      // API 호출
       const response = await api.get('/api/v1/artists/recommended', {
         params,
         headers: {
           Authorization: token ? `Bearer ${token}` : undefined,
         },
       });
-      console.log('추천 아티스트 API 응답:', response.data);
       if (response.data.success) {
-        // 데이터 구조가 random/popularity에 따라 다름
         const newData =
           currentSort === 'popularity'
             ? response.data.data?.data || []
             : response.data.data || [];
-        console.log('가져온 아티스트 배열:', newData);
         setArtistData((prev) => (loadMore ? [...prev, ...newData] : newData));
         if (currentSort === 'popularity') {
           setHasNext(response.data.data?.hasNext || false);
           setCursor(response.data.data?.nextCursor || null);
         } else {
-          setHasNext(true); // random도 무한 스크롤 지원
+          // 랜덤 모드는 항상 새로고침, hasNext를 true로 유지
+          setHasNext(true);
         }
         setError(null);
       } else {
-        console.log('API error object:', response.data.error);
         setError(
           response.data.error?.message || '데이터를 불러올 수 없습니다.',
         );
       }
     } catch (err) {
-      setError(
-        '아티스트 데이터를 가져올 수 없습니다. (네트워크나 서버 문제일 수 있습니다.)',
-      );
+      setError('네트워크나 서버 문제일 수 있습니다');
       console.error('추천 아티스트 API 호출 실패:', err);
     } finally {
       setLoading(false);
     }
   };
 
+  const initialFetch = async (sort: 'random' | 'popularity') => {
+    //상태값 초기화 -> 새로운 추천 목록 불러옴
+    setSortType(sort);
+    setCursor(null);
+    setHasNext(true);
+    setArtistData([]);
+    await fetchMoreArtists(null, sort, false);
+  };
+
   React.useEffect(() => {
-    setSortType('popularity');
-    fetchArtists(false, 'popularity');
+    initialFetch('popularity');
   }, []);
 
   const renderHeader = () => (
@@ -105,6 +117,7 @@ const Component = () => {
         <View style={{ height: 27 }} />
         <View>
           <Text style={styles.text3}>관심 아티스트</Text>
+          <InterestedArtistList selectedArtists={selectedArtists} />
         </View>
       </View>
       <View>
@@ -122,10 +135,7 @@ const Component = () => {
             height={24}
             onPress={() => {
               setError(null);
-              setArtistData([]);
-              setCursor(null);
-              setSortType('random');
-              fetchArtists(false, 'random');
+              initialFetch('random');
             }}
           />
         </View>
@@ -139,6 +149,7 @@ const Component = () => {
     <SafeAreaView style={styles.viewBg}>
       <View style={styles.view}>
         <StatusBarHeader />
+        {renderHeader()}
         {loading && artistData.length === 0 ? (
           <View
             style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
@@ -152,63 +163,27 @@ const Component = () => {
             <Text style={{ color: Colors.palette.Gray100 }}>{error}</Text>
           </View>
         ) : (
-          <FlatList
-            data={artistData}
-            keyExtractor={(item) => item.id}
-            numColumns={4}
-            columnWrapperStyle={{ justifyContent: 'flex-start' }}
-            renderItem={({ item }) => (
-              <View
-                style={{
-                  flex: 1,
-                  marginBottom: 16,
-                  alignItems: 'center',
-                }}
-              >
-                <View
-                  style={{
-                    width: 68,
-                    height: 68,
-                    borderRadius: 34,
-                    overflow: 'hidden',
-                    backgroundColor: Colors.palette.Gray700,
-                  }}
-                >
-                  <Image
-                    source={{ uri: item.imgUrl }}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      resizeMode: 'cover',
-                    }}
-                  />
-                </View>
-                <Text
-                  style={[
-                    Typography.body2,
-                    {
-                      color: Colors.palette.Gray100,
-                      marginTop: 8,
-                      textAlign: 'center',
-                    },
-                  ]}
-                >
-                  {item.name}
-                </Text>
-              </View>
-            )}
-            ListHeaderComponent={renderHeader}
-            ListFooterComponent={renderFooter}
-            showsVerticalScrollIndicator={false}
-            onEndReached={() => fetchArtists(true, sortType)}
-            onMomentumScrollBegin={() => setError(null)}
+          // RecommendedArtistList(FlatList) 사용
+          // - artistData를 목록으로 렌더링
+          // - fetchMore는 onEndReached에서 호출되어 무한 스크롤(인기순일 때 페이지네이션) 트리거
+          // - 페이지네이션은 fetchMoreArtists(loadMore=true)에서 처리됨
+          <RecommendedArtistList
+            artistData={artistData}
+            onSelectArtist={toggleSelectArtist}
+            fetchMore={(nextCursor) =>
+              fetchMoreArtists(nextCursor, sortType, true)
+            }
+            sortType={sortType}
+            setError={setError}
           />
         )}
         <BottomNextButton onPress={() => router.push('/step3-timesetting')} />
         <LinearGradient
           colors={['transparent', Colors.palette.Gray900]}
           style={styles.fadeOverlay}
-        />
+        >
+          {renderFooter()}
+        </LinearGradient>
       </View>
     </SafeAreaView>
   );
