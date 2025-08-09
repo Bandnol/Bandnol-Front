@@ -9,7 +9,7 @@ import api from '@/store/api'; // axios instance 불러오기
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import * as SecureStore from 'expo-secure-store';
@@ -25,6 +25,70 @@ const Component = () => {
     'popularity',
   );
   const [selectedArtists, setSelectedArtists] = React.useState<any[]>([]);
+  const [saving, setSaving] = React.useState(false);
+  // 관심 아티스트 즐겨찾기 저장 API 호출
+  // 선택된 아티스트들을 `/api/v1/artists/liked` 엔드포인트로 각각 저장합니다.
+  const saveLikedArtists = async () => {
+    if (selectedArtists.length === 0) {
+      console.log('[관심 아티스트] 선택된 아티스트가 없어 저장을 건너뜁니다.');
+      return true; // 아무것도 없으면 성공으로 간주하고 다음 단계로 이동
+    }
+
+    try {
+      setSaving(true);
+      const token = await SecureStore.getItemAsync('JWTToken');
+      if (!token) {
+        console.log('[관심 아티스트] 토큰이 없어 저장할 수 없습니다.');
+        Alert.alert(
+          '로그인이 필요해요',
+          '토큰이 없어 관심 아티스트를 저장할 수 없어요. 다시 로그인 해주세요.',
+        );
+        return false;
+      }
+
+      // 각 아티스트를 개별 저장 (백엔드 스펙이 단건 저장이라 가정)
+      const results = await Promise.allSettled(
+        selectedArtists.map((artist) =>
+          api.post(
+            '/api/v1/artists/liked',
+            {
+              id: artist.id,
+              name: artist.name,
+              imgUrl: artist.imgUrl,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          ),
+        ),
+      );
+
+      const rejected = results.filter((r) => r.status === 'rejected');
+      if (rejected.length > 0) {
+        console.log('[관심 아티스트] 일부 저장 실패:', rejected);
+        Alert.alert(
+          '일부 저장 실패',
+          '선택한 아티스트 중 일부가 저장되지 않았어요. 잠시 후 다시 시도해 주세요.',
+        );
+        return false;
+      }
+
+      console.log(
+        '[관심 아티스트] 저장 완료. 총',
+        selectedArtists.length,
+        '명 저장됨',
+      );
+      return true;
+    } catch (e) {
+      console.log('[관심 아티스트] 저장 중 오류 발생:', e);
+      Alert.alert('저장 오류', '네트워크나 서버 문제로 저장하지 못했어요.');
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const toggleSelectArtist = useCallback(
     (artist: any) => {
@@ -177,7 +241,17 @@ const Component = () => {
             setError={setError}
           />
         )}
-        <BottomNextButton onPress={() => router.push('/step3-timesetting')} />
+        <BottomNextButton
+          onPress={async () => {
+            if (saving) return; // 저장 중 중복 클릭 방지
+            // 한글 콘솔로그로 흐름 확인
+            console.log('[관심 아티스트] 다음 단계로 이동 전, 저장 시도');
+            const ok = await saveLikedArtists();
+            if (ok) {
+              router.push('/step3-timesetting');
+            }
+          }}
+        />
         <LinearGradient
           colors={['transparent', Colors.palette.Gray900]}
           style={styles.fadeOverlay}

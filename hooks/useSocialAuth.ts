@@ -28,8 +28,12 @@ export function useSocialAuth() {
         console.log('서버 응답:', data);
 
         if (data.success) {
-          // JWTToken 등 저장 후 다음 화면 이동 (문자열만 저장)
+          // JWTToken & 리프레쉬 토큰 저장
           await SecureStore.setItemAsync('JWTToken', data.data.token);
+          await SecureStore.setItemAsync(
+            'JWTRefreshToken',
+            data.data.refreshToken,
+          );
           await SecureStore.setItemAsync(
             'user',
             JSON.stringify(data.data.user),
