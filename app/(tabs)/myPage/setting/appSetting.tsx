@@ -1,4 +1,6 @@
+import api from '@/store/api';
 import { useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
 import React from 'react';
 import {
   SafeAreaView,
@@ -14,6 +16,31 @@ import { Typography } from '@/constants/typography';
 
 export default function AppSetting() {
   const router = useRouter();
+
+  React.useEffect(() => {
+    const storeTokenAndFetchNotifications = async () => {
+      await SecureStore.setItemAsync(
+        'JWTToken',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImU2M2JhZTlhLWZjMTQtNDcwZS04YmViLTk3MTNiYmZlZDUyMiIsImlhdCI6MTc1Mzg4NjE4OSwiZXhwIjoxNzU0NDkwOTg5fQ.UnRXUHlpjtaG5q5MQ36zKQAEDYTz_FAGhqg9Mb8ckIs',
+      );
+      try {
+        const token = await SecureStore.getItemAsync('JWTToken');
+        if (token) {
+          const response = await api.get('/api/v1/users/me/notification', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          console.log('Notification API response:', response.data);
+        } else {
+          console.log('No JWT token found');
+        }
+      } catch (error) {
+        console.log('Notification API error:', error);
+      }
+    };
+    storeTokenAndFetchNotifications();
+  }, []);
 
   return (
     <SafeAreaView style={styles.safeArea}>
