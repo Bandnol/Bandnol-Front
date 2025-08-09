@@ -1,13 +1,13 @@
 import { Typography } from '@/constants/typography';
 import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
-import { useState } from 'react';
+import { useRef, useState } from 'react'; // ⬅️ 수정: useRef 추가
 
 import {
   Alert, //나중에 toast로 변경하기
   Image,
   LayoutChangeEvent,
-  Pressable,
+  Pressable, // ⬅️ Pressable 사용
   StyleSheet,
   Text,
   View,
@@ -15,6 +15,9 @@ import {
 import Modal from 'react-native-modal';
 import Svg, { Circle } from 'react-native-svg';
 import type { CalendarItem } from './RecommendCal';
+
+import ViewShot from 'react-native-view-shot'; // ⬅️ 추가
+import * as MediaLibrary from 'expo-media-library'; // ⬅️ 추가
 
 import Insta from '@/assets/icons/size_m/insta.svg';
 import Link from '@/assets/icons/size_m/link.svg';
@@ -33,6 +36,7 @@ export default function RecShareModal({
   recData,
 }: RecShareModalProps) {
   const [containerWidth, setContainerWidth] = useState(0);
+  const viewShotRef = useRef<ViewShot>(null); // ⬅️ 추가
 
   if (!recData) return null;
   const isRecommended = 'senderNickname' in recData;
@@ -48,8 +52,6 @@ export default function RecShareModal({
     Alert.alert('링크가 복사되었습니다.');
   };
 
-  const circleSize = containerWidth * 0.28;
-  const bigCircleSize = containerWidth * 0.52;
   const handleShareToX = () => {
     if (!recData) return;
     const shareUrl = `https://bandnol.app/recoms/${recData.id}`;
@@ -63,6 +65,35 @@ export default function RecShareModal({
     });
   };
 
+  // ⬅️ 추가: containerInner만 캡처해서 저장
+  const handleSaveImage = async () => {
+    try {
+      // 권한 요청
+      const perm = await MediaLibrary.requestPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert('권한 필요', '사진 보관함 저장 권한을 허용해주세요.');
+        return;
+      }
+
+      // ViewShot 캡처
+      const uri = await viewShotRef.current?.capture?.();
+      if (!uri) throw new Error('이미지 캡처에 실패했습니다.');
+
+      // 갤러리에 저장
+      const asset = await MediaLibrary.createAssetAsync(uri);
+      // 없으면 앨범 생성 시도 (이미 있으면 catch로 무시)
+      await MediaLibrary.createAlbumAsync('Bandnol', asset, false).catch(
+        () => {},
+      );
+      Alert.alert('저장 완료', '갤러리에 이미지가 저장되었습니다.');
+    } catch (e: any) {
+      Alert.alert('저장 실패', e?.message ?? String(e));
+    }
+  };
+
+  const circleSize = containerWidth * 0.28;
+  const bigCircleSize = containerWidth * 0.52;
+
   return (
     <Modal
       isVisible={visible}
@@ -71,107 +102,104 @@ export default function RecShareModal({
       style={styles.modal}
     >
       {/* 테두리 wrapper */}
-      <View style={styles.containerWrapper}>
-        <View style={styles.containerInner} onLayout={handleLayout}>
-          {containerWidth > 0 && (
-            <View
-              style={{
-                position: 'relative',
-                width: containerWidth,
-                alignItems: 'center',
-              }}
-            >
-              <Image
-                source={{ uri: recData.imageUrl }}
+      <ViewShot
+        ref={viewShotRef} // ⬅️ 추가
+        options={{ format: 'png', quality: 1 }} // ⬅️ 추가: 고화질 PNG
+        style={{ borderRadius: OUTER_RADIUS - BORDER_WIDTH }} // 시각 통일
+      >
+        <View style={styles.containerWrapper}>
+          <View style={styles.containerInner} onLayout={handleLayout}>
+            {containerWidth > 0 && (
+              <View
                 style={{
-                  width: containerWidth * 1.1,
-                  aspectRatio: 1,
-                  borderRadius: 9999,
-                  marginTop: -containerWidth * 0.43,
-                  marginBottom: 8,
-                }}
-                resizeMode="cover"
-              />
-
-              <Svg
-                width={circleSize}
-                height={circleSize}
-                style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: [
-                    { translateX: -circleSize / 2 },
-                    { translateY: -circleSize / 0.9 - 10 },
-                  ],
-                  zIndex: 2,
+                  position: 'relative',
+                  width: containerWidth,
+                  alignItems: 'center',
                 }}
               >
-                <Circle cx="50%" cy="50%" r="50%" fill="#1F1F1F" />
-              </Svg>
-
-              <Svg
-                width={bigCircleSize}
-                height={bigCircleSize}
-                style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: [
-                    { translateX: -bigCircleSize / 2 },
-                    { translateY: -bigCircleSize / 1.22 - 16 },
-                  ],
-                  zIndex: 1,
-                }}
-              >
-                <Circle
-                  cx="50%"
-                  cy="50%"
-                  r="50%"
-                  fill="black"
-                  fillOpacity={0.4}
+                <Image
+                  source={{ uri: recData.imageUrl }}
+                  style={{
+                    width: containerWidth * 1.1,
+                    aspectRatio: 1,
+                    borderRadius: 9999,
+                    marginTop: -containerWidth * 0.43,
+                    marginBottom: 8,
+                  }}
+                  resizeMode="cover"
                 />
-              </Svg>
+
+                <Svg
+                  width={circleSize}
+                  height={circleSize}
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: [
+                      { translateX: -circleSize / 2 },
+                      { translateY: -circleSize / 0.9 - 10 },
+                    ],
+                    zIndex: 2,
+                  }}
+                >
+                  <Circle cx="50%" cy="50%" r="50%" fill="#1F1F1F" />
+                </Svg>
+
+                <Svg
+                  width={bigCircleSize}
+                  height={bigCircleSize}
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: [
+                      { translateX: -bigCircleSize / 2 },
+                      { translateY: -bigCircleSize / 1.22 - 16 },
+                    ],
+                    zIndex: 1,
+                  }}
+                >
+                  <Circle
+                    cx="50%"
+                    cy="50%"
+                    r="50%"
+                    fill="black"
+                    fillOpacity={0.4}
+                  />
+                </Svg>
+              </View>
+            )}
+
+            {isRecommended && (
+              <Text style={styles.toText}>
+                To. <Text style={{ color: '#F4F4F4' }}>me</Text>
+              </Text>
+            )}
+            <Text style={styles.titleText}>{recData.title}</Text>
+            <Text style={styles.artistText}>{recData.artistName}</Text>
+            <View style={styles.commentBox}>
+              <Text style={styles.commentText}>{recData.comment}</Text>
             </View>
-          )}
-
-          <Quit
-            onPress={onClose}
-            style={{
-              position: 'absolute',
-              alignSelf: 'flex-end',
-              top: 20,
-              right: 20,
-            }}
-          />
-
-          {isRecommended && (
-            <Text style={styles.toText}>
-              To. <Text style={{ color: '#F4F4F4' }}>me</Text>
+            <Text style={styles.fromText}>
+              From.{' '}
+              <Text style={{ color: '#F4F4F4' }}>
+                {isRecommended ? recData.senderNickname : 'me'}
+              </Text>
             </Text>
-          )}
-          <Text style={styles.titleText}>{recData.title}</Text>
-          <Text style={styles.artistText}>{recData.artistName}</Text>
-          <View style={styles.commentBox}>
-            <Text style={styles.commentText}>{recData.comment}</Text>
           </View>
-          <Text style={styles.fromText}>
-            From.{' '}
-            <Text style={{ color: '#F4F4F4' }}>
-              {isRecommended ? recData.senderNickname : 'me'}
-            </Text>
-          </Text>
         </View>
-      </View>
+      </ViewShot>
 
       {/* 공유 버튼 그룹 */}
       <View style={styles.buttonGroup}>
-        <View style={styles.shareItem}>
+        {/* ⬇️ 버튼을 Pressable로 바꾸고 onPress 연결 */}
+        <Pressable style={styles.shareItem} onPress={handleSaveImage}>
           <View style={styles.shareButton}>
             <Insta />
           </View>
-          <Text style={styles.shareText}>인스타그램으로{'\n'}공유</Text>
-        </View>
+          <Text style={styles.shareText}>이미지 저장</Text>
+        </Pressable>
 
         <View style={styles.shareItem}>
           <Pressable style={styles.shareButton} onPress={handleShareToX}>
@@ -187,9 +215,21 @@ export default function RecShareModal({
           <Text style={styles.shareText}>링크 복사</Text>
         </View>
       </View>
+
+      {/* 닫기 버튼은 캡처 영역 바깥(= wrapper)에 둬서 이미지에 안 찍히도록 유지 */}
+      <Quit
+        onPress={onClose}
+        style={{
+          position: 'absolute',
+          alignSelf: 'flex-end',
+          top: 20,
+          right: 20,
+        }}
+      />
     </Modal>
   );
 }
+
 const BORDER_WIDTH = 5;
 const OUTER_RADIUS = 20;
 
