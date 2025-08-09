@@ -1,6 +1,8 @@
 import { Typography } from '@/constants/typography';
 import * as Clipboard from 'expo-clipboard';
+import * as Linking from 'expo-linking';
 import { useState } from 'react';
+
 import {
   Alert, //나중에 toast로 변경하기
   Image,
@@ -48,6 +50,18 @@ export default function RecShareModal({
 
   const circleSize = containerWidth * 0.28;
   const bigCircleSize = containerWidth * 0.52;
+  const handleShareToX = () => {
+    if (!recData) return;
+    const shareUrl = `https://bandnol.app/recoms/${recData.id}`;
+    const text = encodeURIComponent(
+      `${recData.title} - ${recData.artistName}\n${shareUrl}`,
+    );
+
+    // X 앱 열기 (앱이 없으면 웹으로 이동)
+    Linking.openURL(`twitter://post?message=${text}`).catch(() => {
+      Linking.openURL(`https://twitter.com/intent/tweet?text=${text}`);
+    });
+  };
 
   return (
     <Modal
@@ -160,9 +174,9 @@ export default function RecShareModal({
         </View>
 
         <View style={styles.shareItem}>
-          <View style={styles.shareButton}>
+          <Pressable style={styles.shareButton} onPress={handleShareToX}>
             <X />
-          </View>
+          </Pressable>
           <Text style={styles.shareText}>X로 공유</Text>
         </View>
 

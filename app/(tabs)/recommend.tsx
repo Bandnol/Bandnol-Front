@@ -5,13 +5,14 @@ import RecommendList, {
 } from '@/app/(tabs)/recommend-tab/RecommendList';
 import Dropdown from '@/assets/icons/size_m/dropdown.svg';
 import { Typography } from '@/constants/typography';
-import { JWT_TOKEN } from '@env';
+import { EXPO_PUBLIC_API_TOKEN } from '@env';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+
 type RecommendItem = {
   date: string;
   recommending: {
@@ -41,11 +42,19 @@ const fetchRecommendList = async (): Promise<RecommendItem[]> => {
 export default function RecommendScreen() {
   useEffect(() => {
     const storeDummyToken = async () => {
-      await SecureStore.setItemAsync('JWTToken', JWT_TOKEN);
+      await SecureStore.setItemAsync('JWTToken', EXPO_PUBLIC_API_TOKEN);
     };
 
     storeDummyToken();
   }, []);
+  useEffect(() => {
+    const debugToken = async () => {
+      const token = await SecureStore.getItemAsync('JWTToken');
+      console.log('🔑 JWT Token:', token);
+    };
+    debugToken();
+  }, []);
+
   const router = useRouter();
   const [selectedMonth, setSelectedMonth] = useState(dayjs());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
