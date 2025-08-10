@@ -1,30 +1,27 @@
+import Logo from '@/assets/icons/logo.svg';
+import Insta from '@/assets/icons/size_m/insta.svg';
+import Link from '@/assets/icons/size_m/link.svg';
+import Quit from '@/assets/icons/size_m/quit.svg';
+import X from '@/assets/icons/size_m/x.svg';
 import { Typography } from '@/constants/typography';
 import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
-
-import { useRef, useState } from 'react'; // ⬅️ 수정: useRef 추가
-// 상단 import 구역에 추가
-//import Share, { Social } from 'react-native-share'; // ⬅️ 인스타 스토리 공유용
-import Logo from '@/assets/icons/logo.svg';
+import { useRef, useState } from 'react';
 import {
   Alert, //나중에 toast로 변경하기
   Image,
   LayoutChangeEvent,
-  Pressable, // ⬅️ Pressable 사용
+  Platform,
+  Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import Modal from 'react-native-modal';
+import Share, { Social } from 'react-native-share';
 import Svg, { Circle } from 'react-native-svg';
+import ViewShot from 'react-native-view-shot';
 import type { CalendarItem } from './RecommendCal';
-
-import ViewShot from 'react-native-view-shot'; // ⬅️ 추가
-
-import Insta from '@/assets/icons/size_m/insta.svg';
-import Link from '@/assets/icons/size_m/link.svg';
-import Quit from '@/assets/icons/size_m/quit.svg';
-import X from '@/assets/icons/size_m/x.svg';
 
 type RecShareModalProps = {
   visible: boolean;
@@ -38,9 +35,9 @@ export default function RecShareModal({
   recData,
 }: RecShareModalProps) {
   const [containerWidth, setContainerWidth] = useState(0);
-  const viewShotRefInsta = useRef<ViewShot>(null); // ⬅️ 추가
-  const viewShotRefX = useRef<ViewShot>(null); // ★ NEW: 가로형 전용
-
+  const viewShotRefInsta = useRef<ViewShot>(null);
+  const viewShotRefX = useRef<ViewShot>(null);
+  const viewShotRefBg = useRef<ViewShot>(null);
   if (!recData) return null;
   const isRecommended = 'senderNickname' in recData;
 
@@ -54,6 +51,34 @@ export default function RecShareModal({
     await Clipboard.setStringAsync(shareUrl);
     Alert.alert('링크가 복사되었습니다.');
   };
+  const handleShareToInstagramStory = async () => {
+    try {
+      if (!recData) return;
+      // 1) 캡쳐
+      const stickerUri = await viewShotRefInsta.current?.capture?.();
+      if (!stickerUri) throw new Error('이미지 캡처 실패');
+
+      const backgroundUri = await viewShotRefBg.current?.capture?.();
+      if (!backgroundUri) throw new Error('배경 이미지 캡처 실패');
+
+      // 4) react-native-share: 특정 앱(IG Stories)로 바로 공유
+      await Share.shareSingle({
+        social: Social.InstagramStories,
+        appId: 'YOUR_FB_APP_ID',
+        backgroundImage: backgroundUri,
+        stickerImage: stickerUri,
+        backgroundTopColor: '#000000',
+        backgroundBottomColor: '#000000',
+      });
+    } catch (error: any) {
+      // IG 미설치, 사용자가 닫기, Expo Go 사용 등 케이스
+      const msg =
+        Platform.OS === 'ios'
+          ? '인스타그램 앱이 설치되어 있고 Dev Client/EAS 빌드에서만 동작합니다. (Expo Go에서는 동작하지 않음)'
+          : (error?.message ?? String(error));
+      Alert.alert('공유 실패', msg);
+    }
+  };
 
   const handleShareToX = () => {
     if (!recData) return;
@@ -62,7 +87,6 @@ export default function RecShareModal({
       `${recData.title} - ${recData.artistName}\n${shareUrl}`,
     );
 
-    // X 앱 열기 (앱이 없으면 웹으로 이동)
     Linking.openURL(`twitter://post?message=${text}`).catch(() => {
       Linking.openURL(`https://twitter.com/intent/tweet?text=${text}`);
     });
@@ -78,13 +102,12 @@ export default function RecShareModal({
         onBackdropPress={onClose}
         backdropOpacity={0.8}
         style={styles.modal}
-        coverScreen={false} //이거 가로모달 수정 후에 지우기!! 아예 이 줄을
       >
         {/* 테두리 wrapper */}
         <ViewShot
           ref={viewShotRefInsta} // ⬅️ 추가
           options={{ format: 'png', quality: 1, width: 300 }} // ⬅️ 추가: 고화질 PNG
-          style={{ borderRadius: OUTER_RADIUS - BORDER_WIDTH }} // 시각 통일
+          style={{ borderRadius: 15 }} // 시각 통일
         >
           <View style={styles.containerWrapper}>
             <View style={styles.containerInner} onLayout={handleLayout}>
@@ -221,7 +244,7 @@ export default function RecShareModal({
         <View style={styles.buttonGroup}>
           <Pressable
             style={styles.shareItem}
-            //onPress={handleShareToInstagramStory}
+            onPress={handleShareToInstagramStory}
           >
             <View style={styles.shareButton}>
               <Insta />
@@ -243,134 +266,146 @@ export default function RecShareModal({
             <Text style={styles.shareText}>링크 복사</Text>
           </View>
         </View>
+      </Modal>
 
-        {/* ⬇️ 나중에 Modal 밖으로 빼야 함!!!*/}
-        <View
-          //pointerEvents="none" collapsable={false}
-          style={{ position: 'absolute', top: 24, left: 16, zIndex: 99 }}
-        >
-          <ViewShot
-            ref={viewShotRefX}
-            options={{ format: 'png', quality: 1, width: 357, height: 187 }}
+      {/* 캡쳐용 ViewShot */}
+      <View
+        pointerEvents="none"
+        collapsable={false}
+        style={{ position: 'absolute', zIndex: 99, left: -10000, top: -10000 }}
+      >
+        <ViewShot ref={viewShotRefBg} options={{ format: 'png', quality: 1 }}>
+          <Image
+            source={{ uri: recData.imageUrl }}
+            style={{ width: 1080, height: 1920 }}
+            resizeMode="cover"
+          />
+          <View
             style={{
-              borderRadius: 16,
+              ...StyleSheet.absoluteFillObject,
+              backgroundColor: 'rgba(0,0,0,0.75)',
             }}
-          >
-            <View style={styles.XcontainerWrapper}>
-              <View style={styles.XcontainerInner} onLayout={handleLayout}>
-                <View style={styles.XLeft}>
-                  {/* 커버 이미지 */}
-                  <Image
-                    source={{ uri: recData.imageUrl }}
-                    style={{
-                      position: 'absolute',
-                      top: '50%',
-                      left: '50%',
-                      width: 220,
-                      height: 220,
-                      borderRadius: 110,
-                      transform: [{ translateX: -110 }, { translateY: -110 }],
-                    }}
-                    resizeMode="cover"
+          />
+        </ViewShot>
+
+        <ViewShot
+          ref={viewShotRefX}
+          options={{ format: 'png', quality: 1, width: 357, height: 187 }}
+          style={{
+            borderRadius: 16,
+          }}
+        >
+          <View style={styles.XcontainerWrapper}>
+            <View style={styles.XcontainerInner} onLayout={handleLayout}>
+              <View style={styles.XLeft}>
+                {/* 커버 이미지 */}
+                <Image
+                  source={{ uri: recData.imageUrl }}
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    width: 220,
+                    height: 220,
+                    borderRadius: 110,
+                    transform: [{ translateX: -110 }, { translateY: -110 }],
+                  }}
+                  resizeMode="cover"
+                />
+
+                {/* 반투명 큰 원 */}
+                <Svg
+                  width={113}
+                  height={113}
+                  style={{
+                    position: 'absolute',
+                  }}
+                >
+                  <Circle
+                    cx="50%"
+                    cy="50%"
+                    r="50%"
+                    fill="black"
+                    fillOpacity={0.4}
                   />
+                </Svg>
 
-                  {/* 반투명 큰 원 */}
-                  <Svg
-                    width={113}
-                    height={113}
-                    style={{
-                      position: 'absolute',
-                    }}
-                  >
-                    <Circle
-                      cx="50%"
-                      cy="50%"
-                      r="50%"
-                      fill="black"
-                      fillOpacity={0.4}
-                    />
-                  </Svg>
+                {/* 중앙 작은 원 (이미 57로 축소됨) */}
+                <Svg
+                  width={57}
+                  height={57}
+                  style={{
+                    position: 'absolute',
+                  }}
+                >
+                  <Circle cx="50%" cy="50%" r="50%" fill="#1F1F1F" />
+                </Svg>
+              </View>
 
-                  {/* 중앙 작은 원 (이미 57로 축소됨) */}
-                  <Svg
-                    width={57}
-                    height={57}
-                    style={{
-                      position: 'absolute',
-                    }}
-                  >
-                    <Circle cx="50%" cy="50%" r="50%" fill="#1F1F1F" />
-                  </Svg>
-                </View>
-
-                <View style={styles.XRight}>
-                  {/* To. me — 1줄, ... */}
-                  {isRecommended && (
-                    <Text
-                      style={styles.XtoText}
-                      numberOfLines={1} // NEW
-                      ellipsizeMode="tail" // NEW
-                    >
-                      To. <Text style={{ color: '#F4F4F4' }}>me</Text>
-                    </Text>
-                  )}
-
-                  {/* 제목 — 1줄, ... */}
+              <View style={styles.XRight}>
+                {/* To. me — 1줄, ... */}
+                {isRecommended && (
                   <Text
-                    style={styles.XtitleText}
+                    style={styles.XtoText}
                     numberOfLines={1} // NEW
                     ellipsizeMode="tail" // NEW
                   >
-                    {recData.title}
+                    To. <Text style={{ color: '#F4F4F4' }}>me</Text>
                   </Text>
+                )}
 
-                  {/* 아티스트 — 1줄, ... */}
+                {/* 제목 — 1줄, ... */}
+                <Text
+                  style={styles.XtitleText}
+                  numberOfLines={1} // NEW
+                  ellipsizeMode="tail" // NEW
+                >
+                  {recData.title}
+                </Text>
+
+                {/* 아티스트 — 1줄, ... */}
+                <Text
+                  style={styles.XartistText}
+                  numberOfLines={1} // NEW
+                  ellipsizeMode="tail" // NEW
+                >
+                  {recData.artistName}
+                </Text>
+
+                {/* 코멘트 — 2줄, ... */}
+                <View style={styles.XcommentBox}>
                   <Text
-                    style={styles.XartistText}
-                    numberOfLines={1} // NEW
+                    style={styles.XcommentText}
+                    numberOfLines={2} // NEW: 가로형은 2줄이 균형 좋음
                     ellipsizeMode="tail" // NEW
                   >
-                    {recData.artistName}
-                  </Text>
-
-                  {/* 코멘트 — 2줄, ... */}
-                  <View style={styles.XcommentBox}>
-                    <Text
-                      style={styles.XcommentText}
-                      numberOfLines={2} // NEW: 가로형은 2줄이 균형 좋음
-                      ellipsizeMode="tail" // NEW
-                    >
-                      {recData.comment}
-                    </Text>
-                  </View>
-
-                  {/* From. XXX — 1줄, ... */}
-                  <Text
-                    style={styles.XfromText}
-                    numberOfLines={1} // NEW
-                    ellipsizeMode="tail" // NEW
-                  >
-                    From.{' '}
-                    <Text style={{ color: '#F4F4F4' }}>
-                      {isRecommended ? recData.senderNickname : 'me'}
-                    </Text>
+                    {recData.comment}
                   </Text>
                 </View>
 
-                <View style={styles.XlogoContainer}>
-                  <Logo width={16.86} height={12} />
-                </View>
+                {/* From. XXX — 1줄, ... */}
+                <Text
+                  style={styles.XfromText}
+                  numberOfLines={1} // NEW
+                  ellipsizeMode="tail" // NEW
+                >
+                  From.{' '}
+                  <Text style={{ color: '#F4F4F4' }}>
+                    {isRecommended ? recData.senderNickname : 'me'}
+                  </Text>
+                </Text>
+              </View>
+
+              <View style={styles.XlogoContainer}>
+                <Logo width={16.86} height={12} />
               </View>
             </View>
-          </ViewShot>
-        </View>
-      </Modal>
+          </View>
+        </ViewShot>
+      </View>
     </>
   );
 }
-
-const BORDER_WIDTH = 5;
-const OUTER_RADIUS = 20;
 const styles = StyleSheet.create({
   modal: {
     margin: 0,
@@ -381,8 +416,8 @@ const styles = StyleSheet.create({
     width: 335,
     height: 489,
     backgroundColor: '#333',
-    padding: BORDER_WIDTH,
-    borderRadius: OUTER_RADIUS,
+    padding: 5,
+    borderRadius: 20,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
@@ -393,7 +428,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#333',
     transform: [{ translateY: -3 }],
-    borderRadius: OUTER_RADIUS - BORDER_WIDTH,
+    borderRadius: 15,
     borderColor: '#7C7C7C',
     borderWidth: 1,
     alignItems: 'center',
@@ -482,8 +517,8 @@ const styles = StyleSheet.create({
     width: 357,
     height: 187,
     backgroundColor: '#333',
-    padding: BORDER_WIDTH,
-    borderRadius: OUTER_RADIUS,
+    padding: 5,
+    borderRadius: 20,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
@@ -493,7 +528,7 @@ const styles = StyleSheet.create({
     height: 178,
     flex: 1,
     backgroundColor: '#333',
-    borderRadius: OUTER_RADIUS - BORDER_WIDTH,
+    borderRadius: 15,
     borderColor: '#7C7C7C',
     borderWidth: 1,
     alignItems: 'center',

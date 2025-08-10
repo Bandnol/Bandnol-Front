@@ -11,7 +11,7 @@ export default {
     userInterfaceStyle: 'automatic',
     newArchEnabled: true,
     ios: {
-      bundleIdentifier: 'com.bandnol.Bandnol',
+      bundleIdentifier: 'com.bohyun.Bandnol',
       supportsTablet: true,
     },
     android: {
