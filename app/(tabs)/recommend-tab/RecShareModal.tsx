@@ -6,11 +6,11 @@ import X from '@/assets/icons/size_m/x.svg';
 import { Typography } from '@/constants/typography';
 import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import {
-  Alert, //나중에 toast로 변경하기
+  Alert,
+  Dimensions, //나중에 toast로 변경하기
   Image,
-  LayoutChangeEvent,
   Platform,
   Pressable,
   StyleSheet,
@@ -28,22 +28,22 @@ type RecShareModalProps = {
   onClose: () => void;
   recData: CalendarItem | undefined;
 };
+const { width: screenWidth } = Dimensions.get('window');
+let scale = 1;
 
+if (screenWidth < 415) {
+  scale = screenWidth / 415;
+}
 export default function RecShareModal({
   visible,
   onClose,
   recData,
 }: RecShareModalProps) {
-  const [containerWidth, setContainerWidth] = useState(0);
   const viewShotRefInsta = useRef<ViewShot>(null);
   const viewShotRefX = useRef<ViewShot>(null);
   const viewShotRefBg = useRef<ViewShot>(null);
   if (!recData) return null;
   const isRecommended = 'senderNickname' in recData;
-
-  const handleLayout = (e: LayoutChangeEvent) => {
-    setContainerWidth(e.nativeEvent.layout.width);
-  };
 
   const handleCopyLink = async () => {
     if (!recData) return;
@@ -71,10 +71,9 @@ export default function RecShareModal({
         backgroundBottomColor: '#000000',
       });
     } catch (error: any) {
-      // IG 미설치, 사용자가 닫기, Expo Go 사용 등 케이스
       const msg =
         Platform.OS === 'ios'
-          ? '인스타그램 앱이 설치되어 있고 Dev Client/EAS 빌드에서만 동작합니다. (Expo Go에서는 동작하지 않음)'
+          ? Linking.openURL('itms-apps://itunes.apple.com/app/id389801252')
           : (error?.message ?? String(error));
       Alert.alert('공유 실패', msg);
     }
@@ -92,56 +91,48 @@ export default function RecShareModal({
     });
   };
 
-  const circleSize = containerWidth * 0.28;
-  const bigCircleSize = containerWidth * 0.52;
-
   return (
     <>
-      <Modal
-        isVisible={visible}
-        onBackdropPress={onClose}
-        backdropOpacity={0.8}
-        style={styles.modal}
-      >
-        {/* 테두리 wrapper */}
-        <ViewShot
-          ref={viewShotRefInsta} // ⬅️ 추가
-          options={{ format: 'png', quality: 1, width: 300 }} // ⬅️ 추가: 고화질 PNG
-          style={{ borderRadius: 15 }} // 시각 통일
+      <View style={screenWidth < 410 && { transform: [{ scale }] }}>
+        <Modal
+          isVisible={visible}
+          onBackdropPress={onClose}
+          backdropOpacity={0.8}
+          style={styles.modal}
         >
-          <View style={styles.containerWrapper}>
-            <View style={styles.containerInner} onLayout={handleLayout}>
-              {containerWidth > 0 && (
+          <ViewShot
+            ref={viewShotRefInsta}
+            options={{ format: 'png', quality: 1, width: 300 }}
+            style={{ borderRadius: 15 }}
+          >
+            <View style={styles.containerWrapper}>
+              <View style={styles.containerInner}>
                 <View
                   style={{
-                    position: 'relative',
-                    width: containerWidth,
+                    width: 355,
+                    marginTop: -140,
                     alignItems: 'center',
                   }}
                 >
                   <Image
                     source={{ uri: recData.imageUrl }}
                     style={{
-                      width: containerWidth * 1.1,
+                      width: '100%',
                       aspectRatio: 1,
                       borderRadius: 9999,
-                      marginTop: -containerWidth * 0.43,
                       marginBottom: 8,
                     }}
                     resizeMode="cover"
                   />
 
                   <Svg
-                    width={circleSize}
-                    height={circleSize}
+                    width={88}
+                    height={88}
                     style={{
                       position: 'absolute',
                       top: '50%',
                       left: '50%',
-                      transform: [
-                        { translateX: -circleSize / 2 },
-                        { translateY: -circleSize / 0.9 - 10 },
-                      ],
+                      transform: [{ translateX: -44 }, { translateY: -44 }],
                       zIndex: 2,
                     }}
                   >
@@ -149,16 +140,13 @@ export default function RecShareModal({
                   </Svg>
 
                   <Svg
-                    width={bigCircleSize}
-                    height={bigCircleSize}
+                    width={178}
+                    height={178}
                     style={{
                       position: 'absolute',
                       top: '50%',
                       left: '50%',
-                      transform: [
-                        { translateX: -bigCircleSize / 2 },
-                        { translateY: -bigCircleSize / 1.22 - 16 },
-                      ],
+                      transform: [{ translateX: -89 }, { translateY: -89 }],
                       zIndex: 1,
                     }}
                   >
@@ -171,102 +159,102 @@ export default function RecShareModal({
                     />
                   </Svg>
                 </View>
-              )}
 
-              {/* To. me — 말줄임 적용 (혹시 닉네임 길어질 대비) */}
-              {isRecommended && (
+                {/* To. me — 말줄임 적용 (혹시 닉네임 길어질 대비) */}
+                {isRecommended && (
+                  <Text
+                    style={styles.toText}
+                    numberOfLines={1} // NEW: 말줄임
+                    ellipsizeMode="tail" // NEW
+                  >
+                    To. <Text style={{ color: '#F4F4F4' }}>me</Text>
+                  </Text>
+                )}
+
+                {/* 제목 — 1줄 고정, ... */}
                 <Text
-                  style={styles.toText}
-                  numberOfLines={1} // NEW: 말줄임
+                  style={styles.titleText}
+                  numberOfLines={1} // NEW
                   ellipsizeMode="tail" // NEW
                 >
-                  To. <Text style={{ color: '#F4F4F4' }}>me</Text>
+                  {recData.title}
                 </Text>
-              )}
 
-              {/* 제목 — 1줄 고정, ... */}
-              <Text
-                style={styles.titleText}
-                numberOfLines={1} // NEW
-                ellipsizeMode="tail" // NEW
-              >
-                {recData.title}
-              </Text>
-
-              {/* 아티스트 — 1줄 고정, ... */}
-              <Text
-                style={styles.artistText}
-                numberOfLines={1} // NEW
-                ellipsizeMode="tail" // NEW
-              >
-                {recData.artistName}
-              </Text>
-
-              {/* 코멘트 — 3줄 제한, ... */}
-              <View style={styles.commentBox}>
+                {/* 아티스트 — 1줄 고정, ... */}
                 <Text
-                  style={styles.commentText}
-                  numberOfLines={3} // NEW: 3줄 제한
+                  style={styles.artistText}
+                  numberOfLines={1} // NEW
                   ellipsizeMode="tail" // NEW
                 >
-                  {recData.comment}
+                  {recData.artistName}
                 </Text>
-              </View>
 
-              {/* From. XXX — 1줄, ... (닉네임 길이 대비) */}
-              <Text
-                style={styles.fromText}
-                numberOfLines={1} // NEW
-                ellipsizeMode="tail" // NEW
-              >
-                From.{' '}
-                <Text style={{ color: '#F4F4F4' }}>
-                  {isRecommended ? recData.senderNickname : 'me'}
+                {/* 코멘트 — 3줄 제한, ... */}
+                <View style={styles.commentBox}>
+                  <Text
+                    style={styles.commentText}
+                    numberOfLines={3} // NEW: 3줄 제한
+                    ellipsizeMode="tail" // NEW
+                  >
+                    {recData.comment}
+                  </Text>
+                </View>
+
+                {/* From. XXX — 1줄, ... (닉네임 길이 대비) */}
+                <Text
+                  style={styles.fromText}
+                  numberOfLines={1} // NEW
+                  ellipsizeMode="tail" // NEW
+                >
+                  From.{' '}
+                  <Text style={{ color: '#F4F4F4' }}>
+                    {isRecommended ? recData.senderNickname : 'me'}
+                  </Text>
                 </Text>
-              </Text>
 
-              <View style={styles.logoContainer}>
-                <Logo width={26.964} height={20.298} />
+                <View style={styles.logoContainer}>
+                  <Logo width={26.964} height={20.298} />
+                </View>
               </View>
+              <Quit
+                onPress={onClose}
+                style={{
+                  position: 'absolute',
+                  alignSelf: 'flex-end',
+                  top: 20,
+                  right: 20,
+                }}
+              />
             </View>
-            <Quit
-              onPress={onClose}
-              style={{
-                position: 'absolute',
-                alignSelf: 'flex-end',
-                top: 20,
-                right: 20,
-              }}
-            />
-          </View>
-        </ViewShot>
+          </ViewShot>
 
-        <View style={styles.buttonGroup}>
-          <Pressable
-            style={styles.shareItem}
-            onPress={handleShareToInstagramStory}
-          >
-            <View style={styles.shareButton}>
-              <Insta />
+          <View style={styles.buttonGroup}>
+            <Pressable
+              style={styles.shareItem}
+              onPress={handleShareToInstagramStory}
+            >
+              <View style={styles.shareButton}>
+                <Insta />
+              </View>
+              <Text style={styles.shareText}>인스타그램으로 공유</Text>
+            </Pressable>
+
+            <View style={styles.shareItem}>
+              <Pressable style={styles.shareButton} onPress={handleShareToX}>
+                <X />
+              </Pressable>
+              <Text style={styles.shareText}>X로 공유</Text>
             </View>
-            <Text style={styles.shareText}>인스타그램으로 공유</Text>
-          </Pressable>
 
-          <View style={styles.shareItem}>
-            <Pressable style={styles.shareButton} onPress={handleShareToX}>
-              <X />
-            </Pressable>
-            <Text style={styles.shareText}>X로 공유</Text>
+            <View style={styles.shareItem}>
+              <Pressable style={styles.shareButton} onPress={handleCopyLink}>
+                <Link />
+              </Pressable>
+              <Text style={styles.shareText}>링크 복사</Text>
+            </View>
           </View>
-
-          <View style={styles.shareItem}>
-            <Pressable style={styles.shareButton} onPress={handleCopyLink}>
-              <Link />
-            </Pressable>
-            <Text style={styles.shareText}>링크 복사</Text>
-          </View>
-        </View>
-      </Modal>
+        </Modal>
+      </View>
 
       {/* 캡쳐용 ViewShot */}
       <View
@@ -296,7 +284,7 @@ export default function RecShareModal({
           }}
         >
           <View style={styles.XcontainerWrapper}>
-            <View style={styles.XcontainerInner} onLayout={handleLayout}>
+            <View style={styles.XcontainerInner}>
               <View style={styles.XLeft}>
                 {/* 커버 이미지 */}
                 <Image
