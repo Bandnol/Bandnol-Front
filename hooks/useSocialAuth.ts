@@ -8,11 +8,13 @@ export function useSocialAuth() {
 
   const loginWithKakao = async () => {
     try {
+      console.log('[KAKAO] login() 호출');
       const res = await login();
-      console.log('카카오 로그인 결과:', res);
+      console.log('[KAKAO] login() 성공, 결과:', res);
 
       if (res.idToken) {
-        // 백엔드로 id_token 보내기
+        // TEMP: 백엔드에서 Kakao API 호출 시 사용자 access_token이 필요해 500(NOAUTH) 발생 →
+        // 백엔드가 OIDC 방식으로 id_token만으로 검증 완료하기 전까지 access_token도 함께 전달
         const response = await fetch(
           `${API_URL}/api/v1/oauth2/callback/kakao`,
           {
@@ -20,20 +22,37 @@ export function useSocialAuth() {
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ id_token: res.idToken }),
+            body: JSON.stringify({
+              id_token: res.idToken,
+              access_token: res.accessToken,
+            }),
           },
         );
+        console.log('서버 응답 status:', response.status);
 
         const data = await response.json();
         console.log('서버 응답:', data);
 
         if (data.success) {
-          // JWTToken & 리프레쉬 토큰 저장
+          // 액세스 토큰 저장 (필수)
           await SecureStore.setItemAsync('JWTToken', data.data.token);
-          await SecureStore.setItemAsync(
-            'JWTRefreshToken',
-            data.data.refreshToken,
-          );
+
+          // 리프레시 토큰이 응답에 있을 때만 저장 (백엔드 캐시 전환 대응)
+          if (data?.data?.refreshToken) {
+            await SecureStore.setItemAsync(
+              'JWTRefreshToken',
+              data.data.refreshToken,
+            );
+            console.log('리프레시 토큰 저장 완료');
+          } else {
+            // 서버가 쿠키/캐시로만 관리하는 경우 대비
+            await SecureStore.deleteItemAsync('JWTRefreshToken');
+            console.log(
+              '리프레시 토큰 미수신: 서버에서 캐시/쿠키로 관리하는 것으로 판단',
+            );
+          }
+
+          // 사용자 정보 저장
           await SecureStore.setItemAsync(
             'user',
             JSON.stringify(data.data.user),
@@ -45,11 +64,19 @@ export function useSocialAuth() {
             params: { name, email },
           });
         } else {
-          console.error('카카오 로그인 실패:', data.error);
+          const errCode = data?.error?.code ?? 'UNKNOWN';
+          const errMsg =
+            data?.error?.message ?? data?.message ?? '알 수 없는 오류';
+          console.error(`카카오 로그인 실패 [${errCode}] : ${errMsg}`, data);
         }
+      } else {
+        console.warn(
+          '[KAKAO] idToken 없음: 로그인 취소 또는 토큰 발급 실패',
+          res,
+        );
       }
     } catch (error) {
-      console.error('카카오 로그인 실패:', error);
+      console.error('[KAKAO] login() 예외 발생:', error);
     }
   };
 
