@@ -1,4 +1,4 @@
-package com.bhyn.bandnol
+package com.bandnol.Bandnol
 
 import android.app.Application
 import android.content.res.Configuration

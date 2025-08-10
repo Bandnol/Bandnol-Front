@@ -1,11 +1,11 @@
 import { Typography } from '@/constants/typography';
 import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
+
 import { useRef, useState } from 'react'; // ⬅️ 수정: useRef 추가
 // 상단 import 구역에 추가
-import Share, { Social } from 'react-native-share'; // ⬅️ 인스타 스토리 공유용
-import { Platform } from 'react-native'; // ⬅️ 안내용(오류 핸들링)
-
+//import Share, { Social } from 'react-native-share'; // ⬅️ 인스타 스토리 공유용
+import Logo from '@/assets/icons/logo.svg';
 import {
   Alert, //나중에 toast로 변경하기
   Image,
@@ -38,7 +38,8 @@ export default function RecShareModal({
   recData,
 }: RecShareModalProps) {
   const [containerWidth, setContainerWidth] = useState(0);
-  const viewShotRef = useRef<ViewShot>(null); // ⬅️ 추가
+  const viewShotRefInsta = useRef<ViewShot>(null); // ⬅️ 추가
+  const viewShotRefX = useRef<ViewShot>(null); // ★ NEW: 가로형 전용
 
   if (!recData) return null;
   const isRecommended = 'senderNickname' in recData;
@@ -69,183 +70,307 @@ export default function RecShareModal({
 
   const circleSize = containerWidth * 0.28;
   const bigCircleSize = containerWidth * 0.52;
-  // 컴포넌트 내부, handleSaveImage 아래에 추가
-  // ⬇️ 인스타 스토리 공유: ViewShot으로 캡처 → react-native-share로 열기
-  const handleShareToInstagramStory = async () => {
-    try {
-      if (!recData) return;
-
-      // 1) ViewShot으로 현재 카드(=containerInner 포함 영역) 캡처
-      //  - format/png + quality 1로 고화질
-      //  - 기본 반환은 파일 URI (예: file:///var/...) 이고, IG 스토리의 backgroundImage로 바로 사용 가능
-      const uri = await viewShotRef.current?.capture?.();
-      if (!uri) throw new Error('이미지 캡처 실패');
-
-      // 2) 스토리 딥링크/출처 URL (선택)
-      const deepLink = `https://bandnol.app/recoms/${recData.id}`;
-
-      // 3) 페이스북 앱 ID (⚠️ 2023.01부터 IG Stories에 필수)
-      //    실제 발급받은 Facebook App ID로 교체하세요.
-      const FACEBOOK_APP_ID = 'YOUR_FB_APP_ID'; // ⬅️ TODO: 실제 앱 ID로 교체
-
-      // 4) react-native-share: 특정 앱(IG Stories)로 바로 공유
-      await Share.shareSingle({
-        social: Social.InstagramStories,
-        appId: FACEBOOK_APP_ID, // ⬅️ 필수
-        //backgroundImage: uri, // ⬅️ 방금 캡처한 이미지 전체를 배경으로
-        stickerImage: uri, // ⬅️ 스티커로 쓰고 싶으면 주석 해제
-        backgroundTopColor: '#000000',
-        backgroundBottomColor: '#000000',
-        //attributionURL: deepLink, // ⬅️ 선택: 스토리에서 출처 링크
-      });
-    } catch (error: any) {
-      // IG 미설치, 사용자가 닫기, Expo Go 사용 등 케이스
-      const msg =
-        Platform.OS === 'ios'
-          ? '인스타그램 앱이 설치되어 있고 Dev Client/EAS 빌드에서만 동작합니다. (Expo Go에서는 동작하지 않음)'
-          : (error?.message ?? String(error));
-      Alert.alert('공유 실패', msg);
-    }
-  };
 
   return (
-    <Modal
-      isVisible={visible}
-      onBackdropPress={onClose}
-      backdropOpacity={0.8}
-      style={styles.modal}
-    >
-      {/* 테두리 wrapper */}
-      <ViewShot
-        ref={viewShotRef} // ⬅️ 추가
-        options={{ format: 'png', quality: 1, width: 300 }} // ⬅️ 추가: 고화질 PNG
-        style={{ borderRadius: OUTER_RADIUS - BORDER_WIDTH }} // 시각 통일
+    <>
+      <Modal
+        isVisible={visible}
+        onBackdropPress={onClose}
+        backdropOpacity={0.8}
+        style={styles.modal}
+        coverScreen={false} //이거 가로모달 수정 후에 지우기!! 아예 이 줄을
       >
-        <View style={styles.containerWrapper}>
-          <View style={styles.containerInner} onLayout={handleLayout}>
-            {containerWidth > 0 && (
-              <View
-                style={{
-                  position: 'relative',
-                  width: containerWidth,
-                  alignItems: 'center',
-                }}
-              >
-                <Image
-                  source={{ uri: recData.imageUrl }}
-                  style={{
-                    width: containerWidth * 1.1,
-                    aspectRatio: 1,
-                    borderRadius: 9999,
-                    marginTop: -containerWidth * 0.43,
-                    marginBottom: 8,
-                  }}
-                  resizeMode="cover"
-                />
-
-                <Svg
-                  width={circleSize}
-                  height={circleSize}
-                  style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: [
-                      { translateX: -circleSize / 2 },
-                      { translateY: -circleSize / 0.9 - 10 },
-                    ],
-                    zIndex: 2,
-                  }}
-                >
-                  <Circle cx="50%" cy="50%" r="50%" fill="#1F1F1F" />
-                </Svg>
-
-                <Svg
-                  width={bigCircleSize}
-                  height={bigCircleSize}
-                  style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: [
-                      { translateX: -bigCircleSize / 2 },
-                      { translateY: -bigCircleSize / 1.22 - 16 },
-                    ],
-                    zIndex: 1,
-                  }}
-                >
-                  <Circle
-                    cx="50%"
-                    cy="50%"
-                    r="50%"
-                    fill="black"
-                    fillOpacity={0.4}
-                  />
-                </Svg>
-              </View>
-            )}
-
-            {isRecommended && (
-              <Text style={styles.toText}>
-                To. <Text style={{ color: '#F4F4F4' }}>me</Text>
-              </Text>
-            )}
-            <Text style={styles.titleText}>{recData.title}</Text>
-            <Text style={styles.artistText}>{recData.artistName}</Text>
-            <View style={styles.commentBox}>
-              <Text style={styles.commentText}>{recData.comment}</Text>
-            </View>
-            <Text style={styles.fromText}>
-              From.{' '}
-              <Text style={{ color: '#F4F4F4' }}>
-                {isRecommended ? recData.senderNickname : 'me'}
-              </Text>
-            </Text>
-          </View>
-          <Quit
-            onPress={onClose}
-            style={{
-              position: 'absolute',
-              alignSelf: 'flex-end',
-              top: 20,
-              right: 20,
-            }}
-          />
-        </View>
-      </ViewShot>
-
-      <View style={styles.buttonGroup}>
-        <Pressable
-          style={styles.shareItem}
-          onPress={handleShareToInstagramStory}
+        {/* 테두리 wrapper */}
+        <ViewShot
+          ref={viewShotRefInsta} // ⬅️ 추가
+          options={{ format: 'png', quality: 1, width: 300 }} // ⬅️ 추가: 고화질 PNG
+          style={{ borderRadius: OUTER_RADIUS - BORDER_WIDTH }} // 시각 통일
         >
-          <View style={styles.shareButton}>
-            <Insta />
+          <View style={styles.containerWrapper}>
+            <View style={styles.containerInner} onLayout={handleLayout}>
+              {containerWidth > 0 && (
+                <View
+                  style={{
+                    position: 'relative',
+                    width: containerWidth,
+                    alignItems: 'center',
+                  }}
+                >
+                  <Image
+                    source={{ uri: recData.imageUrl }}
+                    style={{
+                      width: containerWidth * 1.1,
+                      aspectRatio: 1,
+                      borderRadius: 9999,
+                      marginTop: -containerWidth * 0.43,
+                      marginBottom: 8,
+                    }}
+                    resizeMode="cover"
+                  />
+
+                  <Svg
+                    width={circleSize}
+                    height={circleSize}
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: [
+                        { translateX: -circleSize / 2 },
+                        { translateY: -circleSize / 0.9 - 10 },
+                      ],
+                      zIndex: 2,
+                    }}
+                  >
+                    <Circle cx="50%" cy="50%" r="50%" fill="#1F1F1F" />
+                  </Svg>
+
+                  <Svg
+                    width={bigCircleSize}
+                    height={bigCircleSize}
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: [
+                        { translateX: -bigCircleSize / 2 },
+                        { translateY: -bigCircleSize / 1.22 - 16 },
+                      ],
+                      zIndex: 1,
+                    }}
+                  >
+                    <Circle
+                      cx="50%"
+                      cy="50%"
+                      r="50%"
+                      fill="black"
+                      fillOpacity={0.4}
+                    />
+                  </Svg>
+                </View>
+              )}
+
+              {/* To. me — 말줄임 적용 (혹시 닉네임 길어질 대비) */}
+              {isRecommended && (
+                <Text
+                  style={styles.toText}
+                  numberOfLines={1} // NEW: 말줄임
+                  ellipsizeMode="tail" // NEW
+                >
+                  To. <Text style={{ color: '#F4F4F4' }}>me</Text>
+                </Text>
+              )}
+
+              {/* 제목 — 1줄 고정, ... */}
+              <Text
+                style={styles.titleText}
+                numberOfLines={1} // NEW
+                ellipsizeMode="tail" // NEW
+              >
+                {recData.title}
+              </Text>
+
+              {/* 아티스트 — 1줄 고정, ... */}
+              <Text
+                style={styles.artistText}
+                numberOfLines={1} // NEW
+                ellipsizeMode="tail" // NEW
+              >
+                {recData.artistName}
+              </Text>
+
+              {/* 코멘트 — 3줄 제한, ... */}
+              <View style={styles.commentBox}>
+                <Text
+                  style={styles.commentText}
+                  numberOfLines={3} // NEW: 3줄 제한
+                  ellipsizeMode="tail" // NEW
+                >
+                  {recData.comment}
+                </Text>
+              </View>
+
+              {/* From. XXX — 1줄, ... (닉네임 길이 대비) */}
+              <Text
+                style={styles.fromText}
+                numberOfLines={1} // NEW
+                ellipsizeMode="tail" // NEW
+              >
+                From.{' '}
+                <Text style={{ color: '#F4F4F4' }}>
+                  {isRecommended ? recData.senderNickname : 'me'}
+                </Text>
+              </Text>
+
+              <View style={styles.logoContainer}>
+                <Logo width={26.964} height={20.298} />
+              </View>
+            </View>
+            <Quit
+              onPress={onClose}
+              style={{
+                position: 'absolute',
+                alignSelf: 'flex-end',
+                top: 20,
+                right: 20,
+              }}
+            />
           </View>
-          <Text style={styles.shareText}>인스타그램으로 공유</Text>
-        </Pressable>
+        </ViewShot>
 
-        <View style={styles.shareItem}>
-          <Pressable style={styles.shareButton} onPress={handleShareToX}>
-            <X />
+        <View style={styles.buttonGroup}>
+          <Pressable
+            style={styles.shareItem}
+            //onPress={handleShareToInstagramStory}
+          >
+            <View style={styles.shareButton}>
+              <Insta />
+            </View>
+            <Text style={styles.shareText}>인스타그램으로 공유</Text>
           </Pressable>
-          <Text style={styles.shareText}>X로 공유</Text>
+
+          <View style={styles.shareItem}>
+            <Pressable style={styles.shareButton} onPress={handleShareToX}>
+              <X />
+            </Pressable>
+            <Text style={styles.shareText}>X로 공유</Text>
+          </View>
+
+          <View style={styles.shareItem}>
+            <Pressable style={styles.shareButton} onPress={handleCopyLink}>
+              <Link />
+            </Pressable>
+            <Text style={styles.shareText}>링크 복사</Text>
+          </View>
         </View>
 
-        <View style={styles.shareItem}>
-          <Pressable style={styles.shareButton} onPress={handleCopyLink}>
-            <Link />
-          </Pressable>
-          <Text style={styles.shareText}>링크 복사</Text>
+        {/* ⬇️ 나중에 Modal 밖으로 빼야 함!!!*/}
+        <View
+          //pointerEvents="none" collapsable={false}
+          style={{ position: 'absolute', top: 24, left: 16, zIndex: 99 }}
+        >
+          <ViewShot
+            ref={viewShotRefX}
+            options={{ format: 'png', quality: 1, width: 357, height: 187 }}
+            style={{
+              borderRadius: 16,
+            }}
+          >
+            <View style={styles.XcontainerWrapper}>
+              <View style={styles.XcontainerInner} onLayout={handleLayout}>
+                <View style={styles.XLeft}>
+                  {/* 커버 이미지 */}
+                  <Image
+                    source={{ uri: recData.imageUrl }}
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      width: 220,
+                      height: 220,
+                      borderRadius: 110,
+                      transform: [{ translateX: -110 }, { translateY: -110 }],
+                    }}
+                    resizeMode="cover"
+                  />
+
+                  {/* 반투명 큰 원 */}
+                  <Svg
+                    width={113}
+                    height={113}
+                    style={{
+                      position: 'absolute',
+                    }}
+                  >
+                    <Circle
+                      cx="50%"
+                      cy="50%"
+                      r="50%"
+                      fill="black"
+                      fillOpacity={0.4}
+                    />
+                  </Svg>
+
+                  {/* 중앙 작은 원 (이미 57로 축소됨) */}
+                  <Svg
+                    width={57}
+                    height={57}
+                    style={{
+                      position: 'absolute',
+                    }}
+                  >
+                    <Circle cx="50%" cy="50%" r="50%" fill="#1F1F1F" />
+                  </Svg>
+                </View>
+
+                <View style={styles.XRight}>
+                  {/* To. me — 1줄, ... */}
+                  {isRecommended && (
+                    <Text
+                      style={styles.XtoText}
+                      numberOfLines={1} // NEW
+                      ellipsizeMode="tail" // NEW
+                    >
+                      To. <Text style={{ color: '#F4F4F4' }}>me</Text>
+                    </Text>
+                  )}
+
+                  {/* 제목 — 1줄, ... */}
+                  <Text
+                    style={styles.XtitleText}
+                    numberOfLines={1} // NEW
+                    ellipsizeMode="tail" // NEW
+                  >
+                    {recData.title}
+                  </Text>
+
+                  {/* 아티스트 — 1줄, ... */}
+                  <Text
+                    style={styles.XartistText}
+                    numberOfLines={1} // NEW
+                    ellipsizeMode="tail" // NEW
+                  >
+                    {recData.artistName}
+                  </Text>
+
+                  {/* 코멘트 — 2줄, ... */}
+                  <View style={styles.XcommentBox}>
+                    <Text
+                      style={styles.XcommentText}
+                      numberOfLines={2} // NEW: 가로형은 2줄이 균형 좋음
+                      ellipsizeMode="tail" // NEW
+                    >
+                      {recData.comment}
+                    </Text>
+                  </View>
+
+                  {/* From. XXX — 1줄, ... */}
+                  <Text
+                    style={styles.XfromText}
+                    numberOfLines={1} // NEW
+                    ellipsizeMode="tail" // NEW
+                  >
+                    From.{' '}
+                    <Text style={{ color: '#F4F4F4' }}>
+                      {isRecommended ? recData.senderNickname : 'me'}
+                    </Text>
+                  </Text>
+                </View>
+
+                <View style={styles.XlogoContainer}>
+                  <Logo width={16.86} height={12} />
+                </View>
+              </View>
+            </View>
+          </ViewShot>
         </View>
-      </View>
-    </Modal>
+      </Modal>
+    </>
   );
 }
 
 const BORDER_WIDTH = 5;
 const OUTER_RADIUS = 20;
-
 const styles = StyleSheet.create({
   modal: {
     margin: 0,
@@ -255,7 +380,7 @@ const styles = StyleSheet.create({
   containerWrapper: {
     width: 335,
     height: 489,
-    backgroundColor: '#222',
+    backgroundColor: '#333',
     padding: BORDER_WIDTH,
     borderRadius: OUTER_RADIUS,
     overflow: 'hidden',
@@ -264,9 +389,10 @@ const styles = StyleSheet.create({
   },
   containerInner: {
     width: 319,
-    height: 480,
+    height: 440,
     flex: 1,
-    backgroundColor: '#222',
+    backgroundColor: '#333',
+    transform: [{ translateY: -3 }],
     borderRadius: OUTER_RADIUS - BORDER_WIDTH,
     borderColor: '#7C7C7C',
     borderWidth: 1,
@@ -276,7 +402,7 @@ const styles = StyleSheet.create({
   toText: {
     ...Typography.subtitle4,
     color: '#D9D9D9',
-    marginTop: 4,
+    marginTop: 19,
     marginBottom: 10,
     fontWeight: '600',
   },
@@ -284,6 +410,7 @@ const styles = StyleSheet.create({
     ...Typography.subtitle1B,
     color: '#F4F4F4',
     fontWeight: '600',
+    marginTop: 8,
     marginBottom: 4,
   },
   artistText: {
@@ -306,6 +433,7 @@ const styles = StyleSheet.create({
   fromText: {
     ...Typography.subtitle4,
     color: '#D9D9D9',
+    marginTop: 'auto', // 남는 공간을 위로 밀어 아래 배치
   },
   buttonGroup: {
     marginTop: 20,
@@ -332,5 +460,114 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
     lineHeight: 18,
+  },
+  logoContainer: {
+    position: 'absolute',
+    bottom: -1,
+    right: -1,
+    height: 29.838,
+    width: 46.469,
+    flexShrink: 0,
+    borderTopLeftRadius: 10, // RN은 각 코너별로 radius 지정
+    borderBottomRightRadius: 10,
+    borderTopWidth: 1,
+    borderLeftWidth: 1,
+    borderColor: '#7C7C7C',
+    backgroundColor: '#333',
+    alignSelf: 'flex-end',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  XcontainerWrapper: {
+    width: 357,
+    height: 187,
+    backgroundColor: '#333',
+    padding: BORDER_WIDTH,
+    borderRadius: OUTER_RADIUS,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  XcontainerInner: {
+    width: 344,
+    height: 178,
+    flex: 1,
+    backgroundColor: '#333',
+    borderRadius: OUTER_RADIUS - BORDER_WIDTH,
+    borderColor: '#7C7C7C',
+    borderWidth: 1,
+    alignItems: 'center',
+    padding: 20,
+    flexDirection: 'row', // 가로형 레이아웃
+    gap: 12, // 카드 간격
+  },
+  XLeft: {
+    width: 130, // 카드 높이와 동일
+    left: -50,
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative', // 자식 요소의 절대 위치 지정
+  },
+  XRight: {
+    flex: 1,
+    paddingTop: 14,
+    paddingBottom: 14,
+    paddingRight: 16,
+  },
+
+  XtoText: {
+    ...Typography.subtitle4,
+    color: '#D9D9D9',
+    marginBottom: 13,
+    fontWeight: '600',
+    height: 17, // 제목 높이 고정
+  },
+  XtitleText: {
+    ...Typography.subtitle1B,
+    color: '#F4F4F4',
+    fontWeight: '600',
+    height: 24, // 제목 높이 고정
+    marginBottom: 4,
+    flexShrink: 0, // 제목이 길어도 줄바꿈
+  },
+  XartistText: {
+    ...Typography.body2,
+    height: 20, // 아티스트 높이 고정
+    color: '#B3B3B3',
+    marginBottom: 11,
+  },
+  XcommentBox: {
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  XcommentText: {
+    ...Typography.caption2,
+    height: 28, // 댓글 높이 고정 (2줄 가정)
+    color: '#EAEAEA',
+    textAlign: 'left',
+  },
+  XfromText: {
+    ...Typography.subtitle4,
+    color: '#D9D9D9',
+  },
+  XlogoContainer: {
+    position: 'absolute',
+    top: -1,
+    right: -1,
+    height: 17,
+    width: 22,
+    flexShrink: 0,
+    borderTopRightRadius: 10, // RN은 각 코너별로 radius 지정
+    borderBottomLeftRadius: 10,
+    borderBottomWidth: 1,
+    borderLeftWidth: 1,
+    borderColor: '#7C7C7C',
+    backgroundColor: '#333',
+    alignSelf: 'flex-end',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

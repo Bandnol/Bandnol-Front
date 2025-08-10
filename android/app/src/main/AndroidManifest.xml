@@ -26,6 +26,7 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="bandnol"/>
+        <data android:scheme="exp+bandnol"/>
       </intent-filter>
     </activity>
     <activity android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity" android:exported="true">
