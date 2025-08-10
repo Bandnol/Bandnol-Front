@@ -1,13 +1,23 @@
 // components/common/StatusBarHeader.tsx
-import BackIcon from '@/assets/onboarding/Vector.svg';
 import { useRouter } from 'expo-router';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
-export default function StatusBarHeader() {
+import BackIcon from '@/assets/onboarding/Vector.svg';
+
+type Props = {
+  onBackPress?: () => void;
+};
+
+export default function StatusBarHeader({ onBackPress }: Props) {
   const router = useRouter();
+  const handleBack = () => {
+    if (onBackPress) return onBackPress();
+    if (router.canGoBack()) router.back();
+  };
+
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => router.back()}>
+      <TouchableOpacity onPress={handleBack}>
         <BackIcon width={24} height={24} />
       </TouchableOpacity>
     </View>
