@@ -13,8 +13,6 @@ export function useSocialAuth() {
       console.log('[KAKAO] login() 성공, 결과:', res);
 
       if (res.idToken) {
-        // TEMP: 백엔드에서 Kakao API 호출 시 사용자 access_token이 필요해 500(NOAUTH) 발생 →
-        // 백엔드가 OIDC 방식으로 id_token만으로 검증 완료하기 전까지 access_token도 함께 전달
         const response = await fetch(
           `${API_URL}/api/v1/oauth2/callback/kakao`,
           {
@@ -23,8 +21,7 @@ export function useSocialAuth() {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              id_token: res.idToken,
-              access_token: res.accessToken,
+              id_token: res.idToken, // id_token만 전송
             }),
           },
         );
