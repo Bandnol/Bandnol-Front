@@ -252,8 +252,8 @@ export default function RecShareModal({
                 style={{
                   position: 'absolute',
                   alignSelf: 'flex-end',
-                  top: 20,
-                  right: 20,
+                  top: 15,
+                  right: 15,
                 }}
               />
             </View>
@@ -267,7 +267,7 @@ export default function RecShareModal({
               <View style={styles.shareButton}>
                 <Insta />
               </View>
-              <Text style={styles.shareText}>인스타그램으로 공유</Text>
+              <Text style={styles.shareText}>인스타그램으로 {'\n'} 공유</Text>
             </Pressable>
 
             <View style={styles.shareItem}>
@@ -430,6 +430,7 @@ const styles = StyleSheet.create({
     margin: 0,
     justifyContent: 'center',
     alignItems: 'center',
+    gap: 10,
   },
   containerWrapper: {
     width: 335,
@@ -474,7 +475,7 @@ const styles = StyleSheet.create({
   },
   commentBox: {
     width: '100%',
-    height: 86,
+    height: 60,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
@@ -482,7 +483,6 @@ const styles = StyleSheet.create({
   commentText: {
     ...Typography.caption1,
     color: '#EAEAEA',
-    textAlign: 'center',
   },
   fromText: {
     ...Typography.subtitle4,
@@ -493,12 +493,12 @@ const styles = StyleSheet.create({
     marginTop: 20,
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 25,
+    gap: 15,
     width: '70%',
   },
   shareItem: {
     alignItems: 'center',
-    width: 80,
+    width: 90,
   },
   shareButton: {
     width: 58,
