@@ -52,30 +52,61 @@ export default function RecShareModal({
     Alert.alert('링크가 복사되었습니다.');
   };
   const handleShareToInstagramStory = async () => {
-    try {
-      if (!recData) return;
-      // 1) 캡쳐
-      const stickerUri = await viewShotRefInsta.current?.capture?.();
-      if (!stickerUri) throw new Error('이미지 캡처 실패');
+    if (Platform.OS === 'ios') {
+      try {
+        if (!recData) return;
+        // 1) 캡쳐
+        const stickerUri = await viewShotRefInsta.current?.capture?.();
+        if (!stickerUri) throw new Error('이미지 캡처 실패');
 
-      const backgroundUri = await viewShotRefBg.current?.capture?.();
-      if (!backgroundUri) throw new Error('배경 이미지 캡처 실패');
+        const backgroundUri = await viewShotRefBg.current?.capture?.();
+        if (!backgroundUri) throw new Error('배경 이미지 캡처 실패');
 
-      // 4) react-native-share: 특정 앱(IG Stories)로 바로 공유
-      await Share.shareSingle({
-        social: Social.InstagramStories,
-        appId: 'YOUR_FB_APP_ID',
-        backgroundImage: backgroundUri,
-        stickerImage: stickerUri,
-        backgroundTopColor: '#000000',
-        backgroundBottomColor: '#000000',
-      });
-    } catch (error: any) {
-      const msg =
-        Platform.OS === 'ios'
-          ? Linking.openURL('itms-apps://itunes.apple.com/app/id389801252')
-          : (error?.message ?? String(error));
-      Alert.alert('공유 실패', msg);
+        // 4) react-native-share: 특정 앱(IG Stories)로 바로 공유
+        await Share.shareSingle({
+          social: Social.InstagramStories,
+          appId: 'YOUR_FB_APP_ID',
+          backgroundImage: backgroundUri,
+          stickerImage: stickerUri,
+          backgroundTopColor: '#000000',
+          backgroundBottomColor: '#000000',
+        });
+      } catch (error: any) {
+        Linking.openURL('itms-apps://itunes.apple.com/app/id389801252');
+      }
+    } else {
+      try {
+        if (!recData) return;
+        const { isInstalled } = await Share.isPackageInstalled(
+          'com.instagram.android',
+        );
+        if (!isInstalled) {
+          await Linking.openURL(
+            'https://play.google.com/store/apps/details?id=com.instagram.android',
+          );
+          return;
+        }
+        // 1) 캡쳐
+        const stickerUri = await viewShotRefInsta.current?.capture?.();
+        if (!stickerUri) throw new Error('이미지 캡처 실패');
+
+        const backgroundUri = await viewShotRefBg.current?.capture?.();
+        if (!backgroundUri) throw new Error('배경 이미지 캡처 실패');
+
+        // 4) react-native-share: 특정 앱(IG Stories)로 바로 공유
+        await Share.shareSingle({
+          social: Social.InstagramStories,
+          appId: 'YOUR_FB_APP_ID',
+          backgroundImage: backgroundUri,
+          stickerImage: stickerUri,
+          backgroundTopColor: '#000000',
+          backgroundBottomColor: '#000000',
+        });
+      } catch (error: any) {
+        Linking.openURL(
+          'https://play.google.com/store/apps/details?id=com.instagram.android&hl=ko&pli=1',
+        );
+      }
     }
   };
 
