@@ -17,9 +17,7 @@ export const fetchReplyComment = async (
     const d = res.data?.data;
     if (!d) return null;
 
-    // 서버 스키마: { id, receiver: { nickname }, replies: { content } }
     const content = d.replies?.content ?? null;
-    // sender 정보가 응답에 없으니, 화면에서 ‘상대 이름’이 필요하면 일단 receiver.nickname으로 대체
     const nickname = d.receiver?.nickname ?? null;
 
     return { content, nickname };
