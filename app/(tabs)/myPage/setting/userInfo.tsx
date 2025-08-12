@@ -1,15 +1,17 @@
-import api from '@/store/api'; // <-- import your axios instance
+import KaKao from '@/assets/icons/size_s/kakao.svg';
+import { Colors } from '@/constants/Colors';
+import { useUpdateOwnId } from '@/hooks/useUpdateOwnId';
+import api from '@/store/api';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { jwtDecode } from 'jwt-decode';
 import React, { useEffect, useState } from 'react';
 import {
-  Image,
-  Modal,
   SafeAreaView,
   StatusBar,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -17,25 +19,80 @@ import {
 import BackArrow from '@/assets/icons/back-arrow.svg';
 import { Typography } from '@/constants/typography';
 
+import ConfirmModal from '@/components/common/ConfirmModal';
+import {
+  logout as kakaoLogout,
+  unlink as kakaoUnlink,
+} from '@react-native-kakao/user';
+
 export default function UserInfo() {
   const router = useRouter();
   const [logoutVisible, setLogoutVisible] = useState(false);
   const [withdrawVisible, setWithdrawVisible] = useState(false);
 
-  // State variables for email and name
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
+  const [ownId, setOwnId] = useState('');
+  const [id, setId] = useState('');
+  const [isChecking, setIsChecking] = useState(false);
+  const [isDuplicate, setIsDuplicate] = useState<boolean | null>(null);
+  const [isIdValid, setIsIdValid] = useState(true);
+  const [hasCheckedId, setHasCheckedId] = useState(false);
+  const [idDirty, setIdDirty] = useState(false);
+
+  const validateId = (value: string) => /^[a-zA-Z0-9._]{1,20}$/.test(value);
+
+  const updateOwnId = useUpdateOwnId();
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
+        // 1) 로그인 시 SecureStore('user')에 저장해둔 사용자 정보 사용
+        const saved = await SecureStore.getItemAsync('user');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            // 저장 형태가 { user: {...} } 와 { ... }가 섞여 있을 수 있어 머지 처리
+            const root = parsed && typeof parsed === 'object' ? parsed : {};
+            const inner =
+              root && typeof (root as any).user === 'object'
+                ? (root as any).user
+                : {};
+            const userObj = { ...root, ...inner } as any; // inner가 우선, 없으면 root 값 사용
+
+            if (userObj?.email) setEmail(userObj.email);
+            if (userObj?.name) setName(userObj.name);
+            if (userObj?.ownId) setOwnId(userObj.ownId);
+            if (userObj?.ownId) setId(userObj.ownId);
+
+            console.log('[회원정보] SecureStore(user)에서 로드 완료');
+            console.log('[회원정보] SecureStore raw:', saved);
+            console.log('[회원정보] parsed:', parsed);
+            console.log('[회원정보] merged userObj:', userObj);
+            console.log(
+              '[회원정보] email:',
+              userObj?.email,
+              'name:',
+              userObj?.name,
+              'ownId:',
+              userObj?.ownId,
+            );
+            return; // 저장된 프로필을 우선 사용
+          } catch (e) {
+            console.log('[회원정보] 저장된 user 파싱 실패, 다음 단계로 진행');
+          }
+        }
+
+        // 2) JWT에서 가능한 정보만 추출 (현재 토큰에는 id/iat/exp만 있는 상태)
         const token = await SecureStore.getItemAsync('JWTToken');
         console.log('토큰:', token);
         if (token) {
           const decoded: any = jwtDecode(token);
           console.log('디코딩된 토큰:', decoded);
-          setEmail(decoded.email || '');
-          setName(decoded.name || '');
+          // 토큰에 email/name이 없다면 빈 값 유지
+          if (decoded?.email) setEmail(decoded.email);
+          if (decoded?.name) setName(decoded.name);
         }
+        // (step 3: 서버 me 조회는 제거됨)
       } catch (error) {
         console.error('회원 정보 조회 에러:', error);
       }
@@ -43,38 +100,42 @@ export default function UserInfo() {
     fetchUserProfile();
   }, []);
 
-  const updateUserInfo = async () => {
+  // 아이디 변경: 검증 → 중복체크 → 업데이트
+  const handleChangeId = async () => {
+    if (!id) return; // 공란이면 반응 없음 요구사항
+
+    // 형식 검증
+    const valid = validateId(id);
+    setIsIdValid(valid);
+    setIsDuplicate(null);
+    setHasCheckedId(false);
+    if (!valid) return; // 메시지는 상태에 따라 이미 표시됨
+
+    // 중복 체크
+    setIsChecking(true);
     try {
       const token = await SecureStore.getItemAsync('JWTToken');
-      if (!token) {
-        console.error('토큰이 없습니다.');
-        return;
-      }
-      const response = await api.patch(
-        '/api/v1/users/me/profiles',
-        {
-          nickname: name,
-          ownId: email,
-          gender: 'WOMAN',
-          birth: '2004-03-08',
-          recomsTime: '09:00',
-          bio: '',
+      const res = await api.get('/api/v1/users/check-ownId', {
+        params: { ownId: id },
+        headers: { Authorization: token ? `Bearer ${token}` : undefined },
+      });
+      const ok = !!res?.data?.success;
+      setIsDuplicate(!ok); // success=true → 사용 가능 → duplicate=false
+      setHasCheckedId(true);
+      if (!ok) return; // 중복이면 여기서 끝, 메시지 표시
+
+      // 사용 가능하면 실제 업데이트
+      await updateOwnId(id, {
+        onSuccess: (serverOwnId: string) => {
+          setOwnId(serverOwnId);
         },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-      const data = response.data;
-      console.log('회원 정보 수정 결과:', data);
-      if (data.success) {
-        alert('회원 정보가 수정되었습니다!');
-      } else {
-        alert(`수정 실패: ${data.error.message}`);
-      }
-    } catch (error) {
-      console.error('회원 정보 수정 에러:', error);
+      });
+    } catch (e) {
+      console.error('아이디 중복확인 실패:', e);
+      setIsDuplicate(true);
+      setHasCheckedId(true);
+    } finally {
+      setIsChecking(false);
     }
   };
 
@@ -103,29 +164,111 @@ export default function UserInfo() {
           {/* 연결된 소셜 로그인 계정 */}
           <Text style={styles.label}>연결된 소셜 로그인 계정</Text>
           <View style={styles.textBox}>
-            <Image
-              source={{ uri: 'https://placehold.co/24x24' }} // 임시 이미지
-              style={styles.icon}
-            />
-            <Text style={styles.textValue}>{email}</Text>
+            <KaKao width={20} height={20} style={{ marginRight: 10 }} />
+            <Text
+              style={[styles.textValue, { flex: 1 }]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {email}
+            </Text>
           </View>
 
           {/* 이름 */}
           <View style={styles.marginBlock}>
             <Text style={styles.label}>이름</Text>
             <View style={styles.textBox}>
-              <Text style={styles.textValue}>{name}</Text>
+              <Text
+                style={[styles.textValue, { flex: 1 }]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {name}
+              </Text>
             </View>
           </View>
 
           {/* 아이디 */}
           <View style={styles.marginBlock}>
             <Text style={styles.label}>아이디</Text>
-            <View style={styles.textBoxRow}>
-              <Text style={styles.idtextValue}>sayoxx</Text>
-              <TouchableOpacity onPress={updateUserInfo}>
-                <Text style={styles.linkText}>변경</Text>
+            <View style={styles.frameGroupFlexBox}>
+              <View style={[{ flex: 1 }, styles.frameShadowBox]}>
+                <TextInput
+                  style={[styles.inputText, { flex: 1, paddingVertical: 0 }]}
+                  value={id}
+                  onChangeText={(text) => {
+                    setIdDirty(true);
+                    setId(text);
+                    const valid = validateId(text);
+                    setIsIdValid(valid);
+                    setHasCheckedId(false);
+                    setIsDuplicate(null);
+                  }}
+                  placeholder="아이디 입력"
+                  placeholderTextColor={Colors.palette.Gray500}
+                  numberOfLines={1}
+                />
+              </View>
+              <TouchableOpacity
+                onPress={handleChangeId}
+                disabled={!id || id === ownId || isChecking}
+              >
+                <View
+                  style={[
+                    styles.frameView,
+                    !id || id === ownId || isChecking
+                      ? { backgroundColor: Colors.palette.Gray800 }
+                      : { backgroundColor: Colors.palette.point },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      Typography.body2,
+                      {
+                        color:
+                          !id || id === ownId || isChecking
+                            ? Colors.palette.Gray500
+                            : Colors.palette.white,
+                      },
+                    ]}
+                  >
+                    변경
+                  </Text>
+                </View>
               </TouchableOpacity>
+            </View>
+
+            {/* 메시지 영역: 처음엔 표시하지 않고, 수정 이후에만 표시. 높이를 고정해 레이아웃 흔들림 방지 */}
+            <View style={styles.messagePlaceholder}>
+              {idDirty &&
+                (!isIdValid && !!id ? (
+                  <Text
+                    style={[
+                      Typography.body2,
+                      { color: Colors.palette.point, alignSelf: 'flex-start' },
+                    ]}
+                  >
+                    형식에 맞지 않는 아이디입니다.
+                  </Text>
+                ) : isIdValid && hasCheckedId && isDuplicate === true ? (
+                  <Text
+                    style={[
+                      Typography.body2,
+                      { color: Colors.palette.point, alignSelf: 'flex-start' },
+                    ]}
+                  >
+                    이미 사용 중인 아이디입니다.
+                  </Text>
+                ) : isIdValid && hasCheckedId && isDuplicate === false ? (
+                  <Text
+                    style={[
+                      Typography.body2,
+                      { color: '#2C64FF', alignSelf: 'flex-start' },
+                    ]}
+                  >
+                    사용 가능한 아이디입니다.
+                  </Text>
+                ) : null)}
             </View>
           </View>
 
@@ -143,84 +286,51 @@ export default function UserInfo() {
           </TouchableOpacity>
         </View>
         {/* 로그아웃 모달 */}
-        <Modal
-          transparent
-          animationType="fade"
+        <ConfirmModal
           visible={logoutVisible}
-          onRequestClose={() => setLogoutVisible(false)}
-        >
-          <View style={styles.modalBackground}>
-            <View style={styles.logoutWrapper}>
-              {/* 1. 상단 텍스트 박스 */}
-              <View style={styles.logoutHeaderBox}>
-                <Text style={styles.logoutHeaderText}>
-                  로그아웃하시겠습니까?
-                </Text>
-              </View>
-
-              {/* 2. 확인 버튼 */}
-              <TouchableOpacity
-                style={styles.logoutConfirmBtn}
-                onPress={() => {
-                  setLogoutVisible(false);
-                  router.push('/(auth)/splash');
-                }}
-              >
-                <Text style={styles.logoutConfirmText}>확인</Text>
-              </TouchableOpacity>
-
-              {/* 3. 밑줄 텍스트 (취소) */}
-              <TouchableOpacity
-                style={styles.logoutCancelWrapper}
-                onPress={() => setLogoutVisible(false)}
-              >
-                <Text style={styles.logoutCancelText}>취소</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
+          variant="logout"
+          headerText={'로그아웃하시겠습니까?'}
+          onConfirm={async () => {
+            try {
+              try {
+                await kakaoLogout();
+              } catch {}
+            } finally {
+              try {
+                await SecureStore.deleteItemAsync('JWTToken');
+                await SecureStore.deleteItemAsync('JWTRefreshToken');
+                await SecureStore.deleteItemAsync('user');
+              } catch {}
+              setLogoutVisible(false);
+              router.push('/(auth)/splash');
+            }
+          }}
+          onCancel={() => setLogoutVisible(false)}
+        />
         {/* 회원탈퇴 모달 */}
-        <Modal
-          transparent
-          animationType="fade"
+        <ConfirmModal
           visible={withdrawVisible}
-          onRequestClose={() => setWithdrawVisible(false)}
-        >
-          <View style={styles.modalBackground}>
-            <View style={styles.withdrawWrapper}>
-              {/* 1. 상단 텍스트 박스 */}
-              <View style={styles.withdrawHeaderBox}>
-                <Text style={styles.withdrawHeaderText}>
-                  <Text>회원 탈퇴를 진행하게 되면{'\n'}</Text>
-                  <Text style={styles.boldText}>
-                    지금까지의 모든 밴놀 기록이 삭제되며,{'\n'}
-                    이는 복구할 수 없습니다.{'\n'}
-                  </Text>
-                  정말 탈퇴하시겠습니까?
-                </Text>
-              </View>
-
-              {/* 2. 확인 버튼 */}
-              <TouchableOpacity
-                style={styles.logoutConfirmBtn}
-                onPress={() => {
-                  setWithdrawVisible(false);
-                  router.push('/(auth)/splash');
-                }}
-              >
-                <Text style={styles.logoutConfirmText}>확인</Text>
-              </TouchableOpacity>
-
-              {/* 3. 취소 텍스트 */}
-              <TouchableOpacity
-                style={styles.logoutCancelWrapper}
-                onPress={() => setWithdrawVisible(false)}
-              >
-                <Text style={styles.logoutCancelText}>취소</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
+          variant="withdraw"
+          headerText={
+            '회원 탈퇴를 진행하게 되면\n지금까지의 모든 밴놀 기록이 삭제되며, 이는 복구할 수 없습니다.\n정말 탈퇴하시겠습니까?'
+          }
+          onConfirm={async () => {
+            try {
+              try {
+                await kakaoUnlink();
+              } catch {}
+            } finally {
+              try {
+                await SecureStore.deleteItemAsync('JWTToken');
+                await SecureStore.deleteItemAsync('JWTRefreshToken');
+                await SecureStore.deleteItemAsync('user');
+              } catch {}
+              setWithdrawVisible(false);
+              router.push('/(auth)/splash');
+            }
+          }}
+          onCancel={() => setWithdrawVisible(false)}
+        />
       </View>
     </SafeAreaView>
   );
@@ -229,11 +339,11 @@ export default function UserInfo() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: Colors.palette.Gray900,
   },
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: Colors.palette.Gray900,
   },
   topNavBar: {
     width: '100%',
@@ -253,7 +363,7 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'center',
     ...Typography.subtitle1B,
-    color: '#F4F4F4',
+    color: Colors.palette.Gray100,
   },
   content: {
     paddingTop: 24,
@@ -261,43 +371,43 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   label: {
-    color: '#7C7C7C',
+    color: Colors.palette.Gray500,
     marginBottom: 8,
     ...Typography.body1,
   },
   textBox: {
-    height: 50,
+    minHeight: 50,
     borderRadius: 10,
-    backgroundColor: '#121212',
+    backgroundColor: Colors.palette.Gray900,
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
     borderWidth: 1,
-    borderColor: '#555',
+    borderColor: Colors.palette.Gray600,
   },
   textBoxRow: {
-    height: 48,
+    height: 50,
     borderRadius: 10,
-    backgroundColor: '#121212',
+    backgroundColor: Colors.palette.Gray900,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 16,
     borderWidth: 1,
-    borderColor: '#555',
+    borderColor: Colors.palette.Gray600,
   },
   textValue: {
-    color: '#555',
+    color: Colors.palette.Gray400,
     fontFamily: 'Pretendard',
     fontSize: 14,
-    lineHeight: 140,
+    lineHeight: 20,
     letterSpacing: -0.21,
   },
   idtextValue: {
-    color: '#F4F4F4',
+    color: Colors.palette.Gray100,
     fontFamily: 'Pretendard',
     fontSize: 14,
-    lineHeight: 140,
+    lineHeight: 20,
     letterSpacing: -0.21,
   },
   icon: {
@@ -312,7 +422,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     lineHeight: 19.6,
     letterSpacing: -0.21,
-    color: '#555',
+    color: Colors.palette.Gray600,
     textDecorationLine: 'underline',
     textDecorationStyle: 'solid',
   },
@@ -325,7 +435,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     lineHeight: 19.6,
     letterSpacing: -0.21,
-    color: '#555',
+    color: Colors.palette.Gray600,
     textDecorationLine: 'underline',
     textDecorationStyle: 'solid',
     paddingTop: 20,
@@ -337,93 +447,53 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     lineHeight: 19.6,
     letterSpacing: -0.21,
-    color: '#555',
+    color: Colors.palette.Gray600,
     textDecorationLine: 'underline',
     textDecorationStyle: 'solid',
     paddingTop: 30,
     textAlign: 'center',
-  }, // ----로그아웃 모달 ------
-  modalBackground: {
-    flex: 1,
-    backgroundColor: 'transparent',
-    justifyContent: 'center',
+  },
+  frameGroupFlexBox: {
+    gap: 10,
+    flexDirection: 'row',
+    alignSelf: 'stretch',
     alignItems: 'center',
   },
-  logoutWrapper: {
-    width: 324,
-    height: 194,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-  },
-  logoutHeaderBox: {
-    width: 324,
-    backgroundColor: '#333',
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
-    paddingVertical: 40,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoutHeaderText: {
-    color: '#FFF',
-    fontFamily: 'Pretendard',
-    fontSize: 16,
-    letterSpacing: -0.48,
-  },
-  logoutConfirmBtn: {
-    width: 324,
+  frameShadowBox: {
+    padding: 16,
     height: 50,
-    backgroundColor: '#FB4932',
-    borderBottomLeftRadius: 10,
-    borderBottomRightRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.palette.Gray700,
+    borderStyle: 'solid',
+    backgroundColor: Colors.palette.Gray800,
+    borderRadius: 10,
+    shadowOpacity: 1,
+    elevation: 1,
+    shadowRadius: 1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowColor: 'rgba(0, 0, 0, 0.25)',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  inputText: {
+    color: Colors.palette.white,
+  },
+  frameView: {
+    width: 80,
     justifyContent: 'center',
+    backgroundColor: Colors.palette.Gray700,
+    padding: 16,
+    borderRadius: 10,
+    shadowOpacity: 1,
+    elevation: 1,
+    shadowRadius: 1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowColor: 'rgba(0, 0, 0, 0.25)',
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  logoutConfirmText: {
-    color: '#FFF',
-    ...Typography.subtitle3,
-  },
-  logoutCancelWrapper: {
-    marginTop: 25,
-  },
-  logoutCancelText: {
-    ...Typography.subtitle3,
-    color: '#FFF',
-    textDecorationLine: 'underline',
-    textDecorationStyle: 'solid',
-  },
-  // ----회원탈퇴 모달 ------
-  withdrawWrapper: {
-    width: 324,
-    height: 251,
-    alignItems: 'center',
-  },
-  withdrawHeaderBox: {
-    width: 324,
-    paddingHorizontal: 16,
-    paddingVertical: 40,
-    backgroundColor: '#333',
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
-    alignItems: 'center',
-  },
-  withdrawHeaderText: {
-    color: '#F4F4F4',
-    fontSize: 16,
-    textAlign: 'center',
-    fontWeight: 400,
-    letterSpacing: -0.48,
-    fontFamily: 'Pretendard',
-    fontStyle: 'normal',
-  },
-  boldText: {
-    color: '#F4F4F4',
-    fontSize: 16,
-    textAlign: 'center',
-    fontWeight: 700,
-    letterSpacing: -0.48,
-    fontFamily: 'Pretendard',
-    fontStyle: 'normal',
+  messagePlaceholder: {
+    minHeight: 20,
+    // Ensures space is reserved even when no message is shown
   },
 });

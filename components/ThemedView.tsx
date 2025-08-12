@@ -14,9 +14,7 @@ export function ThemedView({
   ...otherProps
 }: ThemedViewProps = {}) {
   const backgroundColor =
-    lightColor !== undefined
-      ? lightColor
-      : useThemeColor({ light: '#fff' }, 'background') || '#fff';
+    lightColor !== undefined ? lightColor : useThemeColor();
 
   return <View style={[{ backgroundColor }, style]} {...otherProps} />;
 }
