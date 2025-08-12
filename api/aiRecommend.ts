@@ -16,7 +16,7 @@ export const fetchAIComment = async (title: string, artist: string) => {
         },
       },
     );
-
+    console.log('fetchAIComment 응답:', response.data);
     return response.data;
   } catch (error) {
     console.error('❌ AI 코멘트 생성 오류:', error);

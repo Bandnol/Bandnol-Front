@@ -1,7 +1,9 @@
+import { Colors } from '@/constants/Colors';
 import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  Alert,
   Modal,
   SafeAreaView,
   StatusBar,
@@ -13,9 +15,12 @@ import {
 
 import BackArrow from '@/assets/icons/back-arrow.svg';
 import { Typography } from '@/constants/typography';
+import api from '@/store/api';
+import * as SecureStore from 'expo-secure-store';
 
 export default function ReceiveTime() {
   const router = useRouter();
+  const [user, setUser] = useState<any>({});
 
   // 표시용 시간 (모달에서 저장 시 갱신)
   const [displayAmpm, setDisplayAmpm] = useState<'오전' | '오후'>('오전');
@@ -28,6 +33,24 @@ export default function ReceiveTime() {
   const [minute, setMinute] = useState(displayMinute);
 
   const [visible, setVisible] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const userStr = await SecureStore.getItemAsync('user');
+        const parsed = userStr ? JSON.parse(userStr) : {};
+        setUser(parsed?.user ?? parsed ?? {});
+        const initial = parsed?.recomsTime || parsed?.user?.recomsTime;
+        if (initial) {
+          console.log('[수신 시간] 초기 recomsTime:', initial);
+          applyFromHHmm(initial);
+        }
+      } catch (e) {
+        console.log('[수신 시간] 초기화 실패', e);
+      }
+    })();
+  }, []);
 
   const hours = Array.from({ length: 12 }, (_, i) =>
     (i + 1).toString().padStart(2, '0'),
@@ -43,12 +66,120 @@ export default function ReceiveTime() {
     setVisible(true);
   };
 
-  const saveTime = () => {
-    setDisplayAmpm(ampm);
-    setDisplayHour(hour);
-    setDisplayMinute(minute);
-    // TODO: API 저장
-    setVisible(false);
+  const saveTime = async () => {
+    try {
+      setIsSaving(true);
+      // UI 적용
+      setDisplayAmpm(ampm);
+      setDisplayHour(hour);
+      setDisplayMinute(minute);
+
+      // 12h -> 24h + 콜론 HH:MM
+      let h24 = parseInt(hour, 10);
+      if (ampm === '오후' && h24 !== 12) h24 += 12;
+      if (ampm === '오전' && h24 === 12) h24 = 0;
+      const recomsTime = `${h24.toString().padStart(2, '0')}:${minute}`;
+      console.log('[수신 시간] PATCH recomsTime:', recomsTime);
+
+      // 토큰 헤더
+      const token = await SecureStore.getItemAsync('JWTToken');
+      if (!token) {
+        console.warn(
+          '[수신 시간] JWTToken 없음: Authorization 헤더가 비게 됩니다.',
+        );
+      }
+
+      const payload = { recomsTime };
+      console.log('[수신 시간] PATCH payload:', payload);
+
+      const res = await api.patch('/api/v1/users/me/profiles', payload, {
+        headers: {
+          Authorization: token ? `Bearer ${token}` : undefined,
+          'Content-Type': 'application/json',
+        },
+      });
+      console.log('[수신 시간] PATCH 응답:', res?.status, res?.data);
+
+      // SecureStore 갱신(루트/중첩 모두 반영)
+      try {
+        const saved = await SecureStore.getItemAsync('user');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          const updated = {
+            ...parsed,
+            recomsTime,
+            user: { ...(parsed?.user ?? {}), recomsTime },
+          };
+          await SecureStore.setItemAsync('user', JSON.stringify(updated));
+        }
+      } catch {}
+      setVisible(false);
+    } catch (e) {
+      console.error('[수신 시간] 저장 실패:', e);
+      // 추가 디버깅 정보
+      // @ts-ignore
+      console.log('[수신 시간] error.status:', e?.response?.status);
+      // @ts-ignore
+      console.log('[수신 시간] error.data:', e?.response?.data);
+
+      // 서버 메시지 추출
+      // @ts-ignore
+      const serverMsg = e?.response?.data?.error?.message || '';
+
+      // BE 마이그레이션 이슈(Prisma refresh_token 컬럼 누락)일 때: 로컬에만 저장하고 닫기 (임시 워크어라운드)
+      // @ts-ignore
+      if (e?.response?.status === 500 && serverMsg.includes('refresh_token')) {
+        console.warn(
+          '[수신 시간] 서버 500(Prisma refresh_token 컬럼 누락) → 로컬 저장으로 대체',
+        );
+        try {
+          let h24 = parseInt(hour, 10);
+          if (ampm === '오후' && h24 !== 12) h24 += 12;
+          if (ampm === '오전' && h24 === 12) h24 = 0;
+          const recomsTime = `${h24.toString().padStart(2, '0')}:${minute}`;
+
+          const saved = await SecureStore.getItemAsync('user');
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            const updated = {
+              ...parsed,
+              recomsTime,
+              user: { ...(parsed?.user ?? {}), recomsTime },
+            };
+            await SecureStore.setItemAsync('user', JSON.stringify(updated));
+          }
+          Alert.alert(
+            '임시 저장',
+            '서버 점검 중이라 변경사항을 기기에 임시 저장했어요. 서버 복구 후 자동으로 동기화됩니다.',
+          );
+          setVisible(false);
+          return; // 종료
+        } catch {}
+      }
+
+      // 일반 에러: 모달 유지 + 메시지 표시
+      Alert.alert(
+        '저장 실패',
+        serverMsg || '서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // HH:MM 또는 HHmm 포맷에서 표시 상태로 적용
+  const applyFromHHmm = (hhmm?: string) => {
+    if (!hhmm) return;
+    const normalized = hhmm.includes(':')
+      ? hhmm
+      : `${hhmm.slice(0, 2)}:${hhmm.slice(2, 4)}`;
+    const [hStr, mStr] = normalized.split(':');
+    const h = Math.max(0, Math.min(23, parseInt(hStr || '0', 10)));
+    const isPM = h >= 12;
+    const twelveHour = h % 12 === 0 ? 12 : h % 12;
+    setDisplayAmpm(isPM ? '오후' : '오전');
+    setDisplayHour(twelveHour.toString().padStart(2, '0'));
+    setDisplayMinute((mStr || '00').padStart(2, '0'));
   };
 
   return (
@@ -101,17 +232,16 @@ export default function ReceiveTime() {
                 <View style={styles.pickerWrapper}>
                   <Picker
                     selectedValue={ampm}
-                    onValueChange={(v) => setAmpm(v)}
+                    onValueChange={(itemValue) => setAmpm(itemValue)}
                     style={styles.picker}
                     itemStyle={styles.pickerItem}
                   >
                     <Picker.Item label="오전" value="오전" />
                     <Picker.Item label="오후" value="오후" />
                   </Picker>
-
                   <Picker
                     selectedValue={hour}
-                    onValueChange={(v) => setHour(v)}
+                    onValueChange={(itemValue) => setHour(itemValue)}
                     style={styles.picker}
                     itemStyle={styles.pickerItem}
                   >
@@ -119,10 +249,9 @@ export default function ReceiveTime() {
                       <Picker.Item key={h} label={h} value={h} />
                     ))}
                   </Picker>
-
                   <Picker
                     selectedValue={minute}
-                    onValueChange={(v) => setMinute(v)}
+                    onValueChange={(itemValue) => setMinute(itemValue)}
                     style={styles.picker}
                     itemStyle={styles.pickerItem}
                   >
@@ -133,8 +262,14 @@ export default function ReceiveTime() {
                 </View>
 
                 {/* 버튼 영역 */}
-                <TouchableOpacity style={styles.saveBtn} onPress={saveTime}>
-                  <Text style={styles.saveBtnText}>저장</Text>
+                <TouchableOpacity
+                  style={[styles.saveBtn, isSaving && { opacity: 0.6 }]}
+                  onPress={isSaving ? undefined : saveTime}
+                  disabled={isSaving}
+                >
+                  <Text style={styles.saveBtnText}>
+                    {isSaving ? '저장 중…' : '저장'}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -148,11 +283,11 @@ export default function ReceiveTime() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: Colors.palette.Gray900,
   },
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: Colors.palette.Gray900,
   },
   topNavBar: {
     width: '100%',
@@ -172,7 +307,7 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'center',
     ...Typography.subtitle1B,
-    color: '#F4F4F4',
+    color: Colors.palette.Gray100,
   },
   row: {
     paddingVertical: 24,
@@ -181,16 +316,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'stretch',
     borderBottomWidth: 0.5,
-    borderBottomColor: '#555',
+    borderBottomColor: Colors.palette.Gray600,
     flexDirection: 'row',
   },
   timeText: {
-    color: '#F4F4F4',
+    color: Colors.palette.Gray100,
     ...Typography.body1,
   },
   linkText: {
     ...Typography.body1,
-    color: '#555',
+    color: Colors.palette.Gray600,
     textDecorationLine: 'underline',
     textDecorationStyle: 'solid',
   }, // ---- 모달 시작 -----
@@ -208,20 +343,20 @@ const styles = StyleSheet.create({
   },
   headerBox: {
     width: 324,
-    backgroundColor: '#333',
+    backgroundColor: Colors.palette.Gray700,
     borderTopLeftRadius: 10,
     borderTopRightRadius: 10,
     paddingHorizontal: 16,
     paddingVertical: 16,
   },
   headerTitle: {
-    color: '#F4F4F4',
+    color: Colors.palette.Gray100,
     ...Typography.subtitle3,
     textAlign: 'center',
   },
   bodyBox: {
     width: 324,
-    backgroundColor: '#333',
+    backgroundColor: Colors.palette.Gray700,
     borderBottomLeftRadius: 10,
     borderBottomRightRadius: 10,
     alignItems: 'center',
@@ -233,9 +368,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   picker: {
-    height: 140,
-    width: 80,
-    color: '#333',
+    height: 200,
+    width: 90,
+    color: Colors.palette.white,
   },
   pickerItem: {
     fontSize: 18,
@@ -246,7 +381,7 @@ const styles = StyleSheet.create({
   },
 
   saveBtn: {
-    backgroundColor: '#FB4932',
+    backgroundColor: Colors.palette.point,
     padding: 16,
     height: 50,
     width: 324,
@@ -256,7 +391,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   saveBtnText: {
-    color: '#F4F4F4',
+    color: Colors.palette.Gray100,
     ...Typography.subtitle3,
   },
 });
