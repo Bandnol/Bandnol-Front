@@ -1,4 +1,4 @@
-import { API_URL, TEST_TOKEN } from '@env';
+import { API_URL, EXPO_PUBLIC_API_TOKEN } from '@env';
 import axios from 'axios';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useState } from 'react';
@@ -24,7 +24,7 @@ const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${TEST_TOKEN}`, // .env에 있는 토큰
+    Authorization: `Bearer ${EXPO_PUBLIC_API_TOKEN}`, // .env에 있는 토큰
   },
 });
 
@@ -50,6 +50,7 @@ export default function ReceiveRecommend() {
     const fetchData = async () => {
       try {
         const res = await getReceivedRecommend();
+        console.log('success?', res?.success, 'type:', typeof res?.data);
         console.log('요청 URL:', `${API_URL}/api/v1/recoms/received`);
         console.log('서버 응답 상태:', res.success ? '성공' : '실패');
         console.log('서버 응답 데이터:', JSON.stringify(res.data, null, 2));
