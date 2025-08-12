@@ -1,8 +1,7 @@
 import { Typography } from '@/constants/typography';
-import axios from 'axios';
+import { useAuthFetch } from '@/hooks/useAxios';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ko';
-import * as SecureStore from 'expo-secure-store';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ImageBackground,
@@ -45,39 +44,32 @@ export default function RecommendCal({
   setSelectedDate,
   isTabRecommending,
 }: RecommendCalProps) {
+  const { json } = useAuthFetch();
   const [songDataList, setSongDataList] = useState<CalendarItem[]>([]); // ✅ API 데이터 상태
   const today = dayjs().format('YYYY-MM-DD');
 
-  // ✅ API 호출
+  // API 호출
   useEffect(() => {
     const fetchCalendarData = async () => {
       try {
-        const token = await SecureStore.getItemAsync('JWTToken');
-        if (!token) throw new Error('JWT 토큰 없음');
-
         const year = selectedMonth.year();
         const month = selectedMonth.month() + 1;
         const status = isTabRecommending ? 'recommending' : 'recommended';
 
-        const response = await axios.get(
-          `https://bandnol.app/api/v1/recoms/calendars?year=${year}&month=${month}&status=${status}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
+        const res = await json(
+          `/api/v1/recoms/calendars?year=${year}&month=${month}&status=${status}`,
+          { method: 'GET' },
         );
 
-        const data = response.data?.data ?? []; // ✅ null이면 빈 배열 처리
-        setSongDataList(data);
+        const data = res?.data ?? [];
+        setSongDataList(Array.isArray(data) ? data : []);
       } catch (e) {
-        //console.error('캘린더 API 에러:', e);
         setSongDataList([]);
       }
     };
 
     fetchCalendarData();
-  }, [selectedMonth, isTabRecommending]); // ✅ 연동 조건
+  }, [selectedMonth, isTabRecommending, json]); // ✅ 연동 조건
 
   const dates: CalendarDate[] = useMemo(() => {
     const startOfMonth = selectedMonth.startOf('month');

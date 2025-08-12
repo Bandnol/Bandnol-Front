@@ -5,11 +5,9 @@ import RecommendList, {
 } from '@/app/(tabs)/recommend-tab/RecommendList';
 import Dropdown from '@/assets/icons/size_m/dropdown.svg';
 import { Typography } from '@/constants/typography';
-import { JWT_TOKEN } from '@env';
-import axios from 'axios';
+import { useAuthFetch } from '@/hooks/useAxios';
 import dayjs from 'dayjs';
 import { useRouter } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 type RecommendItem = {
@@ -27,25 +25,8 @@ type RecommendItem = {
     comment: string;
   };
 };
-const fetchRecommendList = async (): Promise<RecommendItem[]> => {
-  const token = await SecureStore.getItemAsync('JWTToken');
-  if (!token) throw new Error('JWT 토큰 없음');
-
-  const response = await axios.get('https://bandnol.app/api/v1/recoms/lists', {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  return response.data.data;
-};
 export default function RecommendScreen() {
-  useEffect(() => {
-    const storeDummyToken = async () => {
-      await SecureStore.setItemAsync('JWTToken', JWT_TOKEN);
-    };
-
-    storeDummyToken();
-  }, []);
+  const { json } = useAuthFetch();
   const router = useRouter();
   const [selectedMonth, setSelectedMonth] = useState(dayjs());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -68,16 +49,20 @@ export default function RecommendScreen() {
   useEffect(() => {
     const load = async () => {
       try {
-        const result = await fetchRecommendList();
-        setData(result);
+        const res = await json('/api/v1/recoms/lists', { method: 'GET' });
+        const items = Array.isArray(res?.data)
+          ? (res.data as RecommendItem[])
+          : [];
+        setData(items);
       } catch (e) {
         console.error('API 호출 실패:', e);
+        setData([]);
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, []);
+  }, [json]);
 
   return (
     <>

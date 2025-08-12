@@ -14,7 +14,7 @@ import {
 import BackArrow from '@/assets/icons/back-arrow.svg';
 import { Typography } from '@/constants/typography';
 
-import { useAuthFetch } from '@/hooks/useAuthFetch';
+import { useAuthFetch } from '@/hooks/useAxios';
 
 export default function AppSetting() {
   const router = useRouter();
