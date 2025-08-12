@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import Swiper from 'react-native-swiper';
 
-import { fetchReplyComment } from '@/api/replies';
 import AlertIcon from '@/assets/icons/alert.svg';
 import BandnolIcon from '@/assets/icons/bandnol-logo.svg';
 import CommentIcon from '@/assets/icons/comment.svg';
@@ -20,6 +19,7 @@ import PlayIcon from '@/assets/icons/play-solid.svg';
 import CommentModal from '@/components/common/CommentModal';
 import DateHeader from '@/components/common/DateHeader';
 import { Typography } from '@/constants/typography';
+import { fetchReplyComment } from '@/api/replies';
 
 const defaultAlbumImage = require('@/assets/images/album-cover.jpg'); // 임시 이미지..
 
@@ -71,18 +71,28 @@ export default function MyRecommendSwiper() {
   };
   useEffect(() => {
     const getReply = async () => {
-      const replyData = await fetchReplyComment(recomsId, 'received');
-      console.log('📦 replyData:', replyData);
+      try {
+        const reply = await fetchReplyComment(recomsId, 'received');
+        console.log('📦 reply:', reply);
 
-      if (replyData) {
-        setReplyComment(replyData.content);
-        setReplySender(replyData.senderName);
-      } else {
+        if (reply) {
+          setReplyComment(reply.content);
+          setReplySender(reply.nickname);
+        } else {
+          setReplyComment(null);
+          setReplySender(null);
+        }
+      } catch (error) {
+        console.error('❌ replyComment API 오류:', error);
         setReplyComment(null);
+        setReplySender(null);
       }
     };
-    getReply();
-  }, []);
+
+    if (recomsId) {
+      getReply();
+    }
+  }, [recomsId]); // 답장 조회하기 API
 
   return (
     <>
@@ -214,8 +224,8 @@ export default function MyRecommendSwiper() {
       <CommentModal
         visible={isReplyCommentVisible}
         onClose={() => setIsReplyCommentVisible(false)}
-        title="From. 훈심이"
-        description="와 노래 좋아요 좋은 노래 알아갑니다!! 감사합니다~~"
+        title={`From. ${replySender || ''}`} // senderName 적용
+        description={replyComment || ''} // content 적용
         closeColor="#1F1F1F"
         closeText="닫기"
       />
