@@ -1,4 +1,4 @@
-import { API_URL, TEST_TOKEN } from '@env';
+import { API_URL, EXPO_PUBLIC_API_TOKEN } from '@env';
 import axios from 'axios';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useState } from 'react';
@@ -24,7 +24,7 @@ const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${TEST_TOKEN}`, // .env에 있는 토큰
+    Authorization: `Bearer ${EXPO_PUBLIC_API_TOKEN}`, // .env에 있는 토큰
   },
 });
 
