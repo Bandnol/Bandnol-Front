@@ -11,7 +11,6 @@ export default {
     userInterfaceStyle: 'automatic',
     newArchEnabled: true,
     ios: {
-
       bundleIdentifier: 'com.bandnol.Bandnol20',
       supportsTablet: true,
     },
