@@ -14,7 +14,7 @@ import {
 import BackArrow from '@/assets/icons/back-arrow.svg';
 import { Typography } from '@/constants/typography';
 
-import { useAuthFetch } from '@/hooks/useAxios';
+import { useAuthFetch } from '@/hooks/useAuthFetch';
 
 export default function AppSetting() {
   const router = useRouter();
@@ -119,7 +119,7 @@ export default function AppSetting() {
           </TouchableOpacity>
         </View>
         {/* 최근 알림 미리보기 */}
-        <View style={{ paddingHorizontal: 20, paddingTop: 12 }}>
+        {/* <View style={{ paddingHorizontal: 20, paddingTop: 12 }}>
           <Text style={styles.sectionTitle}>최근 알림</Text>
           {loading ? (
             <ActivityIndicator style={{ marginTop: 16 }} />
@@ -151,8 +151,8 @@ export default function AppSetting() {
                 </View>
               )}
             />
-          )}
-        </View>
+          )} // 왜 있는 거지???
+        </View> */}
       </View>
     </SafeAreaView>
   );
