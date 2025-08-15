@@ -118,41 +118,6 @@ export default function AppSetting() {
             <Text style={styles.itemText}>문의하기</Text>
           </TouchableOpacity>
         </View>
-        {/* 최근 알림 미리보기 */}
-        <View style={{ paddingHorizontal: 20, paddingTop: 12 }}>
-          <Text style={styles.sectionTitle}>최근 알림</Text>
-          {loading ? (
-            <ActivityIndicator style={{ marginTop: 16 }} />
-          ) : errorText ? (
-            <Text style={styles.errorText}>{errorText}</Text>
-          ) : (
-            <FlatList
-              data={notis.slice(0, 5)}
-              keyExtractor={(item, idx) => item.id ?? String(idx)}
-              contentContainerStyle={{ paddingTop: 8, paddingBottom: 20 }}
-              ListEmptyComponent={
-                <Text style={styles.emptyText}>알림이 없습니다.</Text>
-              }
-              renderItem={({ item }) => (
-                <View style={styles.notiItem}>
-                  <Text style={styles.notiTitle}>
-                    {item.title || item.message || item.type || '알림'}
-                  </Text>
-                  {item.body || item.message ? (
-                    <Text style={styles.notiBody} numberOfLines={2}>
-                      {item.body || item.message}
-                    </Text>
-                  ) : null}
-                  {item.createdAt ? (
-                    <Text style={styles.notiTime}>
-                      {new Date(item.createdAt).toLocaleString()}
-                    </Text>
-                  ) : null}
-                </View>
-              )}
-            />
-          )}
-        </View>
       </View>
     </SafeAreaView>
   );
