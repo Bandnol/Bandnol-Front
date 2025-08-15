@@ -1,11 +1,3 @@
-import { EXPO_PUBLIC_API_TOKEN } from '@env';
-import axios from 'axios';
-import dayjs from 'dayjs';
-import { useRouter } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
-import { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-
 import RecommendCal from '@/app/(tabs)/recommend-tab/RecommendCal';
 import RecommendHeader from '@/app/(tabs)/recommend-tab/RecommendHeader';
 import RecommendList, {
@@ -13,6 +5,13 @@ import RecommendList, {
 } from '@/app/(tabs)/recommend-tab/RecommendList';
 import Dropdown from '@/assets/icons/size_m/dropdown.svg';
 import { Typography } from '@/constants/typography';
+import { EXPO_PUBLIC_API_TOKEN } from '@env';
+import axios from 'axios';
+import dayjs from 'dayjs';
+import { useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
+import { useEffect, useRef, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 type RecommendItem = {
   date: string;

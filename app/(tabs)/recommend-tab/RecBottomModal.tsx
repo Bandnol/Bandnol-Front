@@ -1,12 +1,10 @@
+import type { CalendarItem } from '@/app/(tabs)/recommend-tab/RecommendCal';
+import Share from '@/assets/icons/size_m/share.svg';
+import { Typography } from '@/constants/typography';
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import Modal from 'react-native-modal';
-
-import type { CalendarItem } from '@/app/(tabs)/recommend-tab/RecommendCal';
-import Share from '@/assets/icons/size_m/share.svg';
-import { Typography } from '@/constants/typography';
-
 import RecShareModal from './RecShareModal';
 
 type RecBottomModalProps = {
@@ -105,6 +103,7 @@ export default function RecBottomModal({
         visible={isShareVisible}
         onClose={() => setIsShareVisible(false)}
         recData={songData as CalendarItem}
+        isTabRecommending={isTabRecommending} // isTabRecommending이 true면 From.@@@ & To.me 다 있고 false면 From.me만 있음
       />
     </>
   );

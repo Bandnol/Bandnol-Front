@@ -1,9 +1,15 @@
+import Logo from '@/assets/icons/logo.svg';
+import Insta from '@/assets/icons/size_m/insta.svg';
+import Link from '@/assets/icons/size_m/link.svg';
+import Quit from '@/assets/icons/size_m/quit.svg';
+import X from '@/assets/icons/size_m/x.svg';
+import { Typography } from '@/constants/typography';
 import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
 import { useRef } from 'react';
 import {
   Alert,
-  Dimensions, //나중에 toast로 변경하기
+  Dimensions,
   Image,
   Platform,
   Pressable,
@@ -15,20 +21,13 @@ import Modal from 'react-native-modal';
 import Share, { Social } from 'react-native-share';
 import Svg, { Circle } from 'react-native-svg';
 import ViewShot from 'react-native-view-shot';
-
-import Logo from '@/assets/icons/logo.svg';
-import Insta from '@/assets/icons/size_m/insta.svg';
-import Link from '@/assets/icons/size_m/link.svg';
-import Quit from '@/assets/icons/size_m/quit.svg';
-import X from '@/assets/icons/size_m/x.svg';
-import { Typography } from '@/constants/typography';
-
 import type { CalendarItem } from './RecommendCal';
 
 type RecShareModalProps = {
   visible: boolean;
   onClose: () => void;
   recData: CalendarItem | undefined;
+  isTabRecommending?: boolean; //false면 From.@@@ & To.me 다 있고 true면 From.me만 있음
 };
 const { width: screenWidth } = Dimensions.get('window');
 let scale = 1;
@@ -40,12 +39,12 @@ export default function RecShareModal({
   visible,
   onClose,
   recData,
+  isTabRecommending = true, // 기본값 true로 설정
 }: RecShareModalProps) {
   const viewShotRefInsta = useRef<ViewShot>(null);
   const viewShotRefX = useRef<ViewShot>(null);
   const viewShotRefBg = useRef<ViewShot>(null);
   if (!recData) return null;
-  const isRecommended = 'senderNickname' in recData;
 
   const handleCopyLink = async () => {
     if (!recData) return;
@@ -194,7 +193,7 @@ export default function RecShareModal({
                 </View>
 
                 {/* To. me — 말줄임 적용 (혹시 닉네임 길어질 대비) */}
-                {isRecommended && (
+                {!isTabRecommending && (
                   <Text
                     style={styles.toText}
                     numberOfLines={1} // NEW: 말줄임
@@ -241,7 +240,7 @@ export default function RecShareModal({
                 >
                   From.{' '}
                   <Text style={{ color: '#F4F4F4' }}>
-                    {isRecommended ? recData.senderNickname : 'me'}
+                    {!isTabRecommending ? recData.senderNickname : 'me'}
                   </Text>
                 </Text>
 
@@ -365,7 +364,7 @@ export default function RecShareModal({
 
               <View style={styles.XRight}>
                 {/* To. me — 1줄, ... */}
-                {isRecommended && (
+                {!isTabRecommending && (
                   <Text
                     style={styles.XtoText}
                     numberOfLines={1} // NEW
@@ -412,7 +411,7 @@ export default function RecShareModal({
                 >
                   From.{' '}
                   <Text style={{ color: '#F4F4F4' }}>
-                    {isRecommended ? recData.senderNickname : 'me'}
+                    {!isTabRecommending ? recData.senderNickname : 'me'}
                   </Text>
                 </Text>
               </View>
