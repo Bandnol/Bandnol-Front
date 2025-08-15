@@ -1,5 +1,6 @@
 import { EXPO_PUBLIC_API_TOKEN } from '@env';
 import axios from 'axios';
+import * as SecureStore from 'expo-secure-store';
 
 export const postReply = async (
   recomsId: string, // 또는 number
@@ -12,6 +13,9 @@ export const postReply = async (
   }
 
   try {
+    const token = await SecureStore.getItemAsync('JWTToken');
+    console.log('[postReply] JWTToken:', token);
+
     const response = await axios.post(
       `https://bandnol.app/api/v1/recoms/${recomsId}/replies`,
       {
@@ -20,15 +24,16 @@ export const postReply = async (
       },
       {
         headers: {
-          Authorization: `Bearer ${EXPO_PUBLIC_API_TOKEN}`,
+          Authorization: token ? `Bearer ${token}` : '',
           'Content-Type': 'application/json',
         },
       },
     );
 
+    console.log('[postReply] 서버 응답:', response.data);
     return { success: true, data: response.data };
   } catch (error) {
-    console.error('❌ postReply 오류:', error);
+    console.error('postReply 오류:', error);
     return { success: false, error };
   }
 };

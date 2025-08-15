@@ -2,6 +2,7 @@ import { Typography } from '@/constants/typography';
 
 import dayjs from 'dayjs';
 import 'dayjs/locale/ko';
+import { useRouter } from 'expo-router';
 import {
   forwardRef,
   useEffect,
@@ -10,7 +11,14 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  Pressable,
+} from 'react-native';
 
 dayjs.locale('ko');
 
@@ -42,6 +50,7 @@ const RecommendList = forwardRef<RecommendListRef, RecommendListProps>(
   ({ selectedMonth, selectedDate, setSelectedDate, data }, ref) => {
     const today = dayjs().format('YYYY-MM-DD');
     const scrollViewRef = useRef<ScrollView>(null);
+    const router = useRouter();
     const [sectionLayouts, setSectionLayouts] = useState<
       Record<string, number>
     >({});
@@ -148,7 +157,20 @@ const RecommendList = forwardRef<RecommendListRef, RecommendListProps>(
                       ? '나의 추천곡'
                       : '추천 받은 곡'}
                   </Text>
-                  <View style={styles.myrecInfo}>
+                  <Pressable
+                    style={styles.myrecInfo}
+                    onPress={() => {
+                      const rawId =
+                        (sub as any)?.song?.artistId ??
+                        (sub as any)?.song?.artist?.id;
+                      const id = rawId != null ? String(rawId).trim() : '';
+                      if (!id) {
+                        alert('아티스트 정보를 찾을 수 없어요.');
+                        return;
+                      }
+                      router.push(`/artist/${encodeURIComponent(id)}`);
+                    }}
+                  >
                     <Image
                       source={{ uri: sub.song.imageUrl }}
                       style={{
@@ -174,7 +196,7 @@ const RecommendList = forwardRef<RecommendListRef, RecommendListProps>(
                       }}
                     />
                     <Text style={styles.myrecComment}>{sub.song.comment}</Text>
-                  </View>
+                  </Pressable>
                 </View>
               ))}
             </View>

@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Image,
   ScrollView,
@@ -9,12 +9,17 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Alert,
 } from 'react-native';
+
+import { SafeAreaView } from 'react-native-safe-area-context';
+import * as SecureStore from 'expo-secure-store';
 
 import BackArrowIcon from '@/assets/icons/back-arrow.svg';
 import EditIcon from '@/assets/icons/edit.svg';
 import ProfileImage from '@/assets/images/profile.png';
 import { Typography } from '@/constants/typography';
+import { useAuthFetch } from '@/hooks/useAuthFetch';
 
 export default function EditProfile() {
   const [nickname, setNickname] = useState('');
@@ -25,99 +30,185 @@ export default function EditProfile() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showBackgroundModal, setShowBackgroundModal] = useState(false);
 
+  useEffect(() => {
+    (async () => {
+      try {
+        const raw = await SecureStore.getItemAsync('user');
+        if (!raw) return;
+        const u = JSON.parse(raw);
+        const initialNickname = u?.nickname ?? u?.nickName ?? u?.name ?? '';
+        const initialIntro = u?.bio ?? u?.introduction ?? '';
+        setNickname(String(initialNickname));
+        setIntro(String(initialIntro));
+      } catch (e) {
+        console.log('[EditProfile] 로컬 프로필 로드 실패', e);
+      }
+    })();
+  }, []);
+
+  const authFetch = useAuthFetch();
+
+  // YYYYMMDD, YYYY-MM-DD, YYYY/MM/DD, YYYY.MM.DD -> YYYY-MM-DD
+  const normalizeBirth = (raw?: string | null): string | null => {
+    if (!raw) return null;
+    const s = String(raw).trim();
+    const digits = s.replace(/[^0-9]/g, '');
+    if (digits.length !== 8) return null;
+    const y = digits.slice(0, 4);
+    const m = digits.slice(4, 6);
+    const d = digits.slice(6, 8);
+    return `${y}-${m}-${d}`;
+  };
+
+  // HH:mm 또는 HHmm 그대로 유지 (서버 스펙 차이를 고려해 보존)
+  const pickRecomsTime = (t?: string | null) => {
+    if (!t) return null;
+    const s = String(t).trim();
+    if (/^\d{2}:\d{2}$/.test(s)) return s; // HH:mm
+    if (/^\d{4}$/.test(s)) return s; // HHmm
+    return null;
+  };
+
   const handleGoBack = () => {
     router.push('/(tabs)/myPage/myPage');
   };
 
   const handleSave = () => {
-    // 저장 로직이 있으면 추가하고, 이후 이동
-    router.push('/(tabs)/myPage/myPage');
+    (async () => {
+      try {
+        const raw = await SecureStore.getItemAsync('user');
+        const u = raw ? JSON.parse(raw) : {};
+
+        const ownId = u?.ownId ?? u?.userId ?? u?.username ?? null;
+        const gender = u?.gender ?? null;
+        const birth = normalizeBirth(u?.birth ?? u?.birthday ?? null);
+        const recomsTime = pickRecomsTime(
+          u?.recomsTime ?? u?.recommendTime ?? null,
+        );
+
+        const payload: any = { nickname, bio: intro };
+        if (ownId) payload.ownId = ownId;
+        if (gender) payload.gender = gender;
+        if (birth) payload.birth = birth;
+        if (recomsTime) payload.recomsTime = recomsTime;
+
+        const res = await authFetch.json<any>('/api/v1/users/me/profiles', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        // API가 success=false 형태로도 200을 줄 수 있으니 체크
+        if (res?.success === false) {
+          const code = res?.error?.code;
+          const msg = res?.error?.message || '저장에 실패했습니다.';
+          Alert.alert(
+            '프로필 저장 실패',
+            `${msg}${code ? `\n(code: ${code})` : ''}`,
+          );
+          return;
+        }
+
+        // 로컬 동기화
+        const next = { ...u, ...payload };
+        await SecureStore.setItemAsync('user', JSON.stringify(next));
+        router.push('/(tabs)/myPage/myPage');
+      } catch (e: any) {
+        const raw = e?.message ?? e;
+        const msg = typeof raw === 'string' ? raw : JSON.stringify(raw);
+        Alert.alert('프로필 저장 실패', msg);
+      }
+    })();
   };
 
   return (
-    <ScrollView style={styles.safeArea}>
-      <StatusBar
-        translucent
-        backgroundColor="#121212"
-        barStyle="dark-content"
-      />
-      <View style={styles.container}>
-        {/* 왼쪽: 뒤로가기 아이콘 */}
-        <TouchableOpacity onPress={handleGoBack}>
-          <BackArrowIcon width={24} height={24} />
-        </TouchableOpacity>
-
-        {/* 중앙: 텍스트 */}
-        <Text style={styles.title}>프로필 편집</Text>
-
-        {/* 오른쪽: 저장 텍스트 버튼 */}
-        <TouchableOpacity onPress={handleSave}>
-          <Text style={styles.saveText}>저장</Text>
-        </TouchableOpacity>
-      </View>
-      {/* {배경 사진} */}
-      <View style={styles.bgWrapper}>
-        <Image
-          source={require('@/assets/images/background.png')}
-          style={styles.backgroundImage}
-          resizeMode="cover"
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+      <ScrollView>
+        <StatusBar
+          translucent={false}
+          backgroundColor="#121212"
+          barStyle="light-content"
         />
-        <TouchableOpacity
-          style={styles.editIcon}
-          onPress={() => setShowBackgroundModal(true)}
-        >
-          <View style={styles.editIconCircle}>
-            <EditIcon width={18} height={18} />
-          </View>
-        </TouchableOpacity>
-      </View>
-      {/* {프로필 사진 수정} */}
-      <View style={styles.profileImageWrapper}>
-        <TouchableOpacity onPress={() => setShowProfileModal(true)}>
-          <Image source={ProfileImage} style={styles.profileImage} />
-        </TouchableOpacity>
-      </View>
-      {/* 텍스트 필드 영역 */}
-      <View style={styles.textFieldWrapper}>
-        {/* 첫 번째 필드 */}
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>닉네임</Text>
-          <TextInput
-            style={[
-              styles.input,
-              focusedField === 'nickname'
-                ? styles.inputFocused
-                : styles.inputBlurred,
-            ]}
-            value={nickname}
-            onChangeText={setNickname}
-            placeholder="텍스트"
-            placeholderTextColor="#F4F4F4"
-            onFocus={() => setFocusedField('nickname')}
-            onBlur={() => setFocusedField(null)}
-          />
-        </View>
+        <View style={styles.container}>
+          {/* 왼쪽: 뒤로가기 아이콘 */}
+          <TouchableOpacity onPress={handleGoBack}>
+            <BackArrowIcon width={24} height={24} />
+          </TouchableOpacity>
 
-        {/* 두 번째 필드 */}
-        <View style={[styles.inputGroup, { marginTop: 12 }]}>
-          <Text style={styles.label}>소개</Text>
-          <TextInput
-            style={[
-              styles.input,
-              focusedField === 'intro'
-                ? styles.inputFocused
-                : styles.inputBlurred,
-            ]}
-            value={intro}
-            onChangeText={setIntro}
-            placeholder="텍스트"
-            placeholderTextColor="#F4F4F4"
-            onFocus={() => setFocusedField('intro')}
-            onBlur={() => setFocusedField(null)}
-          />
+          {/* 중앙: 텍스트 */}
+          <Text style={styles.title}>프로필 편집</Text>
+
+          {/* 오른쪽: 저장 텍스트 버튼 */}
+          <TouchableOpacity onPress={handleSave}>
+            <Text style={styles.saveText}>저장</Text>
+          </TouchableOpacity>
         </View>
-      </View>
-    </ScrollView>
+        {/* {배경 사진} */}
+        <View style={styles.bgWrapper}>
+          <Image
+            source={require('@/assets/images/background.png')}
+            style={styles.backgroundImage}
+            resizeMode="cover"
+          />
+          <TouchableOpacity
+            style={styles.editIcon}
+            onPress={() => setShowBackgroundModal(true)}
+          >
+            <View style={styles.editIconCircle}>
+              <EditIcon width={18} height={18} />
+            </View>
+          </TouchableOpacity>
+        </View>
+        {/* {프로필 사진 수정} */}
+        <View style={styles.profileImageWrapper}>
+          <TouchableOpacity onPress={() => setShowProfileModal(true)}>
+            <Image source={ProfileImage} style={styles.profileImage} />
+          </TouchableOpacity>
+        </View>
+        {/* 텍스트 필드 영역 */}
+        <View style={styles.textFieldWrapper}>
+          {/* 첫 번째 필드 */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>닉네임</Text>
+            <TextInput
+              style={[
+                styles.input,
+                focusedField === 'nickname'
+                  ? styles.inputFocused
+                  : styles.inputBlurred,
+                { color: nickname.trim() ? '#FFF' : styles.input.color },
+              ]}
+              value={nickname}
+              onChangeText={setNickname}
+              placeholder="닉네임을 입력해주세요"
+              placeholderTextColor="#F4F4F4"
+              onFocus={() => setFocusedField('nickname')}
+              onBlur={() => setFocusedField(null)}
+            />
+          </View>
+
+          {/* 두 번째 필드 */}
+          <View style={[styles.inputGroup, { marginTop: 12 }]}>
+            <Text style={styles.label}>소개</Text>
+            <TextInput
+              style={[
+                styles.input,
+                focusedField === 'intro'
+                  ? styles.inputFocused
+                  : styles.inputBlurred,
+                { color: intro.trim() ? '#FFF' : styles.input.color },
+              ]}
+              value={intro}
+              onChangeText={setIntro}
+              placeholder="소개를 입력해주세요"
+              placeholderTextColor="#F4F4F4"
+              onFocus={() => setFocusedField('intro')}
+              onBlur={() => setFocusedField(null)}
+            />
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

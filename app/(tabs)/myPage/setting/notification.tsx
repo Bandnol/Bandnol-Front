@@ -14,8 +14,7 @@ import {
 
 import BackArrow from '@/assets/icons/back-arrow.svg';
 import { Typography } from '@/constants/typography';
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuthFetch } from '@/hooks/useAxios';
 
 type ToggleProps = {
   value: boolean;
@@ -102,50 +101,12 @@ function toApi(state: NotiState): BackendPayload {
   };
 }
 
-// !💣💣💣💣💣💣💣💣 API 설정 💣💣💣💣💣💣💣💣!
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
-const API_TOKEN = process.env.EXPO_PUBLIC_API_TOKEN;
-
 const ENDPOINT = '/api/v1/users/notification-settings';
-
-const api = axios.create({ baseURL: BASE_URL });
-
-api.interceptors.request.use((cfg) => {
-  if (API_TOKEN) {
-    cfg.headers = cfg.headers ?? {};
-    cfg.headers.Authorization = `Bearer ${API_TOKEN}`;
-  } else {
-    console.log(
-      '⚠️ EXPO_PUBLIC_API_TOKEN이 비어 있습니다. 요청이 401 날 수 있어요.',
-    );
-  }
-  console.log(
-    '➡️',
-    cfg.method?.toUpperCase(),
-    (cfg.baseURL || '') + (cfg.url || ''),
-    cfg.data ?? '',
-  );
-  return cfg;
-});
-api.interceptors.response.use(
-  (res) => {
-    console.log('✅', res.status, res.config.url, res.data);
-    return res;
-  },
-  (err) => {
-    console.log(
-      '❌',
-      err.response?.status ?? 'NO_STATUS',
-      err.config?.url,
-      err.response?.data ?? err.message,
-    );
-    return Promise.reject(err);
-  },
-);
 
 // ! 💣💣💣💣💣💣💣💣 화면 💣💣💣💣💣💣💣💣 !
 export default function Notification() {
   const router = useRouter();
+  const authFetch = useAuthFetch();
 
   const [noti, setNoti] = useState<NotiState>({
     all: false,
@@ -177,8 +138,13 @@ export default function Notification() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await api.get<BackendPayload>(ENDPOINT);
-        setNoti(fromApi(res.data));
+        const res = await authFetch.json<any>(ENDPOINT, { method: 'GET' });
+        const payload: BackendPayload =
+          res && typeof res === 'object' && 'success' in res
+            ? (res.data as BackendPayload)
+            : (res as BackendPayload);
+        setNoti(fromApi(payload));
+        console.log('[알림설정] 조회 성공:', payload);
       } catch {
         Alert.alert(
           '알림 설정',
@@ -195,13 +161,24 @@ export default function Notification() {
     setNoti(next);
     setSaving(true);
     try {
-      await api.patch(ENDPOINT, toApi(next));
+      const body = JSON.stringify(toApi(next));
+      const res = await authFetch.json<any>(ENDPOINT, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+      });
+      if (
+        res &&
+        typeof res === 'object' &&
+        'success' in res &&
+        res.success === false
+      ) {
+        throw { response: { status: 400, data: res } };
+      }
+      console.log('[알림설정] 저장 성공:', toApi(next));
     } catch (e: any) {
       if (e?.response?.status === 401) {
-        Alert.alert(
-          '로그인 필요',
-          '권한이 없어요. EXPO_PUBLIC_API_TOKEN을 확인해주세요.',
-        );
+        Alert.alert('로그인 필요', '세션이 만료되었어요. 다시 로그인해주세요.');
       } else {
         Alert.alert('알림 설정', '저장에 실패했어요. 다시 시도해주세요.');
       }
