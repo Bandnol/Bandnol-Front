@@ -542,24 +542,24 @@ const styles = StyleSheet.create({
   },
   // ✅ 버튼
   buttonWrapper: {
-    marginTop: 40,
-    marginLeft: 84,
-    marginRight: 84,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 70,
-    backgroundColor: '#1F1F1F',
+    marginTop: 35,
+    alignSelf: 'center',
   },
   buttonContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
+    backgroundColor: '#1F1F1F',
+    paddingHorizontal: 16,
     gap: 10,
+    alignSelf: 'center',
+    borderRadius: 70,
+    padding: 5,
   },
   tabButton: {
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: 20,
-    backgroundColor: 'transparent', // 비활성 배경
+    backgroundColor: 'transparent',
+    alignItems: 'center',
   },
   activeTabButton: {
     backgroundColor: '#FFF',
