@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 
+import AlertIcon from '@/assets/icons/alert.svg';
 import { searchSpotifySong } from '@/api/spotifySearch';
 import DateHeader from '@/components/common/DateHeader';
 import { Typography } from '@/constants/typography';
@@ -61,14 +62,23 @@ export default function SearchMusicPage() {
   };
 
   return (
-    // <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
     <View style={styles.container}>
       {/* 헤더 */}
       <View style={styles.topSection}>
         {/* 날짜 */}
-        <Text style={styles.date}>
-          <DateHeader />
-        </Text>
+        <View style={styles.dateWrap}>
+          <Text style={styles.date}>
+            <DateHeader />
+          </Text>
+          <Pressable
+            onPress={() =>
+              router.navigate('/(tabs)/music-recommend/alarmCenter')
+            }
+            style={styles.alertIcon} // 이게 핵심!!
+          >
+            <AlertIcon width={24} height={24} style={styles.alertIcon} />
+          </Pressable>
+        </View>
 
         <Text style={styles.title}>
           오늘 날씨에{'\n'}어울리는 곡을 추천해볼까요?
@@ -115,7 +125,6 @@ export default function SearchMusicPage() {
         )}
       />
     </View>
-    // </TouchableWithoutFeedback>
   );
 }
 
@@ -129,11 +138,22 @@ const styles = StyleSheet.create({
   topSection: {
     marginBottom: 30,
   },
+  dateWrap: {
+    position: 'relative',
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 60,
+  },
   date: {
     ...Typography.subtitle2,
     color: '#B3B3B3',
     textAlign: 'center',
-    marginBottom: 60,
+  },
+  alertIcon: {
+    position: 'absolute',
+    right: 10,
+    top: -0.5,
   },
   title: {
     ...Typography.h1,

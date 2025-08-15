@@ -14,6 +14,11 @@ export default {
       bundleIdentifier: 'com.bandnol.Bandnol20',
       supportsTablet: true,
     },
+    extra: {
+      eas: {
+        projectId: '3d7bb85e-e4d5-4f9a-86be-aafb4ed0e3c9',
+      },
+    },
     android: {
       package: 'com.bandnol.Bandnol',
       adaptiveIcon: {
