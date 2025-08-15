@@ -1,7 +1,6 @@
-import { Typography } from '@/constants/typography';
+import 'dayjs/locale/ko';
 
 import dayjs from 'dayjs';
-import 'dayjs/locale/ko';
 import {
   forwardRef,
   useEffect,
@@ -11,6 +10,8 @@ import {
   useState,
 } from 'react';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+
+import { Typography } from '@/constants/typography';
 
 dayjs.locale('ko');
 

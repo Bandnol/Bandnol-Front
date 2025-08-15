@@ -1,11 +1,12 @@
-import Logo from '@/assets/auth/splash/logo.svg';
-import StatusBarHeader from '@/components/common/StatusBarHeader';
-import { Colors } from '@/constants/Colors';
-import { Typography } from '@/constants/typography';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+import Logo from '@/assets/auth/splash/logo.svg';
+import StatusBarHeader from '@/components/common/StatusBarHeader';
+import { Colors } from '@/constants/Colors';
+import { Typography } from '@/constants/typography';
 
 export default function Step4DoneScreen() {
   const router = useRouter();

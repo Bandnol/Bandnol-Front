@@ -13,7 +13,6 @@ import {
 
 import BackArrow from '@/assets/icons/back-arrow.svg';
 import { Typography } from '@/constants/typography';
-
 import { useAuthFetch } from '@/hooks/useAuthFetch';
 
 export default function AppSetting() {

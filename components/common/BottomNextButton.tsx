@@ -1,8 +1,9 @@
 // components/common/BottomNextButton.tsx
-import { Colors } from '@/constants/Colors';
-import { Typography } from '@/constants/typography';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+import { Colors } from '@/constants/Colors';
+import { Typography } from '@/constants/typography';
 
 type Props = {
   onPress: () => void;

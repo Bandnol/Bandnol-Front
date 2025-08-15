@@ -24,18 +24,30 @@ const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${EXPO_PUBLIC_API_TOKEN}`, // .env에 있는 토큰
+    Authorization: `Bearer ${EXPO_PUBLIC_API_TOKEN}`,
   },
 });
 
+// 최근 수신 1건 조회
 const getReceivedRecommend = async () => {
   const res = await api.get(`/api/v1/recoms/received`);
-  return res.data; // { success, data, error }
+  return res.data;
+};
+
+// 코멘트 조회
+const getRecommendComment = async (recomsId: string) => {
+  const res = await api.get(`/api/v1/recoms/${recomsId}/comments`, {
+    params: { type: 'received' },
+  });
+  return res.data;
 };
 
 export default function ReceiveRecommend() {
   const [loading, setLoading] = useState(true);
   const [recommend, setRecommend] = useState<any>(null);
+
+  const [recomsId, setRecomsId] = useState<string | null>(null);
+  const [commentLoading, setCommentLoading] = useState(false);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [modalProps, setModalProps] = useState({
@@ -55,6 +67,10 @@ export default function ReceiveRecommend() {
         console.log('서버 응답 데이터:', JSON.stringify(res.data, null, 2));
         if (res.success) {
           setRecommend(res.data);
+
+          const rid =
+            res.data?.recomsId ?? res.data?.id ?? res.data?.recoms?.id ?? null;
+          setRecomsId(rid);
         } else {
           console.warn('API 응답 에러:', res.error);
         }
@@ -68,41 +84,67 @@ export default function ReceiveRecommend() {
   }, []);
 
   // 모달
-  const openModal = (type: 'view' | 'reply') => {
-    setModalProps({
-      title:
-        type === 'view'
-          ? `From. ${recommend?.sender?.nickname}`
-          : `To. ${recommend?.sender?.nickname}`,
-      description:
-        type === 'view'
-          ? recommend?.recomsSong?.comment || '추천 이유가 없습니다.'
-          : '답장을 작성해주세요.',
-      closeText: type === 'view' ? '닫기' : '답장 보내기',
-      closeColor: type === 'view' ? '#1F1F1F' : '#FB4932',
-    });
-    setIsModalVisible(true);
-    {
-      /*
+  const openModal = async (type: 'view' | 'reply') => {
     if (type === 'view') {
       setModalProps({
-        title: 'From. noshel',
-        description:
-          '요즘 제가 푹 빠진 밴드 고고학입니다... 파도는 라이브가 진짜 최고인 것 같아요. 후반부로 갈수록 휘몰아치는 악기들이 예술입니다 ㅜㅜ 고고학 다른 곡도 진짜 좋으니까 꼭 들어보세요... 완전 추천합니다!',
+        title: `From. ${recommend?.sender?.nickname ?? ''}`,
+        description: '코멘트를 불러오는 중...',
         closeText: '닫기',
         closeColor: '#1F1F1F',
       });
+      setIsModalVisible(true);
+
+      if (!recomsId) {
+        setModalProps((prev) => ({
+          ...prev,
+          description: '코멘트를 불러올 추천 ID가 없습니다.',
+        }));
+        return;
+      }
+
+      try {
+        setCommentLoading(true);
+        const res = await getRecommendComment(recomsId);
+        console.log('코멘트 응답:', JSON.stringify(res, null, 2));
+
+        if (res?.success) {
+          const commentText =
+            res?.data?.comment ??
+            res?.data?.recomsSong?.comment ??
+            '추천 이유가 없습니다.';
+          setModalProps({
+            title: `From. ${recommend?.sender?.nickname ?? ''}`,
+            description: commentText,
+            closeText: '닫기',
+            closeColor: '#1F1F1F',
+          });
+        } else {
+          setModalProps({
+            title: `From. ${recommend?.sender?.nickname ?? ''}`,
+            description: res?.error ?? '코멘트를 불러오지 못했습니다.',
+            closeText: '닫기',
+            closeColor: '#1F1F1F',
+          });
+        }
+      } catch (e) {
+        console.error('코멘트 조회 실패:', e);
+        setModalProps({
+          title: `From. ${recommend?.sender?.nickname ?? ''}`,
+          description: '코멘트를 불러오는 중 오류가 발생했습니다.',
+          closeText: '닫기',
+          closeColor: '##B3B3B3',
+        });
+      } finally {
+        setCommentLoading(false);
+      }
     } else {
       setModalProps({
-        title: 'To. noshel',
-        description:
-          '와 미쳤다... 바로 제 플리에 저장합니다 ;; 노래 너무 좋아요 ㅜㅜㅜ',
+        title: `To. ${recommend?.sender?.nickname ?? ''}`,
+        description: '답장을 작성해주세요.',
         closeText: '답장 보내기',
         closeColor: '#FB4932',
       });
-    }
-    setIsModalVisible(true);
-    */
+      setIsModalVisible(true);
     }
   };
 

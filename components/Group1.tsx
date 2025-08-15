@@ -1,8 +1,9 @@
 import * as React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Frame from '../assets/onboarding/star_gray.svg';
+
 import Ellipse from '../assets/onboarding/Ellipse 1.svg';
+import Frame from '../assets/onboarding/star_gray.svg';
 
 const Group1 = () => {
   return (

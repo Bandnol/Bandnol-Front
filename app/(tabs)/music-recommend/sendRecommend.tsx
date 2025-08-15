@@ -14,8 +14,8 @@ import {
 
 import { fetchAIComment } from '@/api/aiRecommend';
 import { postReplyAsRecoms } from '@/api/postReplyAsRecoms';
-import Checkboxchecked from '@/assets/icons/checkbox-checked.svg';
 import Checkbox from '@/assets/icons/checkbox.svg';
+import Checkboxchecked from '@/assets/icons/checkbox-checked.svg';
 import DateHeader from '@/components/common/DateHeader';
 import ModalPopup from '@/components/common/ModalPopup';
 import { Typography } from '@/constants/typography';

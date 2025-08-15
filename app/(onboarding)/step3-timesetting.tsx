@@ -1,14 +1,15 @@
-import BottomNextButton from '@/components/common/BottomNextButton';
-import StatusBarHeader from '@/components/common/StatusBarHeader';
-import { Colors } from '@/constants/Colors';
-import { Typography } from '@/constants/typography';
-import api from '@/store/api';
 import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+import BottomNextButton from '@/components/common/BottomNextButton';
+import StatusBarHeader from '@/components/common/StatusBarHeader';
+import { Colors } from '@/constants/Colors';
+import { Typography } from '@/constants/typography';
+import api from '@/store/api';
 
 const Component = () => {
   const router = useRouter();

@@ -1,10 +1,12 @@
+import 'dayjs/locale/ko';
+
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import { StyleSheet, Text, View } from 'react-native';
+
 import type { IconType } from '@/components/NotificationIcon';
 import NotificationIcon from '@/components/NotificationIcon';
 import { Colors } from '@/constants/Colors';
-import dayjs from 'dayjs';
-import 'dayjs/locale/ko';
-import relativeTime from 'dayjs/plugin/relativeTime';
-import { StyleSheet, Text, View } from 'react-native';
 
 dayjs.extend(relativeTime);
 dayjs.locale('ko');

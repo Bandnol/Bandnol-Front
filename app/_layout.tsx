@@ -1,13 +1,12 @@
-import { initializeKakaoSDK } from '@react-native-kakao/core';
-import { useEffect } from 'react';
 import 'react-native-reanimated';
 
+import { initializeKakaoSDK } from '@react-native-kakao/core';
 import { useFonts } from 'expo-font';
 import { Slot } from 'expo-router';
+import React, { useEffect } from 'react';
 
 import { AuthProvider } from '@/hooks/useAuthContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import React from 'react';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();

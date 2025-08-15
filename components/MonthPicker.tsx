@@ -1,8 +1,9 @@
-import { Typography } from '@/constants/typography';
 import { Picker } from '@react-native-picker/picker';
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+import { Typography } from '@/constants/typography';
 
 type MonthPickerProps = {
   visible: boolean;

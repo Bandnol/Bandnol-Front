@@ -1,9 +1,3 @@
-import Logo from '@/assets/icons/logo.svg';
-import Insta from '@/assets/icons/size_m/insta.svg';
-import Link from '@/assets/icons/size_m/link.svg';
-import Quit from '@/assets/icons/size_m/quit.svg';
-import X from '@/assets/icons/size_m/x.svg';
-import { Typography } from '@/constants/typography';
 import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
 import { useRef } from 'react';
@@ -21,6 +15,14 @@ import Modal from 'react-native-modal';
 import Share, { Social } from 'react-native-share';
 import Svg, { Circle } from 'react-native-svg';
 import ViewShot from 'react-native-view-shot';
+
+import Logo from '@/assets/icons/logo.svg';
+import Insta from '@/assets/icons/size_m/insta.svg';
+import Link from '@/assets/icons/size_m/link.svg';
+import Quit from '@/assets/icons/size_m/quit.svg';
+import X from '@/assets/icons/size_m/x.svg';
+import { Typography } from '@/constants/typography';
+
 import type { CalendarItem } from './RecommendCal';
 
 type RecShareModalProps = {

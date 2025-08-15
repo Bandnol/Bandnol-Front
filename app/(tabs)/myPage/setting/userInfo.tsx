@@ -1,7 +1,7 @@
-import KaKao from '@/assets/icons/size_s/kakao.svg';
-import { Colors } from '@/constants/Colors';
-import { useUpdateOwnId } from '@/hooks/useUpdateOwnId';
-import api from '@/store/api';
+import {
+  logout as kakaoLogout,
+  unlink as kakaoUnlink,
+} from '@react-native-kakao/user';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { jwtDecode } from 'jwt-decode';
@@ -17,13 +17,12 @@ import {
 } from 'react-native';
 
 import BackArrow from '@/assets/icons/back-arrow.svg';
-import { Typography } from '@/constants/typography';
-
+import KaKao from '@/assets/icons/size_s/kakao.svg';
 import ConfirmModal from '@/components/common/ConfirmModal';
-import {
-  logout as kakaoLogout,
-  unlink as kakaoUnlink,
-} from '@react-native-kakao/user';
+import { Colors } from '@/constants/Colors';
+import { Typography } from '@/constants/typography';
+import { useUpdateOwnId } from '@/hooks/useUpdateOwnId';
+import api from '@/store/api';
 
 export default function UserInfo() {
   const router = useRouter();
