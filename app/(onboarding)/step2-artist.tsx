@@ -9,6 +9,9 @@ import api from '@/store/api'; // axios instance 불러오기
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
+
+const log = (...args: any[]) => console.log('[관심 아티스트]', ...args);
+
 import {
   ActivityIndicator,
   Alert,
@@ -20,6 +23,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const IA_STORAGE_KEY = '@interested_artists_v1';
 
 const Component = () => {
   const router = useRouter();
@@ -33,10 +39,49 @@ const Component = () => {
   );
   const [selectedArtists, setSelectedArtists] = React.useState<any[]>([]);
   const [saving, setSaving] = React.useState(false);
+
+  const selectedRef = React.useRef<any[]>([]);
+  React.useEffect(() => {
+    selectedRef.current = selectedArtists;
+    log(
+      '선택 변경 →',
+      selectedArtists.length,
+      '명',
+      selectedArtists.map((a: any) => a.id),
+    );
+  }, [selectedArtists]);
+
+  React.useEffect(() => {
+    (async () => {
+      try {
+        if (selectedArtists.length > 0) return; // 이미 선택이 있으면 패스
+        const raw = await AsyncStorage.getItem(IA_STORAGE_KEY);
+        if (!raw) return;
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr) && arr.length) {
+          setSelectedArtists(arr);
+          selectedRef.current = arr;
+          log('스토리지에서 선택 불러옴 →', arr.length, '명');
+        }
+      } catch (e) {
+        console.warn('[관심 아티스트] hydrate 실패', e);
+      }
+    })();
+  }, []);
+
+  React.useEffect(() => {
+    if (!selectedArtists.length) return;
+    AsyncStorage.setItem(IA_STORAGE_KEY, JSON.stringify(selectedArtists)).catch(
+      () => {},
+    );
+  }, [selectedArtists]);
+
   // 관심 아티스트 즐겨찾기 저장 API 호출
   // 선택된 아티스트들을 `/api/v1/artists/liked` 엔드포인트로 각각 저장합니다.
   const saveLikedArtists = async () => {
-    if (selectedArtists.length === 0) {
+    const list = selectedRef.current ?? [];
+    log('저장 시도 시 선택된 수:', list.length);
+    if (list.length === 0) {
       console.log('[관심 아티스트] 선택된 아티스트가 없어 저장을 건너뜁니다.');
       return true; // 아무것도 없으면 성공으로 간주하고 다음 단계로 이동
     }
@@ -55,7 +100,7 @@ const Component = () => {
 
       // 각 아티스트를 개별 저장 (백엔드 스펙이 단건 저장이라 가정)
       const results = await Promise.allSettled(
-        selectedArtists.map((artist) =>
+        list.map((artist) =>
           api.post(
             '/api/v1/artists/liked',
             {
@@ -82,11 +127,7 @@ const Component = () => {
         return false;
       }
 
-      console.log(
-        '[관심 아티스트] 저장 완료. 총',
-        selectedArtists.length,
-        '명 저장됨',
-      );
+      console.log('[관심 아티스트] 저장 완료. 총', list.length, '명 저장됨');
       return true;
     } catch (e) {
       console.log('[관심 아티스트] 저장 중 오류 발생:', e);
@@ -100,12 +141,30 @@ const Component = () => {
   const toggleSelectArtist = useCallback(
     (artist: any) => {
       setSelectedArtists((prev) => {
-        const exists = prev.some((a) => a.id === artist.id);
+        const norm = {
+          id:
+            artist?.id ??
+            artist?.artistId ??
+            artist?.spotifyId ??
+            String(artist?.id ?? ''),
+          name: artist?.name ?? artist?.displayName ?? artist?.title ?? '',
+          imgUrl:
+            artist?.imgUrl ?? artist?.imageUrl ?? artist?.profileUrl ?? '',
+        };
+        const exists = prev.some((a) => a.id === norm.id && norm.id);
+        let next = prev;
         if (exists) {
-          return prev.filter((a) => a.id !== artist.id);
+          next = prev.filter((a) => a.id !== norm.id);
+          log('제거:', norm.id, norm.name, '→ 총', next.length);
+        } else {
+          if (prev.length >= 6) {
+            log('최대 6명 제한, 추가 무시');
+            return prev;
+          }
+          next = [...prev, norm];
+          log('추가:', norm.id, norm.name, '→ 총', next.length);
         }
-        if (prev.length >= 6) return prev; // 최대 6개 제한
-        return [...prev, artist];
+        return next;
       });
     },
     [setSelectedArtists],
@@ -204,12 +263,14 @@ const Component = () => {
         </View>
         <View style={{ height: 27 }} />
         <View>
-          <Text style={styles.text3}>관심 아티스트</Text>
+          <Text style={styles.text3}>
+            관심 아티스트{'  '}
+            <Text style={{ color: Colors.palette.Gray400 }}>
+              {selectedArtists.length}/6
+            </Text>
+          </Text>
           <View style={styles.selectedWrap}>
-            <InterestedArtistList
-              selectedArtists={selectedArtists}
-              onArtistPress={toggleSelectArtist}
-            />
+            <InterestedArtistList selectedArtists={selectedArtists} />
           </View>
         </View>
       </View>
@@ -279,6 +340,7 @@ const Component = () => {
                 }
                 sortType={sortType}
                 setError={setError}
+                selected={selectedArtists}
               />
             </View>
           )}

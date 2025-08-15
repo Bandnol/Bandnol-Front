@@ -1,6 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 import { useCallback } from 'react';
 import { useAuthFetch } from '@/hooks/useAxios';
+import axios from 'axios';
 
 export function useAIRecommend() {
   const authFetch = useAuthFetch();

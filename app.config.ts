@@ -2,7 +2,7 @@ import 'dotenv/config';
 export default {
   expo: {
     name: 'Bandnol',
-    slug: 'Bandnol',
+    slug: 'bandnol',
     owner: 'bandnol',
     version: '1.0.0',
     orientation: 'portrait',
@@ -12,7 +12,7 @@ export default {
     newArchEnabled: true,
     ios: {
       bundleIdentifier: 'com.bandnol.Bandnol20',
-      supportsTablet: true,
+      supportsTablet: false,
     },
     android: {
       package: 'com.bandnol.Bandnol',
@@ -21,6 +21,11 @@ export default {
         backgroundColor: '#ffffff',
       },
       edgeToEdgeEnabled: true,
+      useNextNotificationsApi: true,
+      notification: {
+        icon: './assets/notification-icon.png',
+        color: '#FB4932',
+      },
     },
     web: {
       bundler: 'metro',
@@ -60,9 +65,23 @@ export default {
           },
         },
       ],
+      [
+        'expo-notifications',
+        {
+          mode:
+            process.env.EAS_BUILD_PROFILE === 'production'
+              ? 'production'
+              : 'development',
+        },
+      ],
     ],
     experiments: {
       typedRoutes: true,
+    },
+    extra: {
+      eas: {
+        projectId: 'e22ee9c3-9022-4d36-8e63-d8a411ac0ccd',
+      },
     },
   },
 };

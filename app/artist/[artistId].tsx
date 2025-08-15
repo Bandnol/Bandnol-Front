@@ -11,11 +11,15 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  RefreshControl,
+  StatusBar,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
 import { useAuthFetch } from '@/hooks/useAuthFetch';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import StatusBarHeader from '@/components/common/StatusBarHeader';
 
 // API 응답 타입(필요 속성만 정의)
 interface ArtistDetail {
@@ -33,24 +37,55 @@ interface ArtistDetail {
 
 export default function ArtistPage() {
   const router = useRouter();
-  const { artistId } = useLocalSearchParams<{ artistId: string }>();
+  const { artistId, artistName, name } = useLocalSearchParams<{
+    artistId: string;
+    artistName?: string;
+    name?: string;
+  }>();
+  console.log('[ArtistPage] params →', { artistId, artistName, name });
+  const [artistNameState, setArtistName] = React.useState('');
+  const normalizedId = React.useMemo(() => {
+    const raw = Array.isArray(artistId) ? artistId[0] : artistId;
+    return (raw ?? '').toString().trim();
+  }, [artistId]);
+  const [apiData, setApiData] = React.useState<ArtistDetail | null>(null);
+  const displayName =
+    (Array.isArray(name) ? name[0] : name) ||
+    (Array.isArray(artistName) ? artistName[0] : artistName) ||
+    apiData?.name ||
+    normalizedId;
+  console.log(
+    '[ArtistPage] mounted with artistId:',
+    artistId,
+    '→ normalized:',
+    normalizedId,
+  );
   const authFetch = useAuthFetch();
 
   const [artist, setArtist] = React.useState<ArtistDetail | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [refreshing, setRefreshing] = React.useState(false);
 
   const load = React.useCallback(async () => {
-    if (!artistId) return;
+    if (!normalizedId) {
+      console.log('[ArtistPage] no artistId, abort load');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
+      console.log('[ArtistPage] start load, artistId:', normalizedId);
       // GET /api/v1/artists/{artistId}
       const res = await authFetch.json<{
         success: boolean;
         data: any;
         error: any;
-      }>(`/api/v1/artists/${artistId}`, { method: 'GET' });
+        name?: string;
+      }>(`/api/v1/artists/${encodeURIComponent(normalizedId)}`, {
+        method: 'GET',
+      });
+      console.log('[ArtistPage] API raw response:', res);
       // API success=false 처리 (예: A1300)
       if ((res as any)?.success === false && (res as any)?.error?.code) {
         const code = (res as any)?.error?.code;
@@ -61,22 +96,35 @@ export default function ArtistPage() {
           return;
         }
       }
+      if (res.name) setArtistName(res.name);
       // 백엔드 스키마에 맞춰 매핑
       const d = (res?.data ?? res) as any;
+      const payload = d?.data ?? d; // 백엔드가 { success, data } 형태로 줄 수 있음
+      console.log('[ArtistPage] mapped source object:', payload);
       const mapped: ArtistDetail = {
-        id: d?.id ?? String(artistId),
-        name: d?.name ?? d?.artistName ?? '아티스트',
-        bannerUrl: d?.bannerUrl ?? d?.coverImageUrl ?? null,
-        profileUrl: d?.profileUrl ?? d?.profileImageUrl ?? null,
-        fanCount: d?.fanCount ?? d?.fans ?? 0,
-        isInterested: d?.isInterested ?? d?.liked ?? false,
+        id: String(normalizedId),
+        name:
+          payload?.name ??
+          payload?.artistName ??
+          (Array.isArray(name) ? name[0] : name) ??
+          String(normalizedId),
+        bannerUrl: payload?.bannerUrl ?? null,
+        profileUrl: payload?.profileUrl ?? payload?.imgUrl ?? null,
+        fanCount: payload?.likedCount ?? payload?.fanCount ?? 0,
+        isInterested: payload?.isLiked ?? payload?.isInterested ?? false,
         stats: {
-          sentCount: d?.stats?.sentCount ?? d?.recommendedCount ?? 0,
-          receivedCount: d?.stats?.receivedCount ?? d?.receivedCount ?? 0,
+          sentCount:
+            payload?.recommends?.sentCnt ?? payload?.stats?.sentCount ?? 0,
+          receivedCount:
+            payload?.recommends?.receivedCnt ??
+            payload?.stats?.receivedCount ??
+            0,
         },
       };
       setArtist(mapped);
+      setApiData(mapped);
     } catch (e: any) {
+      console.log('[ArtistPage] load error:', e);
       try {
         const msg = e?.message ?? '';
         const parsed = typeof msg === 'string' ? JSON.parse(msg) : null;
@@ -93,8 +141,9 @@ export default function ArtistPage() {
       );
     } finally {
       setLoading(false);
+      if (refreshing) setRefreshing(false);
     }
-  }, [artistId, authFetch]);
+  }, [normalizedId, authFetch, refreshing, router]);
 
   React.useEffect(() => {
     load();
@@ -130,41 +179,51 @@ export default function ArtistPage() {
   const fansLabel = `${artist.fanCount?.toLocaleString?.() ?? 0} 명의 팬`;
 
   return (
-    <View style={styles.screen}>
-      {/* 헤더 배경 */}
-      <ImageBackground
-        source={artist.bannerUrl ? { uri: artist.bannerUrl } : undefined}
-        style={styles.headerBg}
-        imageStyle={{ resizeMode: 'cover' }}
-      >
-        <LinearGradient
-          colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.7)']}
-          style={StyleSheet.absoluteFill}
-        />
-        <Pressable style={styles.backBtn} onPress={onBack} hitSlop={8}>
-          <Text style={styles.backIcon}>{'<'}</Text>
-        </Pressable>
-      </ImageBackground>
+    <SafeAreaView style={styles.screen}>
+      <StatusBarHeader backgroundColor="transparent" />
+      <View style={{ position: 'relative' }}>
+        <ImageBackground
+          source={artist.bannerUrl ? { uri: artist.bannerUrl } : undefined}
+          style={styles.headerBg}
+          imageStyle={{ resizeMode: 'cover' }}
+        >
+          <LinearGradient
+            colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.7)']}
+            style={StyleSheet.absoluteFill}
+          />
+        </ImageBackground>
+        {artist.profileUrl && (
+          <View style={styles.avatarWrap}>
+            <Image source={{ uri: artist.profileUrl }} style={styles.avatar} />
+          </View>
+        )}
+      </View>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView
+        refreshControl={
+          // Pull-to-Refresh
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              setRefreshing(true);
+              load();
+            }}
+            tintColor={Colors.palette.Gray100}
+          />
+        }
+        contentContainerStyle={{ paddingBottom: 40 }}
+      >
         {/* 프로필 라인 */}
         <View style={styles.profileRow}>
-          <View style={styles.avatarWrap}>
-            {artist.profileUrl ? (
-              <Image
-                source={{ uri: artist.profileUrl }}
-                style={styles.avatar}
-              />
-            ) : (
-              <View
-                style={[
-                  styles.avatar,
-                  { backgroundColor: Colors.palette.Gray700 },
-                ]}
-              />
-            )}
-          </View>
-          <Text style={styles.artistName}>{artist.name}</Text>
+          {!artist.profileUrl && (
+            <View
+              style={[
+                styles.avatar,
+                { backgroundColor: Colors.palette.Gray700 },
+              ]}
+            />
+          )}
+          <Text style={styles.artistName}>{displayName}</Text>
           <View style={styles.fanRow}>
             <Text style={styles.fanText}>{fansLabel}</Text>
             <Text style={styles.redStar}>★</Text>
@@ -215,11 +274,12 @@ export default function ArtistPage() {
           </View>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const HEADER_H = 220;
+const AVATAR_SIZE = 120;
 
 const styles = StyleSheet.create({
   screen: {
@@ -254,23 +314,30 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   profileRow: {
-    marginTop: -48,
+    marginTop: 80,
     paddingHorizontal: 20,
     alignItems: 'center',
+    position: 'relative',
+    zIndex: 10,
+    elevation: 4,
   },
   avatarWrap: {
-    width: 86,
-    height: 86,
-    borderRadius: 43,
+    position: 'absolute',
+    bottom: -AVATAR_SIZE / 2,
+    left: '50%',
+    transform: [{ translateX: -AVATAR_SIZE / 2 }],
+    width: AVATAR_SIZE,
+    height: AVATAR_SIZE,
+    borderRadius: AVATAR_SIZE / 2,
     overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: Colors.palette.Gray900,
+    zIndex: 20,
+    elevation: 6,
     backgroundColor: Colors.palette.Gray700,
   },
   avatar: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
+    width: AVATAR_SIZE,
+    height: AVATAR_SIZE,
+    borderRadius: AVATAR_SIZE / 2,
   },
   artistName: {
     ...Typography.h3,

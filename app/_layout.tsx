@@ -1,5 +1,5 @@
 import { initializeKakaoSDK } from '@react-native-kakao/core';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import 'react-native-reanimated';
 
 import axios from 'axios';
@@ -13,6 +13,7 @@ import { Slot } from 'expo-router';
 import { AuthProvider } from '@/hooks/useAuthContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import React from 'react';
+//import { usePushNotifications } from '@/hooks/usePushNotification';  //애플 팀계정 필요
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -27,6 +28,8 @@ export default function RootLayout() {
     'Pretendard-Bold': require('../assets/fonts/Pretendard-Bold.ttf'),
   });
 
+  //usePushNotifications(); 애플 팀계정 필요
+
   useEffect(() => {
     if (kakaoNativeAppKey) {
       initializeKakaoSDK(kakaoNativeAppKey);
@@ -34,6 +37,30 @@ export default function RootLayout() {
       console.warn('Kakao Native App Key가 설정되지 않았습니다.');
     }
   }, [kakaoNativeAppKey]);
+
+  // 앱 최초 진입 시 자동 로그인/온보딩 스킵 라우팅 (한 번만 실행)
+  const didRouteOnce = useRef(false);
+  useEffect(() => {
+    if (!loaded) return; // 폰트 로딩 이후 실행 (스플래시 깜빡임 방지)
+    if (didRouteOnce.current) return;
+    didRouteOnce.current = true;
+
+    (async () => {
+      try {
+        const token = await SecureStore.getItemAsync('JWTToken');
+        if (token) {
+          // 로그인 유지: 바로 홈으로
+          router.replace('/(tabs)/home');
+        } else {
+          // 비로그인: 스플래시/로그인 진입
+          router.replace('/(auth)/splash');
+        }
+      } catch (e) {
+        // 오류 시 안전하게 인증 플로우로 보냄
+        router.replace('/(auth)/splash');
+      }
+    })();
+  }, [loaded, router]);
 
   useEffect(() => {
     let authAlertShown = false;
