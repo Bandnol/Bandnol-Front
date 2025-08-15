@@ -389,6 +389,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: -13, // 배경 이미지와 겹치게
     paddingLeft: 20,
+    zIndex: 2,
+    position: 'relative',
   },
   profileImage: {
     width: 76,
