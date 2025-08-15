@@ -3,6 +3,7 @@ import Share from '@/assets/icons/size_m/share.svg';
 import { Typography } from '@/constants/typography';
 import dayjs from 'dayjs';
 import { useState } from 'react';
+import { useRouter } from 'expo-router';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import Modal from 'react-native-modal';
 import RecShareModal from './RecShareModal';
@@ -25,6 +26,7 @@ export default function RecBottomModal({
   isToday,
 }: RecBottomModalProps) {
   const [isShareVisible, setIsShareVisible] = useState(false);
+  const router = useRouter();
 
   if (!selectedDate || !songData) return null;
 
@@ -67,8 +69,22 @@ export default function RecBottomModal({
                 ? '나의 추천곡'
                 : `${(songData as CalendarItem).senderNickname}의 추천곡`}
             </Text>
-
-            <View style={styles.myrecInfo}>
+            <Pressable
+              onPress={() => {
+                // 일부 데이터는 artistId 대신 artist?.id 형태로 올 수 있음
+                const rawId =
+                  (songData as any)?.artistId ?? (songData as any)?.artist?.id;
+                const id = rawId != null ? String(rawId).trim() : '';
+                if (!id) {
+                  // 아이디가 없으면 이동하지 않고 안내
+                  // TODO: 필요 시 이름 기반 검색 화면으로 우회 이동 가능
+                  alert('아티스트 정보를 찾을 수 없어요.');
+                  return;
+                }
+                router.push(`/artist/${encodeURIComponent(id)}`);
+              }}
+              style={styles.myrecInfo}
+            >
               <Image
                 source={{ uri: songData.imageUrl }}
                 style={{
@@ -94,7 +110,7 @@ export default function RecBottomModal({
               ></View>
 
               <Text style={styles.myrecComment}>{songData.comment}</Text>
-            </View>
+            </Pressable>
           </View>
         </View>
       </Modal>

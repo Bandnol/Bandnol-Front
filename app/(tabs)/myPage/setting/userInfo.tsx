@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { jwtDecode } from 'jwt-decode';
 import React, { useEffect, useState } from 'react';
+import { useAuthFetch } from '@/hooks/useAuthFetch';
 import {
   SafeAreaView,
   StatusBar,
@@ -27,6 +28,7 @@ import {
 
 export default function UserInfo() {
   const router = useRouter();
+  const authFetch = useAuthFetch();
   const [logoutVisible, setLogoutVisible] = useState(false);
   const [withdrawVisible, setWithdrawVisible] = useState(false);
 
@@ -316,14 +318,44 @@ export default function UserInfo() {
           }
           onConfirm={async () => {
             try {
+              let kakaoAccessToken =
+                await SecureStore.getItemAsync('KAKAO_ACCESS_TOKEN');
+              if (!kakaoAccessToken) kakaoAccessToken = 'any';
+
+              /*try {
+                await authFetch.json('/api/v1/oauth2/withdraw', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ accessToken: kakaoAccessToken }),
+                });
+                console.log('[회원탈퇴] 서버 응답: success');
+              } catch (e) {
+                // 서버에서 401/404/409 등 에러가 와도 클라이언트 정리는 진행
+                console.log('[회원탈퇴] 서버 요청 실패 또는 오류 응답:', e);
+                try {
+                  const msg = e?.message ?? '';
+                  const parsed = typeof msg === 'string' ? JSON.parse(msg) : null;
+                  const code = parsed?.error?.code;
+                  if (code === 'T1201') {
+                    Alert.alert(
+                      '세션이 만료되었습니다',
+                      '다시 로그인 후 회원탈퇴를 진행해 주세요.',
+                    );
+                  }
+                } catch (_) {}
+              }*/
+
+              // 카카오 SDK 측 사용자 연결 해제 시도
               try {
                 await kakaoUnlink();
               } catch {}
             } finally {
+              // 3) 로컬 토큰/유저정보 정리 후 스플래시로 이동
               try {
                 await SecureStore.deleteItemAsync('JWTToken');
                 await SecureStore.deleteItemAsync('JWTRefreshToken');
                 await SecureStore.deleteItemAsync('user');
+                await SecureStore.deleteItemAsync('KAKAO_ACCESS_TOKEN');
               } catch {}
               setWithdrawVisible(false);
               router.push('/(auth)/splash');

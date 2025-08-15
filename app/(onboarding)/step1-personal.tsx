@@ -40,12 +40,6 @@ export default function Step1Personal() {
   const [isIdValid, setIsIdValid] = React.useState(true);
   const [hasCheckedId, setHasCheckedId] = React.useState(false);
 
-  React.useEffect(() => {
-    if (name && nickname === '') {
-      setNickname(name);
-    }
-  }, [name]);
-
   const isFormFilled = id && nickname && birth && selectedGender;
 
   const validateId = (id: string) => {

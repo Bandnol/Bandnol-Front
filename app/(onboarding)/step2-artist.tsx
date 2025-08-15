@@ -9,7 +9,14 @@ import api from '@/store/api'; // axios instance 불러오기
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import * as SecureStore from 'expo-secure-store';
@@ -94,7 +101,9 @@ const Component = () => {
     (artist: any) => {
       setSelectedArtists((prev) => {
         const exists = prev.some((a) => a.id === artist.id);
-        if (exists) return prev;
+        if (exists) {
+          return prev.filter((a) => a.id !== artist.id);
+        }
         if (prev.length >= 6) return prev; // 최대 6개 제한
         return [...prev, artist];
       });
@@ -165,6 +174,21 @@ const Component = () => {
     initialFetch('popularity');
   }, []);
 
+  const isFetchingMoreRef = React.useRef(false);
+  const handleOuterScroll = (e: any) => {
+    const { contentSize, layoutMeasurement, contentOffset } = e.nativeEvent;
+    const distanceFromBottom =
+      contentSize.height - (layoutMeasurement.height + contentOffset.y);
+    if (distanceFromBottom < 80) {
+      if (sortType === 'popularity' && hasNext && !isFetchingMoreRef.current) {
+        isFetchingMoreRef.current = true;
+        fetchMoreArtists(cursor, sortType, true).finally(() => {
+          isFetchingMoreRef.current = false;
+        });
+      }
+    }
+  };
+
   const renderHeader = () => (
     <View style={{ paddingHorizontal: 20, alignItems: 'flex-start' }}>
       <View>
@@ -181,7 +205,12 @@ const Component = () => {
         <View style={{ height: 27 }} />
         <View>
           <Text style={styles.text3}>관심 아티스트</Text>
-          <InterestedArtistList selectedArtists={selectedArtists} />
+          <View style={styles.selectedWrap}>
+            <InterestedArtistList
+              selectedArtists={selectedArtists}
+              onArtistPress={toggleSelectArtist}
+            />
+          </View>
         </View>
       </View>
       <View>
@@ -193,7 +222,7 @@ const Component = () => {
             width: '100%',
           }}
         >
-          <Text style={styles.text3}>추천 아티스트</Text>
+          <Text style={[styles.text3, { marginTop: 20 }]}>추천 아티스트</Text>
           <RoadingIcon
             width={24}
             height={24}
@@ -212,35 +241,48 @@ const Component = () => {
   return (
     <SafeAreaView style={styles.viewBg}>
       <View style={styles.view}>
-        <StatusBarHeader />
-        {renderHeader()}
-        {loading && artistData.length === 0 ? (
-          <View
-            style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
-          >
-            <ActivityIndicator size="large" color={Colors.palette.Gray100} />
-          </View>
-        ) : error ? (
-          <View
-            style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
-          >
-            <Text style={{ color: Colors.palette.Gray100 }}>{error}</Text>
-          </View>
-        ) : (
-          // RecommendedArtistList(FlatList) 사용
-          // - artistData를 목록으로 렌더링
-          // - fetchMore는 onEndReached에서 호출되어 무한 스크롤(인기순일 때 페이지네이션) 트리거
-          // - 페이지네이션은 fetchMoreArtists(loadMore=true)에서 처리됨
-          <RecommendedArtistList
-            artistData={artistData}
-            onSelectArtist={toggleSelectArtist}
-            fetchMore={(nextCursor) =>
-              fetchMoreArtists(nextCursor, sortType, true)
-            }
-            sortType={sortType}
-            setError={setError}
-          />
-        )}
+        <ScrollView
+          style={styles.view}
+          contentContainerStyle={{ paddingBottom: 120 }}
+          onScroll={handleOuterScroll}
+          scrollEventThrottle={16}
+        >
+          <StatusBarHeader />
+          {renderHeader()}
+          {loading && artistData.length === 0 ? (
+            <View
+              style={{
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <ActivityIndicator size="large" color={Colors.palette.Gray100} />
+            </View>
+          ) : error ? (
+            <View
+              style={{
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ color: Colors.palette.Gray100 }}>{error}</Text>
+            </View>
+          ) : (
+            <View style={{ paddingHorizontal: 20, paddingTop: 10 }}>
+              <RecommendedArtistList
+                artistData={artistData}
+                onSelectArtist={toggleSelectArtist}
+                fetchMore={(nextCursor) =>
+                  fetchMoreArtists(nextCursor, sortType, true)
+                }
+                sortType={sortType}
+                setError={setError}
+              />
+            </View>
+          )}
+        </ScrollView>
         <BottomNextButton
           onPress={async () => {
             if (saving) return; // 저장 중 중복 클릭 방지
@@ -255,9 +297,7 @@ const Component = () => {
         <LinearGradient
           colors={['transparent', Colors.palette.Gray900]}
           style={styles.fadeOverlay}
-        >
-          {renderFooter()}
-        </LinearGradient>
+        />
       </View>
     </SafeAreaView>
   );
@@ -307,6 +347,17 @@ const styles = StyleSheet.create({
     right: 0,
     height: 100,
     zIndex: 0,
+  },
+  fixedNextWrap: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 2,
+  },
+  selectedWrap: {
+    overflow: 'hidden',
+    alignSelf: 'stretch',
   },
 });
 

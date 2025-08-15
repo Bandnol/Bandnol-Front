@@ -1,14 +1,7 @@
 import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
 import React, { useState } from 'react';
-import {
-  FlatList,
-  Image,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface Artist {
   id: string;
@@ -33,44 +26,11 @@ const RecommendedArtistList = ({
   sortType,
   setError,
 }: Props) => {
-  // 다음 데이터 조회를 위한 커서 상태
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
-  // 추가 데이터 로딩 중인지 여부 상태
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-
-  // 무한 스크롤 시 추가 데이터 불러오는 함수
-  const handleEndReached = async () => {
-    if (isLoadingMore) return;
-    if (sortType === 'popularity') {
-      if (!nextCursor && artistData.length > 0) return;
-      try {
-        setIsLoadingMore(true);
-        const res = await fetchMore(nextCursor);
-        if (res?.nextCursor !== undefined) {
-          setNextCursor(res.nextCursor ?? null);
-        }
-      } catch (e) {
-        setError('Failed to load more artists');
-      } finally {
-        setIsLoadingMore(false);
-      }
-    } else {
-      fetchMore();
-    }
-  };
-
   return (
-    <FlatList
-      style={{ flex: 1 }}
-      // 아티스트 데이터 배열
-      data={artistData}
-      keyExtractor={(item) => item.id}
-      numColumns={4}
-      columnWrapperStyle={{ justifyContent: 'flex-start' }}
-      contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 10 }}
-      // 각 아이템 렌더링 (이미지 없으면 배경색으로 대체)
-      renderItem={({ item }) => (
+    <View style={styles.gridWrap}>
+      {artistData.map((item, index) => (
         <TouchableOpacity
+          key={`${item.id}-${index}`}
           style={styles.artistContainer}
           onPress={() => onSelectArtist(item)}
         >
@@ -78,7 +38,6 @@ const RecommendedArtistList = ({
             {item.imgUrl ? (
               <Image source={{ uri: item.imgUrl }} style={styles.artistImage} />
             ) : (
-              // 이미지 없을 때 회색 배경 표시
               <View
                 style={[
                   styles.artistImage,
@@ -89,23 +48,22 @@ const RecommendedArtistList = ({
           </View>
           <Text style={styles.artistName}>{item.name}</Text>
         </TouchableOpacity>
-      )}
-      // 리스트 하단 여백 추가
-      ListFooterComponent={<View style={{ height: 120 }} />}
-      showsVerticalScrollIndicator={false}
-      // 리스트 끝에 도달했을 때 추가 데이터 요청
-      onEndReached={handleEndReached}
-      // 스크롤 시작 시 에러 상태 초기화
-      onMomentumScrollBegin={() => setError(null)}
-    />
+      ))}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  gridWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
+  },
   artistContainer: {
-    flex: 1,
+    width: '25%',
     marginBottom: 16,
     alignItems: 'center',
+    paddingRight: 8,
   },
   artistImageWrapper: {
     width: 68,
