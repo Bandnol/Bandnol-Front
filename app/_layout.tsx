@@ -1,5 +1,5 @@
 import { initializeKakaoSDK } from '@react-native-kakao/core';
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import 'react-native-reanimated';
 
 import axios from 'axios';
@@ -12,7 +12,6 @@ import { Slot } from 'expo-router';
 
 import { AuthProvider } from '@/hooks/useAuthContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import React from 'react';
 //import { usePushNotifications } from '@/hooks/usePushNotification';  //애플 팀계정 필요
 
 export default function RootLayout() {

@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   Image,
@@ -19,17 +19,58 @@ import PlayIcon from '@/assets/icons/play-solid.svg';
 import CommentModal from '@/components/common/CommentModal';
 import DateHeader from '@/components/common/DateHeader';
 import { Typography } from '@/constants/typography';
+import { useAuthFetch } from '@/hooks/useAxios';
+import { API_URL } from '@env';
 
 const albumImage = require('@/assets/images/album-cover.jpg');
 
+type SentRecomResponse = {
+  success: boolean;
+  data?: {
+    id: string;
+    createdAt?: string;
+    recomsSong?: {
+      id?: string;
+      title?: string;
+      artistName?: string;
+      imgUrl?: string;
+    };
+    receiver?: { id?: string; nickname?: string };
+    replyId?: string | null;
+  } | null;
+  error?: any;
+};
+
 export default function MyRecommendSwiper() {
-  const { title = '방학을 기다리던 날들', artist = '문없는집' } =
-    useLocalSearchParams();
   const router = useRouter();
   const swiperRef = useRef<any>(null);
+  const authFetch = useAuthFetch();
+  const [loading, setLoading] = useState(true);
+  const [sent, setSent] = useState<SentRecomResponse['data']>(null);
   const [timeLeft, setTimeLeft] = useState(10);
   const [isMyCommentVisible, setIsMyCommentVisible] = useState(false);
   const [isReplyCommentVisible, setIsReplyCommentVisible] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await authFetch.json<SentRecomResponse>(
+          `${API_URL}/api/v1/recoms/sent`,
+        );
+        if (!cancelled && res?.success) {
+          setSent(res.data ?? null);
+        }
+      } catch (e) {
+        console.warn('[myRecommend] sent fetch failed', e);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authFetch]);
 
   // 타이머 시작
   useEffect(() => {
@@ -49,10 +90,7 @@ export default function MyRecommendSwiper() {
   // 타이머 종료 시 페이지 이동
   useEffect(() => {
     if (timeLeft === 0) {
-      router.replace({
-        pathname: '/(tabs)/music-recommend/receiveRecommend',
-        params: { title, artist },
-      });
+      router.replace('/(tabs)/music-recommend/receiveRecommend');
     }
   }, [timeLeft]);
 
@@ -61,6 +99,12 @@ export default function MyRecommendSwiper() {
     const secRemain = String(sec % 60).padStart(2, '0');
     return `00:${min}:${secRemain}`;
   };
+
+  const songTitle = sent?.recomsSong?.title ?? '—';
+  const artistName = sent?.recomsSong?.artistName ?? '';
+  const bgSource = sent?.recomsSong?.imgUrl
+    ? { uri: sent.recomsSong.imgUrl }
+    : albumImage;
 
   return (
     <>
@@ -74,7 +118,7 @@ export default function MyRecommendSwiper() {
         {/* 나의 추천곡 */}
         <View style={styles.container}>
           <ImageBackground
-            source={albumImage}
+            source={bgSource}
             style={styles.backgroundImage}
             imageStyle={{ opacity: 0.8 }}
           >
@@ -100,12 +144,12 @@ export default function MyRecommendSwiper() {
                 <Text style={styles.dateText}>
                   <DateHeader />
                 </Text>
-                <Text style={styles.songTitle}>{title}</Text>
-                <Text style={styles.artist}>{artist}</Text>
+                <Text style={styles.songTitle}>{songTitle}</Text>
+                <Text style={styles.artist}>{artistName}</Text>
 
                 {/* 앨범 커버 + 재생버튼 */}
                 <View style={styles.albumWrapper}>
-                  <Image source={albumImage} style={styles.albumImage} />
+                  <Image source={bgSource} style={styles.albumImage} />
                   <PlayIcon width={58.1} height={58.1} />
                 </View>
 
@@ -180,7 +224,7 @@ export default function MyRecommendSwiper() {
       <CommentModal
         visible={isReplyCommentVisible}
         onClose={() => setIsReplyCommentVisible(false)}
-        title="From. 훈심이"
+        title={`From. ${sent?.receiver?.nickname ?? ''}`}
         description="와 노래 좋아요 좋은 노래 알아갑니다!! 감사합니다~~"
         closeColor="#1F1F1F"
         closeText="닫기"

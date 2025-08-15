@@ -20,6 +20,8 @@ import {
   Pressable,
 } from 'react-native';
 
+const fallbackImage = require('@/assets/images/album-cover.jpg');
+
 dayjs.locale('ko');
 
 type Song = {
@@ -170,9 +172,19 @@ const RecommendList = forwardRef<RecommendListRef, RecommendListProps>(
                       }
                       router.push(`/artist/${encodeURIComponent(id)}`);
                     }}
+                    disabled={
+                      !(
+                        (sub as any)?.song?.artistId ||
+                        (sub as any)?.song?.artist?.id
+                      )
+                    }
                   >
                     <Image
-                      source={{ uri: sub.song.imageUrl }}
+                      source={
+                        (sub as any)?.song?.imageUrl
+                          ? { uri: (sub as any).song.imageUrl }
+                          : fallbackImage
+                      }
                       style={{
                         width: 28,
                         height: 28,
@@ -182,9 +194,11 @@ const RecommendList = forwardRef<RecommendListRef, RecommendListProps>(
                       }}
                     />
                     <View style={styles.myrecSong}>
-                      <Text style={styles.myrecTitle}>{sub.song.title}</Text>
+                      <Text style={styles.myrecTitle}>
+                        {(sub as any)?.song?.title ?? '-'}
+                      </Text>
                       <Text style={styles.myrecArtist}>
-                        {sub.song.artistName}
+                        {(sub as any)?.song?.artistName ?? ''}
                       </Text>
                     </View>
                     <View
@@ -195,7 +209,9 @@ const RecommendList = forwardRef<RecommendListRef, RecommendListProps>(
                         marginHorizontal: 6,
                       }}
                     />
-                    <Text style={styles.myrecComment}>{sub.song.comment}</Text>
+                    <Text style={styles.myrecComment}>
+                      {(sub as any)?.song?.comment ?? '—'}
+                    </Text>
                   </Pressable>
                 </View>
               ))}
