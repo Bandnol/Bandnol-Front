@@ -1,7 +1,8 @@
-import { Colors } from '@/constants/Colors';
-import { Typography } from '@/constants/typography';
 import React from 'react';
 import { FlatList, Image, Text, View } from 'react-native';
+
+import { Colors } from '@/constants/Colors';
+import { Typography } from '@/constants/typography';
 
 interface Artist {
   id: string;

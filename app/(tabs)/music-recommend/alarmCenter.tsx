@@ -1,8 +1,3 @@
-import Backarrow from '@/assets/icons/size_m/backarrow.svg';
-import { IconType } from '@/components/NotificationIcon';
-import type { NotificationItemProps } from '@/components/NotificationItem';
-import NotificationItem from '@/components/NotificationItem';
-import { Typography } from '@/constants/typography';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
@@ -16,6 +11,12 @@ import {
   Text,
   View,
 } from 'react-native';
+
+import Backarrow from '@/assets/icons/size_m/backarrow.svg';
+import { IconType } from '@/components/NotificationIcon';
+import type { NotificationItemProps } from '@/components/NotificationItem';
+import NotificationItem from '@/components/NotificationItem';
+import { Typography } from '@/constants/typography';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 

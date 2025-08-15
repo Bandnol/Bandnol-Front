@@ -1,8 +1,9 @@
 // components/common/ConfirmModal.tsx
-import { Colors } from '@/constants/Colors';
-import { Typography } from '@/constants/typography';
 import React from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+import { Colors } from '@/constants/Colors';
+import { Typography } from '@/constants/typography';
 
 export type ConfirmModalProps = {
   visible: boolean;

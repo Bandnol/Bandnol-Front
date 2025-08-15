@@ -1,8 +1,3 @@
-import BackIcon from '@/assets/auth/inquiry/Vector.svg';
-import InquiryButton from '@/assets/auth/inquiry/btn.svg';
-import { Colors } from '@/constants/Colors';
-import { Typography } from '@/constants/typography';
-import api from '@/store/api'; // axios 인스턴스
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -15,6 +10,12 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+import InquiryButton from '@/assets/auth/inquiry/btn.svg';
+import BackIcon from '@/assets/auth/inquiry/Vector.svg';
+import { Colors } from '@/constants/Colors';
+import { Typography } from '@/constants/typography';
+import api from '@/store/api'; // axios 인스턴스
 const Component = () => {
   const router = useRouter();
   const [name, setName] = useState('');

@@ -1,6 +1,6 @@
-import { Colors } from '@/constants/Colors';
 import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
@@ -14,9 +14,9 @@ import {
 } from 'react-native';
 
 import BackArrow from '@/assets/icons/back-arrow.svg';
+import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
 import api from '@/store/api';
-import * as SecureStore from 'expo-secure-store';
 
 export default function ReceiveTime() {
   const router = useRouter();

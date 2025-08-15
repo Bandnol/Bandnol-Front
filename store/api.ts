@@ -1,6 +1,7 @@
-import { useAuthStore } from '@/store/auth';
 import { API_URL } from '@env';
 import axios from 'axios';
+
+import { useAuthStore } from '@/store/auth';
 
 const api = axios.create({
   baseURL: API_URL,

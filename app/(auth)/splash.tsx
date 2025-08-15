@@ -1,12 +1,13 @@
+import { useRouter } from 'expo-router';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
 import KakaoIcon from '@/assets/auth/splash/kakao.svg';
 import Logo from '@/assets/auth/splash/logo.svg';
 import GuestIcon from '@/assets/auth/splash/nonlogin.svg';
 import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
 import { useSocialAuth } from '@/hooks/useSocialAuth';
-import { useRouter } from 'expo-router';
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function SplashScreen() {
   const router = useRouter();

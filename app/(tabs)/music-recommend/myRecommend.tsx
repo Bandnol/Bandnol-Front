@@ -49,7 +49,7 @@ export default function MyRecommendSwiper() {
         }
         return prev - 1;
       });
-    }, 10000000); // 작업하기 위해 잠깐 바꿔 둠
+    }, 1000); // 작업하기 위해 잠깐 바꿔 둠
 
     return () => clearInterval(timer);
   }, []);
