@@ -15,14 +15,16 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 type RecommendItem = {
   date: string;
-  recommending: {
+  recommending?: {
     title: string;
+    artistId: string;
     artistName: string;
     imageUrl: string;
     comment: string;
   };
   recommended?: {
     title: string;
+    artistId: string;
     artistName: string;
     imageUrl: string;
     comment: string;
@@ -80,7 +82,7 @@ export default function RecommendScreen() {
         const result = await fetchRecommendList();
         setData(result);
       } catch (e) {
-        console.error('API 호출 실패:', e);
+        console.error('API 호출 실패1:', e);
       } finally {
         setLoading(false);
       }

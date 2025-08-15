@@ -103,7 +103,7 @@ export default function RecBottomModal({
         visible={isShareVisible}
         onClose={() => setIsShareVisible(false)}
         recData={songData as CalendarItem}
-        isTabRecommending={isTabRecommending} // isTabRecommending이 true면 From.@@@ & To.me 다 있고 false면 From.me만 있음
+        isTabRecommending={isTabRecommending} // isTabRecommending이 false면 From.@@@ & To.me 다 있고 true면 From.me만 있음
       />
     </>
   );
