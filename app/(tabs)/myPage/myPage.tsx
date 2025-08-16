@@ -1,6 +1,8 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { useEffect, useState, useCallback } from 'react';
+import * as SecureStore from 'expo-secure-store';
 import {
   Dimensions,
   Image,
@@ -57,7 +59,43 @@ const postData = [
   },
 ];
 
+interface AppUserProfile {
+  nickname?: string;
+  ownId?: string;
+  bio?: string;
+  photo?: string | null;
+  backgroundImg?: string | null;
+}
+
 export default function MyPage() {
+  const [userProfile, setUserProfile] = useState<AppUserProfile>({});
+
+  const loadUserFromSecureStore = async () => {
+    try {
+      const raw = await SecureStore.getItemAsync('user');
+      if (!raw) return;
+      const u = JSON.parse(raw);
+      setUserProfile({
+        nickname: u?.nickname ?? u?.name ?? '',
+        ownId: u?.ownId ?? u?.id ?? '',
+        bio: u?.bio ?? u?.introduction ?? '',
+        photo: u?.photo ?? null,
+        backgroundImg: u?.backgroundImg ?? null,
+      });
+    } catch (e) {
+      console.warn('[MyPage] failed to load user from SecureStore', e);
+    }
+  };
+
+  useEffect(() => {
+    loadUserFromSecureStore();
+  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadUserFromSecureStore();
+      return () => {};
+    }, []),
+  );
   const [activeTab, setActiveTab] = useState<'post' | 'media' | 'bookmark'>(
     'post',
   );
@@ -89,7 +127,11 @@ export default function MyPage() {
         />
         {/* 배경 이미지 */}
         <ImageBackground
-          source={require('@/assets/images/profile-background.jpg')}
+          source={
+            userProfile.backgroundImg
+              ? { uri: userProfile.backgroundImg }
+              : require('@/assets/images/profile-background.jpg')
+          }
           style={styles.topImage}
           resizeMode="cover"
           imageStyle={styles.imageInner}
@@ -119,14 +161,20 @@ export default function MyPage() {
         <View style={styles.profileRow}>
           {/* 프로필 이미지 */}
           <Image
-            source={require('@/assets/images/profile.png')}
+            source={
+              userProfile.photo
+                ? { uri: userProfile.photo }
+                : require('@/assets/images/profile.png')
+            }
             style={styles.profileImage}
           />
 
           {/* 닉네임 + 유저아이디 */}
           <View style={styles.nicknameBox}>
-            <Text style={styles.nickname}>Nickname</Text>
-            <Text style={styles.userId}>@user_id</Text>
+            <Text style={styles.nickname}>
+              {userProfile.nickname || 'Nickname'}
+            </Text>
+            <Text style={styles.userId}>@{userProfile.ownId || 'user_id'}</Text>
           </View>
 
           {/* 공유 아이콘 */}
@@ -154,8 +202,12 @@ export default function MyPage() {
                 </View>
 
                 {/* 텍스트 */}
-                <Text style={styles.textMain}>Nickname</Text>
-                <Text style={styles.textSub}>@user_id</Text>
+                <Text style={styles.textMain}>
+                  {userProfile.nickname || 'Nickname'}
+                </Text>
+                <Text style={styles.textSub}>
+                  @{userProfile.ownId || 'user_id'}
+                </Text>
 
                 {/* 복사 버튼 */}
                 <TouchableOpacity style={styles.copyButton}>
@@ -208,7 +260,7 @@ export default function MyPage() {
         </View>
 
         {/* 한줄소개 */}
-        <Text style={styles.introText}>신나고 재미있게 평생...</Text>
+        <Text style={styles.introText}>{userProfile.bio ?? ''}</Text>
         {/* // 버튼 레이아웃 (UI 구성용) */}
         <View style={styles.buttonWrapper}>
           <View style={styles.buttonContainer}>
@@ -269,11 +321,18 @@ export default function MyPage() {
           <Pressable onPress={() => router.push('/postWrite')}>
             <View style={styles.textFieldHeader}>
               <Image
-                source={require('@/assets/images/profile.png')}
+                source={
+                  userProfile.photo
+                    ? { uri: userProfile.photo }
+                    : require('@/assets/images/profile.png')
+                }
                 style={styles.textFieldProfile}
               />
               <View style={styles.textFieldTextWrapper}>
-                <Text style={styles.textFieldName}>sayoxx</Text>
+                <Text style={styles.textFieldName}>
+                  {userProfile.nickname || 'Nickname'}
+                </Text>
+
                 <View style={styles.textFieldRow}>
                   <WriteIcon
                     width={18}
@@ -581,11 +640,11 @@ const styles = StyleSheet.create({
     marginTop: 22,
     marginHorizontal: 20,
     padding: 20,
-    width: 355,
-    borderRadius: 5,
+    borderRadius: 8,
     backgroundColor: '#1F1F1F',
     flexDirection: 'column',
     alignItems: 'flex-start',
+    alignSelf: 'stretch', // 부모 폭을 가득 채워 좌우 여백만 유지
   },
   textFieldHeader: {
     flexDirection: 'row',
