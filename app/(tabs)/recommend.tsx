@@ -1,10 +1,3 @@
-import { EXPO_PUBLIC_API_TOKEN } from '@env';
-import axios from 'axios';
-import dayjs from 'dayjs';
-import { useRouter } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
-import { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
 import RecommendCal from '@/app/(tabs)/recommend-tab/RecommendCal';
 import RecommendHeader from '@/app/(tabs)/recommend-tab/RecommendHeader';
 import RecommendList, {
@@ -12,7 +5,14 @@ import RecommendList, {
 } from '@/app/(tabs)/recommend-tab/RecommendList';
 import Dropdown from '@/assets/icons/size_m/dropdown.svg';
 import { Typography } from '@/constants/typography';
-import { useAuthFetch } from '@/hooks/useAxios';
+import { EXPO_PUBLIC_API_TOKEN } from '@env';
+import axios from 'axios';
+import dayjs from 'dayjs';
+import { useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
+import { useEffect, useRef, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+
 type RecommendItem = {
   date: string;
   recommending?: {
@@ -30,8 +30,33 @@ type RecommendItem = {
     comment: string;
   };
 };
+const fetchRecommendList = async (): Promise<RecommendItem[]> => {
+  const token = await SecureStore.getItemAsync('JWTToken');
+  if (!token) throw new Error('JWT 토큰 없음');
+
+  const response = await axios.get('https://bandnol.app/api/v1/recoms/lists', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data.data;
+};
 export default function RecommendScreen() {
-  const { json } = useAuthFetch();
+  useEffect(() => {
+    const storeDummyToken = async () => {
+      await SecureStore.setItemAsync('JWTToken', EXPO_PUBLIC_API_TOKEN);
+    };
+
+    storeDummyToken();
+  }, []);
+  useEffect(() => {
+    const debugToken = async () => {
+      const token = await SecureStore.getItemAsync('JWTToken');
+      console.log('🔑 JWT Token:', token);
+    };
+    debugToken();
+  }, []);
+
   const router = useRouter();
   const [selectedMonth, setSelectedMonth] = useState(dayjs());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -54,20 +79,16 @@ export default function RecommendScreen() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await json('/api/v1/recoms/lists', { method: 'GET' });
-        const items = Array.isArray(res?.data)
-          ? (res.data as RecommendItem[])
-          : [];
-        setData(items);
+        const result = await fetchRecommendList();
+        setData(result);
       } catch (e) {
         console.error('API 호출 실패1:', e);
-        setData([]);
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, [json]);
+  }, []);
 
   return (
     <>

@@ -1,13 +1,10 @@
-import dayjs from 'dayjs';
-import { useState } from 'react';
-import { useRouter } from 'expo-router';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import Modal from 'react-native-modal';
-
 import type { CalendarItem } from '@/app/(tabs)/recommend-tab/RecommendCal';
 import Share from '@/assets/icons/size_m/share.svg';
 import { Typography } from '@/constants/typography';
-
+import dayjs from 'dayjs';
+import { useState } from 'react';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import Modal from 'react-native-modal';
 import RecShareModal from './RecShareModal';
 
 type RecBottomModalProps = {
@@ -28,7 +25,6 @@ export default function RecBottomModal({
   isToday,
 }: RecBottomModalProps) {
   const [isShareVisible, setIsShareVisible] = useState(false);
-  const router = useRouter();
 
   if (!selectedDate || !songData) return null;
 
@@ -71,22 +67,8 @@ export default function RecBottomModal({
                 ? '나의 추천곡'
                 : `${(songData as CalendarItem).senderNickname}의 추천곡`}
             </Text>
-            <Pressable
-              onPress={() => {
-                // 일부 데이터는 artistId 대신 artist?.id 형태로 올 수 있음
-                const rawId =
-                  (songData as any)?.artistId ?? (songData as any)?.artist?.id;
-                const id = rawId != null ? String(rawId).trim() : '';
-                if (!id) {
-                  // 아이디가 없으면 이동하지 않고 안내
-                  // TODO: 필요 시 이름 기반 검색 화면으로 우회 이동 가능
-                  alert('아티스트 정보를 찾을 수 없어요.');
-                  return;
-                }
-                router.push(`/artist/${encodeURIComponent(id)}`);
-              }}
-              style={styles.myrecInfo}
-            >
+
+            <View style={styles.myrecInfo}>
               <Image
                 source={{ uri: songData.imageUrl }}
                 style={{
@@ -99,8 +81,20 @@ export default function RecBottomModal({
               />
 
               <View style={styles.myrecSong}>
-                <Text style={styles.myrecTitle}>{songData.title}</Text>
-                <Text style={styles.myrecArtist}>{songData.artistName}</Text>
+                <Text
+                  style={styles.myrecTitle}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {songData.title}
+                </Text>
+                <Text
+                  style={styles.myrecArtist}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {songData.artistName}
+                </Text>
               </View>
 
               <View
@@ -111,8 +105,14 @@ export default function RecBottomModal({
                 }}
               ></View>
 
-              <Text style={styles.myrecComment}>{songData.comment}</Text>
-            </Pressable>
+              <Text
+                style={styles.myrecComment}
+                numberOfLines={3}
+                ellipsizeMode="tail"
+              >
+                {songData.comment}
+              </Text>
+            </View>
           </View>
         </View>
       </Modal>

@@ -1,12 +1,12 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import * as SecureStore from 'expo-secure-store';
+import { useState } from 'react';
 import {
   Dimensions,
   Image,
   ImageBackground,
   Modal,
+  SafeAreaView,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -15,7 +15,6 @@ import {
   View,
 } from 'react-native';
 
-import { SafeAreaView } from 'react-native-safe-area-context';
 import BookmarkIcon from '@/assets/icons/bookmark.svg';
 import BookmarkFillIcon from '@/assets/icons/bookmark-fill.svg';
 import ClipIcon from '@/assets/icons/clip.svg';
@@ -26,21 +25,12 @@ import SearchIcon from '@/assets/icons/search.svg';
 import SettingIcon2 from '@/assets/icons/setting.svg';
 import ShareIcon from '@/assets/icons/share.svg';
 import WriteIcon from '@/assets/icons/write.svg';
+import DummyImage from '@/assets/images/dummy1.png';
+import ProfileImage from '@/assets/images/profile.png';
 import { Typography } from '@/constants/typography';
 
 const screenWidth = Dimensions.get('window').width;
 
-// 타입을 먼저 선언
-type LocalProfile = {
-  nickname?: string | null;
-  ownId?: string | null; // 사용자 아이디(프로필 URL용)
-  gender?: 'MAN' | 'WOMAN' | string | null;
-  birth?: string | null; // YYYY-MM-DD 또는 기타
-  recomsTime?: string | null; // "HH:mm" 또는 "HHmm"
-  bio?: string | null;
-};
-
-// 더미 포스트 데이터
 const postData = [
   {
     id: 1,
@@ -66,58 +56,6 @@ const postData = [
   },
 ];
 
-const PostItem = React.memo(function PostItem({
-  post,
-  onToggleBookmark,
-}: {
-  post: any;
-  onToggleBookmark: (id: number) => void;
-}) {
-  return (
-    <View style={styles.postContainer}>
-      <View style={styles.userRow}>
-        <Image
-          source={require('@/assets/images/profile.png')}
-          style={styles.userImage}
-        />
-        <Text style={styles.username}>{post.username}</Text>
-        <Text style={styles.postTime}>{post.time}</Text>
-        <Text style={styles.showtext}>{post.visibility}</Text>
-        <TouchableOpacity style={styles.moreButton}>
-          <MoreIcon width={18} height={18} />
-        </TouchableOpacity>
-      </View>
-      {post.hasImage && (
-        <Image
-          source={require('@/assets/images/dummy1.png')}
-          style={styles.postImage}
-          resizeMode="cover"
-        />
-      )}
-      <Text style={styles.postText}>
-        <Text style={styles.highlight}>{post.text.split(' ')[0]}</Text>{' '}
-        {post.text.split(' ').slice(1).join(' ')}
-      </Text>
-      <View style={styles.actionRow}>
-        <LikeIcon width={18} height={18} />
-        <Text style={[styles.actionText, { marginLeft: 2, marginRight: 12 }]}>
-          {post.likeCount}
-        </Text>
-        <TouchableOpacity onPress={() => onToggleBookmark(post.id)}>
-          {post.isBookmarked ? (
-            <BookmarkFillIcon width={18} height={18} />
-          ) : (
-            <BookmarkIcon width={18} height={18} />
-          )}
-        </TouchableOpacity>
-        <Text style={[styles.actionText, { marginLeft: 2 }]}>
-          {post.bookmarkCount}
-        </Text>
-      </View>
-    </View>
-  );
-});
-
 export default function MyPage() {
   const [activeTab, setActiveTab] = useState<'post' | 'media' | 'bookmark'>(
     'post',
@@ -125,63 +63,28 @@ export default function MyPage() {
   const [posts, setPosts] = useState(postData);
   const [isShareModalVisible, setIsShareModalVisible] = useState(false);
 
-  const [profile, setProfile] = useState<LocalProfile>({});
-
-  // 프로필 로컬 로드 (로그인 시 저장했던 'user')
-  useEffect(() => {
-    (async () => {
-      try {
-        const raw = await SecureStore.getItemAsync('user');
-        if (!raw) return;
-        const u = JSON.parse(raw);
-        // 다양한 키 케이스를 유연 매핑
-        const nickname = u?.nickname ?? u?.nickName ?? u?.name ?? null;
-        const ownId = u?.ownId ?? u?.userId ?? u?.username ?? null;
-        const gender = u?.gender ?? null;
-        const birth = u?.birth ?? u?.birthday ?? null;
-        const recomsTime = u?.recomsTime ?? u?.recommendTime ?? null;
-        const bio = u?.bio ?? u?.introduction ?? null;
-        setProfile({ nickname, ownId, gender, birth, recomsTime, bio });
-      } catch (e) {
-        console.log('[MyPage] 로컬 프로필 파싱 실패:', e);
-      }
-    })();
-  }, []);
-
-  // HHmm 또는 HH:mm → HH:mm 표기로 포맷
-  const formatTime = (t?: string | null) => {
-    if (!t) return null;
-    const s = String(t);
-    if (/^\d{4}$/.test(s)) return s.slice(0, 2) + ':' + s.slice(2);
-    if (/^\d{2}:\d{2}$/.test(s)) return s;
-    return s;
-  };
-
-  const handleToggleBookmark = useCallback((id: number) => {
+  const handleToggleBookmark = (id: number) => {
     setPosts((prev) =>
       prev.map((post) =>
         post.id === id ? { ...post, isBookmarked: !post.isBookmarked } : post,
       ),
     );
-  }, []);
+  };
 
   const router = useRouter();
 
-  const filteredPosts = useMemo(() => {
-    return posts.filter((post) => {
-      if (activeTab === 'post') return true;
-      if (activeTab === 'media') return post.hasImage;
-      if (activeTab === 'bookmark') return post.isBookmarked;
-      return true;
-    });
-  }, [posts, activeTab]);
+  const filteredPosts = postData.filter((post) => {
+    if (activeTab === 'post') return true;
+    if (activeTab === 'media') return post.hasImage;
+    if (activeTab === 'bookmark') return post.isBookmarked;
+  });
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.safeArea}>
       <ScrollView>
         <StatusBar
-          translucent={false}
-          backgroundColor="#121212"
-          barStyle="light-content"
+          translucent
+          backgroundColor="transparent"
+          barStyle="dark-content"
         />
         {/* 배경 이미지 */}
         <ImageBackground
@@ -221,10 +124,8 @@ export default function MyPage() {
 
           {/* 닉네임 + 유저아이디 */}
           <View style={styles.nicknameBox}>
-            <Text style={styles.nickname}>
-              {profile.nickname ?? 'Nickname'}
-            </Text>
-            <Text style={styles.userId}>@{profile.ownId ?? 'user_id'}</Text>
+            <Text style={styles.nickname}>Nickname</Text>
+            <Text style={styles.userId}>@user_id</Text>
           </View>
 
           {/* 공유 아이콘 */}
@@ -252,12 +153,8 @@ export default function MyPage() {
                 </View>
 
                 {/* 텍스트 */}
-                <Text style={styles.textMain}>
-                  {profile.nickname ?? 'Nickname'}
-                </Text>
-                <Text style={styles.textSub}>
-                  @{profile.ownId ?? 'user_id'}
-                </Text>
+                <Text style={styles.textMain}>Nickname</Text>
+                <Text style={styles.textSub}>@user_id</Text>
 
                 {/* 복사 버튼 */}
                 <TouchableOpacity style={styles.copyButton}>
@@ -310,16 +207,7 @@ export default function MyPage() {
         </View>
 
         {/* 한줄소개 */}
-        <Text style={styles.introText}>
-          {profile.bio?.trim()?.length
-            ? profile.bio
-            : '신나고 재미있게 평생...'}
-        </Text>
-        {formatTime(profile.recomsTime) ? (
-          <Text style={[styles.introText, { marginTop: 6, color: '#B3B3B3' }]}>
-            추천 수신 시간: {formatTime(profile.recomsTime)}
-          </Text>
-        ) : null}
+        <Text style={styles.introText}>신나고 재미있게 평생...</Text>
         {/* // 버튼 레이아웃 (UI 구성용) */}
         <View style={styles.buttonWrapper}>
           <View style={styles.buttonContainer}>
@@ -398,12 +286,59 @@ export default function MyPage() {
           </View>
         </View>
         <View contentContainerStyle={styles.scrollContainer}>
-          {filteredPosts.map((post, i) => (
-            <PostItem
-              key={post.id ?? i}
-              post={post}
-              onToggleBookmark={handleToggleBookmark}
-            />
+          {posts.map((post, i) => (
+            <View key={post.id ?? i} style={styles.postContainer}>
+              {/* 1. 유저 정보 + 더보기 */}
+              <View style={styles.userRow}>
+                <Image source={ProfileImage} style={styles.userImage} />
+                <Text style={styles.username}>{post.username}</Text>
+                <Text style={styles.postTime}>{post.time}</Text>
+                <Text style={styles.showtext}>{post.visibility}</Text>
+                <TouchableOpacity style={styles.moreButton}>
+                  <MoreIcon width={18} height={18} />
+                </TouchableOpacity>
+              </View>
+
+              {/* 2. 이미지 */}
+              {post.hasImage && (
+                <Image
+                  source={DummyImage}
+                  style={styles.postImage}
+                  resizeMode="cover"
+                />
+              )}
+
+              {/* 3. 텍스트 */}
+              <Text style={styles.postText}>
+                <Text style={styles.highlight}>{post.text.split(' ')[0]}</Text>{' '}
+                {post.text.split(' ').slice(1).join(' ')}
+              </Text>
+
+              {/* 4. 좋아요 / 북마크 */}
+              <View style={styles.actionRow}>
+                <LikeIcon width={18} height={18} />
+                <Text
+                  style={[
+                    styles.actionText,
+                    { marginLeft: 2, marginRight: 12 },
+                  ]}
+                >
+                  {post.likeCount}
+                </Text>
+
+                <TouchableOpacity onPress={() => handleToggleBookmark(post.id)}>
+                  {post.isBookmarked ? (
+                    <BookmarkFillIcon width={18} height={18} />
+                  ) : (
+                    <BookmarkIcon width={18} height={18} />
+                  )}
+                </TouchableOpacity>
+
+                <Text style={[styles.actionText, { marginLeft: 2 }]}>
+                  {post.bookmarkCount}
+                </Text>
+              </View>
+            </View>
           ))}
         </View>
       </ScrollView>
@@ -454,6 +389,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: -13, // 배경 이미지와 겹치게
     paddingLeft: 20,
+    zIndex: 2,
+    position: 'relative',
   },
   profileImage: {
     width: 76,
@@ -605,24 +542,24 @@ const styles = StyleSheet.create({
   },
   // ✅ 버튼
   buttonWrapper: {
-    marginTop: 40,
-    marginLeft: 84,
-    marginRight: 84,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 70,
-    backgroundColor: '#1F1F1F',
+    marginTop: 35,
+    alignSelf: 'center',
   },
   buttonContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
+    backgroundColor: '#1F1F1F',
+    paddingHorizontal: 16,
     gap: 10,
+    alignSelf: 'center',
+    borderRadius: 70,
+    padding: 5,
   },
   tabButton: {
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: 20,
-    backgroundColor: 'transparent', // 비활성 배경
+    backgroundColor: 'transparent',
+    alignItems: 'center',
   },
   activeTabButton: {
     backgroundColor: '#FFF',

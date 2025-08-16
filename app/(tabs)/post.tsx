@@ -3,10 +3,10 @@ import { useState } from 'react';
 import {
   Image,
   Pressable,
-  ScrollView,
   StyleSheet,
   TextInput,
   View,
+  FlatList, // ✅ CHANGED: FlatList 추가
 } from 'react-native';
 
 import Filter from '@/assets/icons/size_m/filter.svg';
@@ -57,10 +57,72 @@ export default function postPage() {
 
   const handleSubmit = () => handleSearch(query);
 
-  const threeGroup = [];
+  // ✅ 그대로 유지: 3개씩 묶기
+  const threeGroup: MockData[][] = [];
   for (let i = 0; i < results.length; i += 3) {
     threeGroup.push(results.slice(i, i + 3));
   }
+
+  // ✅ FlatList용 렌더러 (ScrollView 때와 동일한 UI)
+  const renderRow = ({
+    item: row,
+    index: rowIndex,
+  }: {
+    item: MockData[];
+    index: number;
+  }) => {
+    return row.length === 3 && rowIndex % 3 === 2 ? (
+      // ✅ 특수 배치: 3개일 때 마지막 줄마다 한 번
+      <View style={styles.rowWrapper}>
+        <View style={{ width: '66.666666%', aspectRatio: 1 }}>
+          <Image
+            source={row[0].image}
+            style={styles.image}
+            resizeMode="cover"
+          />
+        </View>
+        <View
+          style={{
+            width: '33.333333%',
+            justifyContent: 'space-between',
+            flexDirection: 'column',
+            flex: 1,
+          }}
+        >
+          <View style={{ flex: 1 }}>
+            <Image
+              source={row[1].image}
+              style={styles.image}
+              resizeMode="cover"
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Image
+              source={row[2].image}
+              style={styles.image}
+              resizeMode="cover"
+            />
+          </View>
+        </View>
+      </View>
+    ) : (
+      // ✅ 일반 1:1 배치
+      <View style={styles.rowWrapper}>
+        {row.map((item, colIndex) => (
+          <View
+            key={`${(item as any).image}-${colIndex}`}
+            style={styles.itemWrapper}
+          >
+            <Image
+              source={item.image}
+              style={styles.image}
+              resizeMode="cover"
+            />
+          </View>
+        ))}
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -85,84 +147,17 @@ export default function postPage() {
           </Pressable>
         </View>
 
-        <ScrollView>
-          {threeGroup.map((row, rowIndex) =>
-            row.length === 3 && rowIndex % 3 === 2 ? (
-              // ✅ 특수 배치: 3개일 때 마지막 줄마다 한 번
-              <View key={rowIndex} style={styles.rowWrapper}>
-                <View style={{ width: '66.666666%', aspectRatio: 1 }}>
-                  <Image
-                    source={row[0].image}
-                    style={styles.image}
-                    resizeMode="cover"
-                  />
-                </View>
-                <View
-                  style={{
-                    width: '33.333333%',
-                    justifyContent: 'space-between',
-                    flexDirection: 'column',
-                    flex: 1,
-                  }}
-                >
-                  <View style={{ flex: 1 }}>
-                    <Image
-                      source={row[1].image}
-                      style={styles.image}
-                      resizeMode="cover"
-                    />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Image
-                      source={row[2].image}
-                      style={styles.image}
-                      resizeMode="cover"
-                    />
-                  </View>
-                </View>
-              </View>
-            ) : (
-              // ✅ 일반 1:1 배치
-              <View key={rowIndex} style={styles.rowWrapper}>
-                {row.map((item, colIndex) => (
-                  <View
-                    key={`${item.image}-${colIndex}`}
-                    style={styles.itemWrapper}
-                  >
-                    <Image
-                      source={item.image}
-                      style={styles.image}
-                      resizeMode="cover"
-                    />
-                  </View>
-                ))}
-              </View>
-            ),
-          )}
-        </ScrollView>
+        <FlatList
+          data={threeGroup}
+          keyExtractor={(_, idx) => `row-${idx}`}
+          renderItem={renderRow}
+          initialNumToRender={8}
+          maxToRenderPerBatch={8}
+          windowSize={11}
+          removeClippedSubviews
+          showsVerticalScrollIndicator={false}
+        />
       </View>
-      <Pressable //임시로 추가해 둠!!
-        style={{
-          position: 'absolute',
-          bottom: 30,
-          right: 30,
-          width: 60,
-          height: 60,
-          borderRadius: 30,
-          backgroundColor: '#FF5C5C',
-          justifyContent: 'center',
-          alignItems: 'center',
-          elevation: 5,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.3,
-          shadowRadius: 4,
-          zIndex: 100,
-        }}
-        onPress={() => router.push('/postWrite')}
-      >
-        <Filter />
-      </Pressable>
 
       <PostFilterModal
         visible={isFilterVisible}

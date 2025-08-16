@@ -1,8 +1,6 @@
 import 'dayjs/locale/ko';
 
 import dayjs from 'dayjs';
-import 'dayjs/locale/ko';
-import { useRouter } from 'expo-router';
 import {
   forwardRef,
   useEffect,
@@ -11,16 +9,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import {
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  Pressable,
-} from 'react-native';
-
-const fallbackImage = require('@/assets/images/album-cover.jpg');
+import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Typography } from '@/constants/typography';
 
@@ -54,7 +43,6 @@ const RecommendList = forwardRef<RecommendListRef, RecommendListProps>(
   ({ selectedMonth, selectedDate, setSelectedDate, data }, ref) => {
     const today = dayjs().format('YYYY-MM-DD');
     const scrollViewRef = useRef<ScrollView>(null);
-    const router = useRouter();
     const [sectionLayouts, setSectionLayouts] = useState<
       Record<string, number>
     >({});
@@ -161,32 +149,9 @@ const RecommendList = forwardRef<RecommendListRef, RecommendListProps>(
                       ? '나의 추천곡'
                       : '추천 받은 곡'}
                   </Text>
-                  <Pressable
-                    style={styles.myrecInfo}
-                    onPress={() => {
-                      const rawId =
-                        (sub as any)?.song?.artistId ??
-                        (sub as any)?.song?.artist?.id;
-                      const id = rawId != null ? String(rawId).trim() : '';
-                      if (!id) {
-                        alert('아티스트 정보를 찾을 수 없어요.');
-                        return;
-                      }
-                      router.push(`/artist/${encodeURIComponent(id)}`);
-                    }}
-                    disabled={
-                      !(
-                        (sub as any)?.song?.artistId ||
-                        (sub as any)?.song?.artist?.id
-                      )
-                    }
-                  >
+                  <View style={styles.myrecInfo}>
                     <Image
-                      source={
-                        (sub as any)?.song?.imageUrl
-                          ? { uri: (sub as any).song.imageUrl }
-                          : fallbackImage
-                      }
+                      source={{ uri: sub.song.imageUrl }}
                       style={{
                         width: 28,
                         height: 28,
@@ -196,11 +161,9 @@ const RecommendList = forwardRef<RecommendListRef, RecommendListProps>(
                       }}
                     />
                     <View style={styles.myrecSong}>
-                      <Text style={styles.myrecTitle}>
-                        {(sub as any)?.song?.title ?? '-'}
-                      </Text>
+                      <Text style={styles.myrecTitle}>{sub.song.title}</Text>
                       <Text style={styles.myrecArtist}>
-                        {(sub as any)?.song?.artistName ?? ''}
+                        {sub.song.artistName}
                       </Text>
                     </View>
                     <View
@@ -211,10 +174,8 @@ const RecommendList = forwardRef<RecommendListRef, RecommendListProps>(
                         marginHorizontal: 6,
                       }}
                     />
-                    <Text style={styles.myrecComment}>
-                      {(sub as any)?.song?.comment ?? '—'}
-                    </Text>
-                  </Pressable>
+                    <Text style={styles.myrecComment}>{sub.song.comment}</Text>
+                  </View>
                 </View>
               ))}
             </View>
