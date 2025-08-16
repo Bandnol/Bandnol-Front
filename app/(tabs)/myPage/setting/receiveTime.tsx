@@ -18,23 +18,6 @@ import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
 import api from '@/store/api';
 
-// 생년월일 문자열을 YYYY-MM-DD로 정규화 (허용: YYYYMMDD, YYYY-MM-DD, YYYY.MM.DD, YYYY/MM/DD)
-const normalizeBirth = (raw?: string | null): string | null => {
-  if (!raw) return null;
-  const s = String(raw).trim();
-  if (!s) return null;
-  const digits = s.replace(/[^0-9]/g, '');
-  if (digits.length !== 8) return null;
-  const y = digits.slice(0, 4);
-  const m = digits.slice(4, 6);
-  const d = digits.slice(6, 8);
-  // 간단한 유효성 검사
-  const mm = Number(m),
-    dd = Number(d);
-  if (mm < 1 || mm > 12 || dd < 1 || dd > 31) return null;
-  return `${y}-${m}-${d}`;
-};
-
 export default function ReceiveTime() {
   const router = useRouter();
   const [user, setUser] = useState<any>({});
@@ -91,11 +74,11 @@ export default function ReceiveTime() {
       setDisplayHour(hour);
       setDisplayMinute(minute);
 
-      // 12h -> 24h (서버 전송 형식: HHmm)
+      // 12h -> 24h + 콜론 HH:MM
       let h24 = parseInt(hour, 10);
       if (ampm === '오후' && h24 !== 12) h24 += 12;
       if (ampm === '오전' && h24 === 12) h24 = 0;
-      const recomsTime = `${h24.toString().padStart(2, '0')}${minute}`;
+      const recomsTime = `${h24.toString().padStart(2, '0')}:${minute}`;
       console.log('[수신 시간] PATCH recomsTime:', recomsTime);
 
       // 토큰 헤더
@@ -106,12 +89,7 @@ export default function ReceiveTime() {
         );
       }
 
-      const birthNorm = normalizeBirth(
-        user?.birth ?? user?.user?.birth ?? null,
-      );
-
-      const payload: any = { recomsTime };
-      if (birthNorm) payload.birth = birthNorm; // 서버가 birth 검증 시 함께 전달
+      const payload = { recomsTime };
       console.log('[수신 시간] PATCH payload:', payload);
 
       const res = await api.patch('/api/v1/users/me/profiles', payload, {
@@ -155,11 +133,10 @@ export default function ReceiveTime() {
           '[수신 시간] 서버 500(Prisma refresh_token 컬럼 누락) → 로컬 저장으로 대체',
         );
         try {
-          // 12h -> 24h (서버 전송 형식: HHmm)
           let h24 = parseInt(hour, 10);
           if (ampm === '오후' && h24 !== 12) h24 += 12;
           if (ampm === '오전' && h24 === 12) h24 = 0;
-          const recomsTime = `${h24.toString().padStart(2, '0')}${minute}`;
+          const recomsTime = `${h24.toString().padStart(2, '0')}:${minute}`;
 
           const saved = await SecureStore.getItemAsync('user');
           if (saved) {
@@ -190,7 +167,7 @@ export default function ReceiveTime() {
     }
   };
 
-  // HHmm 포맷에서 표시 상태로 적용
+  // HH:MM 또는 HHmm 포맷에서 표시 상태로 적용
   const applyFromHHmm = (hhmm?: string) => {
     if (!hhmm) return;
     const normalized = hhmm.includes(':')

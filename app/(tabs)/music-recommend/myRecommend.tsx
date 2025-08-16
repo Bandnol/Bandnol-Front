@@ -19,37 +19,15 @@ import PlayIcon from '@/assets/icons/play-solid.svg';
 import CommentModal from '@/components/common/CommentModal';
 import DateHeader from '@/components/common/DateHeader';
 import { Typography } from '@/constants/typography';
-import { useAuthFetch } from '@/hooks/useAxios';
-import { API_URL } from '@env';
 import { fetchReplyComment } from '@/api/replies';
 
 const defaultAlbumImage = require('@/assets/images/album-cover.jpg'); // 임시 이미지..
-
-type SentRecomResponse = {
-  success: boolean;
-  data?: {
-    id: string;
-    createdAt?: string;
-    recomsSong?: {
-      id?: string;
-      title?: string;
-      artistName?: string;
-      imgUrl?: string;
-    };
-    receiver?: { id?: string; nickname?: string };
-    replyId?: string | null;
-  } | null;
-  error?: any;
-};
 
 export default function MyRecommendSwiper() {
   const { title, artist, image, recomsId, comment, content } =
     useLocalSearchParams();
   const router = useRouter();
   const swiperRef = useRef<any>(null);
-  const authFetch = useAuthFetch();
-  const [loading, setLoading] = useState(true);
-  const [sent, setSent] = useState<SentRecomResponse['data']>(null);
   const [timeLeft, setTimeLeft] = useState(10);
   const [isMyCommentVisible, setIsMyCommentVisible] = useState(false);
   const [isReplyCommentVisible, setIsReplyCommentVisible] = useState(false);
@@ -60,27 +38,6 @@ export default function MyRecommendSwiper() {
     typeof image === 'string' && image.length > 0
       ? { uri: image }
       : defaultAlbumImage;
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await authFetch.json<SentRecomResponse>(
-          `${API_URL}/api/v1/recoms/sent`,
-        );
-        if (!cancelled && res?.success) {
-          setSent(res.data ?? null);
-        }
-      } catch (e) {
-        console.warn('[myRecommend] sent fetch failed', e);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [authFetch]);
 
   // 타이머 시작
   useEffect(() => {
@@ -100,7 +57,10 @@ export default function MyRecommendSwiper() {
   // 타이머 종료 시 페이지 이동
   useEffect(() => {
     if (timeLeft === 0) {
-      router.replace('/(tabs)/music-recommend/receiveRecommend');
+      router.replace({
+        pathname: '/(tabs)/music-recommend/receiveRecommend',
+        params: { title, artist },
+      });
     }
   }, [timeLeft]);
 
@@ -133,12 +93,6 @@ export default function MyRecommendSwiper() {
       getReply();
     }
   }, [recomsId]); // 답장 조회하기 API
-
-  const songTitle = sent?.recomsSong?.title ?? '—';
-  const artistName = sent?.recomsSong?.artistName ?? '';
-  const bgSource = sent?.recomsSong?.imgUrl
-    ? { uri: sent.recomsSong.imgUrl }
-    : albumImage;
 
   return (
     <>
@@ -178,8 +132,8 @@ export default function MyRecommendSwiper() {
                 <Text style={styles.dateText}>
                   <DateHeader />
                 </Text>
-                <Text style={styles.songTitle}>{songTitle}</Text>
-                <Text style={styles.artist}>{artistName}</Text>
+                <Text style={styles.songTitle}>{title}</Text>
+                <Text style={styles.artist}>{artist}</Text>
 
                 {/* 앨범 커버 + 재생버튼 */}
                 <View style={styles.albumWrapper}>

@@ -75,7 +75,7 @@ export default function ReceiveRecommend() {
           console.warn('API 응답 에러:', res.error);
         }
       } catch (e) {
-        console.error('API 호출 실패2:', e);
+        console.error('API 호출 실패:', e);
       } finally {
         setLoading(false);
       }

@@ -1,7 +1,7 @@
-import { Typography } from '@/constants/typography';
+import 'dayjs/locale/ko';
+
 import axios from 'axios';
 import dayjs from 'dayjs';
-import 'dayjs/locale/ko';
 import * as SecureStore from 'expo-secure-store';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -11,6 +11,9 @@ import {
   Text,
   View,
 } from 'react-native';
+
+import { Typography } from '@/constants/typography';
+
 import RecBottomModal from './RecBottomModal';
 
 dayjs.locale('ko');

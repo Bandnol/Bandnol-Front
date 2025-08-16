@@ -40,7 +40,7 @@ export default function TermsOfService() {
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.textContainer}>
             <Text style={styles.text}>
-              밴놀 이용 약관 {'\n'}
+              밴놀 이용 약관 (예시, GPT가 써주심) {'\n'}
               {'\n'}1. 서비스 소개{'\n'}
               ·밴놀은 사용자의 음악 취향에 따라 추천곡을 제공하고, 감상 기록을
               공유할 수 있는 음악 기반 SNS입니다.{'\n'}
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   textContainer: {
-    width: '100%',
+    width: 311,
     height: 640,
     backgroundColor: '#121212',
     borderRadius: 10,

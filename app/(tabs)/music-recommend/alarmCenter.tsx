@@ -1,6 +1,6 @@
-import { useAuthFetch } from '@/hooks/useAxios';
-import { useRouter, useFocusEffect } from 'expo-router';
-import { DeviceEventEmitter } from 'react-native';
+import axios from 'axios';
+import { useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -22,48 +22,55 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function AlarmCenterPage() {
   const router = useRouter();
-  const authFetch = useAuthFetch();
-  const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  const load = useCallback(async () => {
-    try {
-      setLoading(true);
-      const res = await authFetch.json<any>('/api/v1/users/me/notification', {
-        method: 'GET',
-      });
-      // 백엔드 응답 모양 다양성 대응: data.data || data || 직접 배열
-      const items = (res?.data?.data ?? res?.data ?? res) as any[];
-      setNotifications(Array.isArray(items) ? items : []);
-      console.log(
-        '[알림함] 목록 로드:',
-        Array.isArray(items) ? items.length : 0,
-      );
-    } catch (e) {
-      console.log('[알림함] 목록 로드 실패:', e);
-      setNotifications([]);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [authFetch]);
-
-  // [자동 새로고침 1] 화면 포커스 시 목록 새로고침
-  useFocusEffect(
-    useCallback(() => {
-      load();
-    }, [load]),
+  const [notifications, setNotifications] = useState<NotificationItemProps[]>(
+    [],
   );
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [hasNextPage, setHasNextPage] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
 
-  // [자동 새로고침 2] 푸시 탭 후 읽음 처리 완료 이벤트 수신 시 목록 새로고침
+  const fetchNotifications = useCallback(async () => {
+    if (isFetching || !hasNextPage) return;
+    setIsFetching(true);
+
+    try {
+      const token = await SecureStore.getItemAsync('JWTToken');
+      if (!token) throw new Error('JWT 토큰 없음');
+
+      const apiUrl = `https://bandnol.app/api/v1/users/me/notification`;
+      const queryParams = cursor ? { cursor } : {};
+
+      const response = await axios.get(apiUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        params: queryParams,
+      });
+
+      if (response.data.success) {
+        const newNoti = response.data.data.data;
+        const NextCursor = response.data.data.nextCursor;
+
+        setNotifications((prev) => [...prev, ...newNoti]);
+        setCursor(NextCursor);
+        setHasNextPage(response.data.data.hasNext);
+      } else {
+        console.error('서버 오류:', response.data.error);
+      }
+    } catch (error: any) {
+      console.error(
+        '알림 가져오기 실패:',
+        error?.response || error?.message || error,
+      );
+    } finally {
+      setIsFetching(false);
+    }
+  }, [cursor, isFetching, hasNextPage]);
+
   useEffect(() => {
-    const sub = DeviceEventEmitter.addListener('NOTI_REFRESH', () => {
-      console.log('[알림함] NOTI_REFRESH 수신 → 새로고침');
-      load();
-    });
-    return () => sub.remove();
-  }, [load]);
+    fetchNotifications();
+  }, []);
 
   const handleEndReached = () => {
     if (!isFetching && hasNextPage) {
@@ -95,17 +102,10 @@ export default function AlarmCenterPage() {
           />
         )}
         contentContainerStyle={styles.list}
-        refreshing={refreshing}
-        onRefresh={() => {
-          setRefreshing(true);
-          load();
-        }}
-        ListEmptyComponent={
-          !loading ? (
-            <Text style={{ color: '#aaa', textAlign: 'center', marginTop: 40 }}>
-              아직 알림이 없어요.
-            </Text>
-          ) : null
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          isFetching ? <ActivityIndicator size="small" color="#fff" /> : null
         }
       />
     </View>

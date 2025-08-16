@@ -74,7 +74,7 @@ export default function SearchMusicPage() {
             onPress={() =>
               router.navigate('/(tabs)/music-recommend/alarmCenter')
             }
-            style={styles.alertIcon} // 이게 핵심!!
+            style={styles.alertIcon}
           >
             <AlertIcon width={24} height={24} style={styles.alertIcon} />
           </Pressable>
