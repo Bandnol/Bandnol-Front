@@ -9,17 +9,20 @@ import { useAuthFetch } from '@/hooks/useAxios';
 import dayjs from 'dayjs';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
+import * as SecureStore from 'expo-secure-store';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 type RecommendItem = {
   date: string;
-  recommending: {
+  recommending?: {
     title: string;
+    artistId: string;
     artistName: string;
     imageUrl: string;
     comment: string;
   };
   recommended?: {
     title: string;
+    artistId: string;
     artistName: string;
     imageUrl: string;
     comment: string;
@@ -55,7 +58,7 @@ export default function RecommendScreen() {
           : [];
         setData(items);
       } catch (e) {
-        console.error('API 호출 실패:', e);
+        console.error('API 호출 실패1:', e);
         setData([]);
       } finally {
         setLoading(false);

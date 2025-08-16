@@ -1,183 +1,464 @@
-import { CalendarItem } from '@/components/mockCalendarApi';
-import { Typography } from '@/constants/typography';
-import { useState } from 'react';
-import { Image, LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
-import Modal from 'react-native-modal';
-import Svg, { Circle } from 'react-native-svg'; // Svg도 import 해줘야 함
-
+import Logo from '@/assets/icons/logo.svg';
 import Insta from '@/assets/icons/size_m/insta.svg';
 import Link from '@/assets/icons/size_m/link.svg';
 import Quit from '@/assets/icons/size_m/quit.svg';
 import X from '@/assets/icons/size_m/x.svg';
+import { Typography } from '@/constants/typography';
+import * as Clipboard from 'expo-clipboard';
+import * as Linking from 'expo-linking';
+import { useRef } from 'react';
+import {
+  Alert,
+  Dimensions,
+  Image,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import Modal from 'react-native-modal';
+import Share, { Social } from 'react-native-share';
+import Svg, { Circle } from 'react-native-svg';
+import ViewShot from 'react-native-view-shot';
+import type { CalendarItem } from './RecommendCal';
 
 type RecShareModalProps = {
   visible: boolean;
   onClose: () => void;
   recData: CalendarItem | undefined;
+  isTabRecommending?: boolean; //false면 From.@@@ & To.me 다 있고 true면 From.me만 있음
 };
+const { width: screenWidth } = Dimensions.get('window');
+let scale = 1;
 
+if (screenWidth < 415) {
+  scale = screenWidth / 415;
+}
 export default function RecShareModal({
   visible,
   onClose,
   recData,
+  isTabRecommending = true, // 기본값 true로 설정
 }: RecShareModalProps) {
-  const [containerWidth, setContainerWidth] = useState(0);
-
+  const viewShotRefInsta = useRef<ViewShot>(null);
+  const viewShotRefX = useRef<ViewShot>(null);
+  const viewShotRefBg = useRef<ViewShot>(null);
   if (!recData) return null;
-  const isRecommended = 'senderNickname' in recData;
 
-  const handleLayout = (e: LayoutChangeEvent) => {
-    setContainerWidth(e.nativeEvent.layout.width);
+  const handleCopyLink = async () => {
+    if (!recData) return;
+    const shareUrl = `https://bandnol.app/recoms/${recData.id}`; // 예시 링크
+    await Clipboard.setStringAsync(shareUrl);
+    Alert.alert('링크가 복사되었습니다.');
+  };
+  const handleShareToInstagramStory = async () => {
+    if (Platform.OS === 'ios') {
+      try {
+        if (!recData) return;
+        // 1) 캡쳐
+        const stickerUri = await viewShotRefInsta.current?.capture?.();
+        if (!stickerUri) throw new Error('이미지 캡처 실패');
+
+        const backgroundUri = await viewShotRefBg.current?.capture?.();
+        if (!backgroundUri) throw new Error('배경 이미지 캡처 실패');
+
+        // 4) react-native-share: 특정 앱(IG Stories)로 바로 공유
+        await Share.shareSingle({
+          social: Social.InstagramStories,
+          appId: 'YOUR_FB_APP_ID',
+          backgroundImage: backgroundUri,
+          stickerImage: stickerUri,
+          backgroundTopColor: '#000000',
+          backgroundBottomColor: '#000000',
+        });
+      } catch (error: any) {
+        Linking.openURL('itms-apps://itunes.apple.com/app/id389801252');
+      }
+    } else {
+      try {
+        if (!recData) return;
+        const { isInstalled } = await Share.isPackageInstalled(
+          'com.instagram.android',
+        );
+        if (!isInstalled) {
+          await Linking.openURL(
+            'https://play.google.com/store/apps/details?id=com.instagram.android',
+          );
+          return;
+        }
+        // 1) 캡쳐
+        const stickerUri = await viewShotRefInsta.current?.capture?.();
+        if (!stickerUri) throw new Error('이미지 캡처 실패');
+
+        const backgroundUri = await viewShotRefBg.current?.capture?.();
+        if (!backgroundUri) throw new Error('배경 이미지 캡처 실패');
+
+        // 4) react-native-share: 특정 앱(IG Stories)로 바로 공유
+        await Share.shareSingle({
+          social: Social.InstagramStories,
+          appId: 'YOUR_FB_APP_ID',
+          backgroundImage: backgroundUri,
+          stickerImage: stickerUri,
+          backgroundTopColor: '#000000',
+          backgroundBottomColor: '#000000',
+        });
+      } catch (error: any) {
+        Linking.openURL(
+          'https://play.google.com/store/apps/details?id=com.instagram.android&hl=ko&pli=1',
+        );
+      }
+    }
   };
 
-  const circleSize = containerWidth * 0.28;
-  const bigCircleSize = containerWidth * 0.52;
+  const handleShareToX = () => {
+    if (!recData) return;
+    const shareUrl = `https://bandnol.app/recoms/${recData.id}`;
+    const text = encodeURIComponent(
+      `${recData.title} - ${recData.artistName}\n${shareUrl}`,
+    );
+
+    Linking.openURL(`twitter://post?message=${text}`).catch(() => {
+      Linking.openURL(`https://twitter.com/intent/tweet?text=${text}`);
+    });
+  };
 
   return (
-    <Modal
-      isVisible={visible}
-      onBackdropPress={onClose}
-      backdropOpacity={0.8}
-      style={styles.modal}
-    >
-      {/* 콘텐츠 박스 */}
-      <View style={styles.container} onLayout={handleLayout}>
-        {containerWidth > 0 && (
-          <>
-            <View
-              style={{
-                position: 'relative',
-                width: containerWidth,
-                alignItems: 'center',
-              }}
-            >
-              <Image
-                source={{ uri: recData.imageUrl }}
+    <>
+      <View style={screenWidth < 410 && { transform: [{ scale }] }}>
+        <Modal
+          isVisible={visible}
+          onBackdropPress={onClose}
+          backdropOpacity={0.8}
+          style={styles.modal}
+        >
+          <ViewShot
+            ref={viewShotRefInsta}
+            options={{ format: 'png', quality: 1, width: 300 }}
+            style={{ borderRadius: 15 }}
+          >
+            <View style={styles.containerWrapper}>
+              <View style={styles.containerInner}>
+                <View
+                  style={{
+                    width: 355,
+                    marginTop: -140,
+                    alignItems: 'center',
+                  }}
+                >
+                  <Image
+                    source={{ uri: recData.imageUrl }}
+                    style={{
+                      width: '100%',
+                      aspectRatio: 1,
+                      borderRadius: 9999,
+                      marginBottom: 8,
+                    }}
+                    resizeMode="cover"
+                  />
+
+                  <Svg
+                    width={88}
+                    height={88}
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: [{ translateX: -44 }, { translateY: -44 }],
+                      zIndex: 2,
+                    }}
+                  >
+                    <Circle cx="50%" cy="50%" r="50%" fill="#1F1F1F" />
+                  </Svg>
+
+                  <Svg
+                    width={178}
+                    height={178}
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: [{ translateX: -89 }, { translateY: -89 }],
+                      zIndex: 1,
+                    }}
+                  >
+                    <Circle
+                      cx="50%"
+                      cy="50%"
+                      r="50%"
+                      fill="black"
+                      fillOpacity={0.4}
+                    />
+                  </Svg>
+                </View>
+
+                {/* To. me — 말줄임 적용 (혹시 닉네임 길어질 대비) */}
+                {!isTabRecommending && (
+                  <Text
+                    style={styles.toText}
+                    numberOfLines={1} // NEW: 말줄임
+                    ellipsizeMode="tail" // NEW
+                  >
+                    To. <Text style={{ color: '#F4F4F4' }}>me</Text>
+                  </Text>
+                )}
+
+                {/* 제목 — 1줄 고정, ... */}
+                <Text
+                  style={styles.titleText}
+                  numberOfLines={1} // NEW
+                  ellipsizeMode="tail" // NEW
+                >
+                  {recData.title}
+                </Text>
+
+                {/* 아티스트 — 1줄 고정, ... */}
+                <Text
+                  style={styles.artistText}
+                  numberOfLines={1} // NEW
+                  ellipsizeMode="tail" // NEW
+                >
+                  {recData.artistName}
+                </Text>
+
+                {/* 코멘트 — 3줄 제한, ... */}
+                <View style={styles.commentBox}>
+                  <Text
+                    style={styles.commentText}
+                    numberOfLines={3} // NEW: 3줄 제한
+                    ellipsizeMode="tail" // NEW
+                  >
+                    {recData.comment}
+                  </Text>
+                </View>
+
+                {/* From. XXX — 1줄, ... (닉네임 길이 대비) */}
+                <Text
+                  style={styles.fromText}
+                  numberOfLines={1} // NEW
+                  ellipsizeMode="tail" // NEW
+                >
+                  From.{' '}
+                  <Text style={{ color: '#F4F4F4' }}>
+                    {!isTabRecommending ? recData.senderNickname : 'me'}
+                  </Text>
+                </Text>
+
+                <View style={styles.logoContainer}>
+                  <Logo width={26.964} height={20.298} />
+                </View>
+              </View>
+              <Quit
+                onPress={onClose}
                 style={{
-                  width: containerWidth * 1.1,
-                  aspectRatio: 1,
-                  borderRadius: 9999,
-                  marginTop: -containerWidth * 0.43,
-                  marginBottom: 8,
+                  position: 'absolute',
+                  alignSelf: 'flex-end',
+                  top: 15,
+                  right: 15,
                 }}
-                resizeMode="cover"
               />
-
-              <Svg
-                width={circleSize}
-                height={circleSize}
-                style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: [
-                    { translateX: -circleSize / 2 },
-                    { translateY: -circleSize / 0.9 - 10 },
-                  ],
-                  zIndex: 2,
-                }}
-              >
-                <Circle cx="50%" cy="50%" r="50%" fill="#1F1F1F" />
-              </Svg>
-
-              <Svg
-                width={bigCircleSize}
-                height={bigCircleSize}
-                style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: [
-                    { translateX: -bigCircleSize / 2 },
-                    { translateY: -bigCircleSize / 1.22 - 16 },
-                  ],
-                  zIndex: 1,
-                }}
-              >
-                <Circle
-                  cx="50%"
-                  cy="50%"
-                  r="50%"
-                  fill="black"
-                  fillOpacity={0.4}
-                />
-              </Svg>
             </View>
-          </>
-        )}
-        <Quit
-          onPress={onClose}
+          </ViewShot>
+
+          <View style={styles.buttonGroup}>
+            <Pressable
+              style={styles.shareItem}
+              onPress={handleShareToInstagramStory}
+            >
+              <View style={styles.shareButton}>
+                <Insta />
+              </View>
+              <Text style={styles.shareText}>인스타그램으로 {'\n'} 공유</Text>
+            </Pressable>
+
+            <View style={styles.shareItem}>
+              <Pressable style={styles.shareButton} onPress={handleShareToX}>
+                <X />
+              </Pressable>
+              <Text style={styles.shareText}>X로 공유</Text>
+            </View>
+
+            <View style={styles.shareItem}>
+              <Pressable style={styles.shareButton} onPress={handleCopyLink}>
+                <Link />
+              </Pressable>
+              <Text style={styles.shareText}>링크 복사</Text>
+            </View>
+          </View>
+        </Modal>
+      </View>
+
+      {/* 캡쳐용 ViewShot */}
+      <View
+        pointerEvents="none"
+        collapsable={false}
+        style={{ position: 'absolute', zIndex: 99, left: -10000, top: -10000 }}
+      >
+        <ViewShot ref={viewShotRefBg} options={{ format: 'png', quality: 1 }}>
+          <Image
+            source={{ uri: recData.imageUrl }}
+            style={{ width: 1080, height: 1920 }}
+            resizeMode="cover"
+          />
+          <View
+            style={{
+              ...StyleSheet.absoluteFillObject,
+              backgroundColor: 'rgba(0,0,0,0.75)',
+            }}
+          />
+        </ViewShot>
+
+        <ViewShot
+          ref={viewShotRefX}
+          options={{ format: 'png', quality: 1, width: 357, height: 187 }}
           style={{
-            position: 'absolute',
-            alignSelf: 'flex-end',
+            borderRadius: 16,
           }}
-        />
-        {isRecommended && (
-          <Text style={styles.toText}>
-            To. <Text style={{ color: '#F4F4F4' }}>me</Text>
-          </Text>
-        )}
-        <Text style={styles.titleText}>{recData.title}</Text>
-        <Text style={styles.artistText}>{recData.artistName}</Text>
-        <View style={styles.commentBox}>
-          <Text style={styles.commentText}>{recData.comment}</Text>
-        </View>
-        <Text style={styles.fromText}>
-          From.{' '}
-          <Text style={{ color: '#F4F4F4' }}>
-            {isRecommended ? recData.senderNickname : 'me'}
-          </Text>
-        </Text>
+        >
+          <View style={styles.XcontainerWrapper}>
+            <View style={styles.XcontainerInner}>
+              <View style={styles.XLeft}>
+                {/* 커버 이미지 */}
+                <Image
+                  source={{ uri: recData.imageUrl }}
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    width: 220,
+                    height: 220,
+                    borderRadius: 110,
+                    transform: [{ translateX: -110 }, { translateY: -110 }],
+                  }}
+                  resizeMode="cover"
+                />
+
+                {/* 반투명 큰 원 */}
+                <Svg
+                  width={113}
+                  height={113}
+                  style={{
+                    position: 'absolute',
+                  }}
+                >
+                  <Circle
+                    cx="50%"
+                    cy="50%"
+                    r="50%"
+                    fill="black"
+                    fillOpacity={0.4}
+                  />
+                </Svg>
+
+                {/* 중앙 작은 원 (이미 57로 축소됨) */}
+                <Svg
+                  width={57}
+                  height={57}
+                  style={{
+                    position: 'absolute',
+                  }}
+                >
+                  <Circle cx="50%" cy="50%" r="50%" fill="#1F1F1F" />
+                </Svg>
+              </View>
+
+              <View style={styles.XRight}>
+                {/* To. me — 1줄, ... */}
+                {!isTabRecommending && (
+                  <Text
+                    style={styles.XtoText}
+                    numberOfLines={1} // NEW
+                    ellipsizeMode="tail" // NEW
+                  >
+                    To. <Text style={{ color: '#F4F4F4' }}>me</Text>
+                  </Text>
+                )}
+
+                {/* 제목 — 1줄, ... */}
+                <Text
+                  style={styles.XtitleText}
+                  numberOfLines={1} // NEW
+                  ellipsizeMode="tail" // NEW
+                >
+                  {recData.title}
+                </Text>
+
+                {/* 아티스트 — 1줄, ... */}
+                <Text
+                  style={styles.XartistText}
+                  numberOfLines={1} // NEW
+                  ellipsizeMode="tail" // NEW
+                >
+                  {recData.artistName}
+                </Text>
+
+                {/* 코멘트 — 2줄, ... */}
+                <View style={styles.XcommentBox}>
+                  <Text
+                    style={styles.XcommentText}
+                    numberOfLines={2} // NEW: 가로형은 2줄이 균형 좋음
+                    ellipsizeMode="tail" // NEW
+                  >
+                    {recData.comment}
+                  </Text>
+                </View>
+
+                {/* From. XXX — 1줄, ... */}
+                <Text
+                  style={styles.XfromText}
+                  numberOfLines={1} // NEW
+                  ellipsizeMode="tail" // NEW
+                >
+                  From.{' '}
+                  <Text style={{ color: '#F4F4F4' }}>
+                    {!isTabRecommending ? recData.senderNickname : 'me'}
+                  </Text>
+                </Text>
+              </View>
+
+              <View style={styles.XlogoContainer}>
+                <Logo width={16.86} height={12} />
+              </View>
+            </View>
+          </View>
+        </ViewShot>
       </View>
-
-      {/* 공유 버튼 그룹 */}
-      <View style={styles.buttonGroup}>
-        <View style={styles.shareItem}>
-          <View style={styles.shareButton}>
-            <Insta />
-          </View>
-          <Text style={styles.shareText}>인스타그램으로{'\n'}공유</Text>
-        </View>
-
-        <View style={styles.shareItem}>
-          <View style={styles.shareButton}>
-            <X />
-          </View>
-          <Text style={styles.shareText}>X로 공유</Text>
-        </View>
-
-        <View style={styles.shareItem}>
-          <View style={styles.shareButton}>
-            <Link />
-          </View>
-          <Text style={styles.shareText}>링크 복사</Text>
-        </View>
-      </View>
-    </Modal>
+    </>
   );
 }
-
 const styles = StyleSheet.create({
   modal: {
     margin: 0,
     justifyContent: 'center',
     alignItems: 'center',
+    gap: 10,
   },
-  container: {
-    width: '90%',
-    aspectRatio: 335 / 489,
-    maxHeight: 489,
-    maxWidth: 335,
-    backgroundColor: '#222',
+  containerWrapper: {
+    width: 335,
+    height: 489,
+    backgroundColor: '#333',
+    padding: 5,
     borderRadius: 20,
     overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  containerInner: {
+    width: 319,
+    height: 440,
+    flex: 1,
+    backgroundColor: '#333',
+    transform: [{ translateY: -3 }],
+    borderRadius: 15,
+    borderColor: '#7C7C7C',
+    borderWidth: 1,
     alignItems: 'center',
     padding: 20,
   },
   toText: {
     ...Typography.subtitle4,
     color: '#D9D9D9',
-    marginTop: 4,
+    marginTop: 19,
     marginBottom: 10,
     fontWeight: '600',
   },
@@ -185,6 +466,7 @@ const styles = StyleSheet.create({
     ...Typography.subtitle1B,
     color: '#F4F4F4',
     fontWeight: '600',
+    marginTop: 8,
     marginBottom: 4,
   },
   artistText: {
@@ -194,7 +476,7 @@ const styles = StyleSheet.create({
   },
   commentBox: {
     width: '100%',
-    height: 86,
+    height: 60,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
@@ -202,23 +484,22 @@ const styles = StyleSheet.create({
   commentText: {
     ...Typography.caption1,
     color: '#EAEAEA',
-    textAlign: 'center',
   },
   fromText: {
     ...Typography.subtitle4,
     color: '#D9D9D9',
+    marginTop: 'auto', // 남는 공간을 위로 밀어 아래 배치
   },
   buttonGroup: {
-    position: 'absolute',
-    bottom: 80,
+    marginTop: 20,
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 25,
+    gap: 15,
     width: '70%',
   },
   shareItem: {
     alignItems: 'center',
-    width: 80,
+    width: 90,
   },
   shareButton: {
     width: 58,
@@ -233,5 +514,115 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 12,
     textAlign: 'center',
+    lineHeight: 18,
+  },
+  logoContainer: {
+    position: 'absolute',
+    bottom: -1,
+    right: -1,
+    height: 29.838,
+    width: 46.469,
+    flexShrink: 0,
+    borderTopLeftRadius: 10, // RN은 각 코너별로 radius 지정
+    borderBottomRightRadius: 10,
+    borderTopWidth: 1,
+    borderLeftWidth: 1,
+    borderColor: '#7C7C7C',
+    backgroundColor: '#333',
+    alignSelf: 'flex-end',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  XcontainerWrapper: {
+    width: 357,
+    height: 187,
+    backgroundColor: '#333',
+    padding: 5,
+    borderRadius: 20,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  XcontainerInner: {
+    width: 344,
+    height: 178,
+    flex: 1,
+    backgroundColor: '#333',
+    borderRadius: 15,
+    borderColor: '#7C7C7C',
+    borderWidth: 1,
+    alignItems: 'center',
+    padding: 20,
+    flexDirection: 'row', // 가로형 레이아웃
+    gap: 12, // 카드 간격
+  },
+  XLeft: {
+    width: 130, // 카드 높이와 동일
+    left: -50,
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative', // 자식 요소의 절대 위치 지정
+  },
+  XRight: {
+    flex: 1,
+    paddingTop: 14,
+    paddingBottom: 14,
+    paddingRight: 16,
+  },
+
+  XtoText: {
+    ...Typography.subtitle4,
+    color: '#D9D9D9',
+    marginBottom: 13,
+    fontWeight: '600',
+    height: 17, // 제목 높이 고정
+  },
+  XtitleText: {
+    ...Typography.subtitle1B,
+    color: '#F4F4F4',
+    fontWeight: '600',
+    height: 24, // 제목 높이 고정
+    marginBottom: 4,
+    flexShrink: 0, // 제목이 길어도 줄바꿈
+  },
+  XartistText: {
+    ...Typography.body2,
+    height: 20, // 아티스트 높이 고정
+    color: '#B3B3B3',
+    marginBottom: 11,
+  },
+  XcommentBox: {
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  XcommentText: {
+    ...Typography.caption2,
+    height: 28, // 댓글 높이 고정 (2줄 가정)
+    color: '#EAEAEA',
+    textAlign: 'left',
+  },
+  XfromText: {
+    ...Typography.subtitle4,
+    color: '#D9D9D9',
+  },
+  XlogoContainer: {
+    position: 'absolute',
+    top: -1,
+    right: -1,
+    height: 17,
+    width: 22,
+    flexShrink: 0,
+    borderTopRightRadius: 10, // RN은 각 코너별로 radius 지정
+    borderBottomLeftRadius: 10,
+    borderBottomWidth: 1,
+    borderLeftWidth: 1,
+    borderColor: '#7C7C7C',
+    backgroundColor: '#333',
+    alignSelf: 'flex-end',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
