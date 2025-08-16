@@ -1,3 +1,10 @@
+import RecommendCal from '@/app/(tabs)/recommend-tab/RecommendCal';
+import RecommendHeader from '@/app/(tabs)/recommend-tab/RecommendHeader';
+import RecommendList, {
+  RecommendListRef,
+} from '@/app/(tabs)/recommend-tab/RecommendList';
+import Dropdown from '@/assets/icons/size_m/dropdown.svg';
+import { Typography } from '@/constants/typography';
 import { EXPO_PUBLIC_API_TOKEN } from '@env';
 import axios from 'axios';
 import dayjs from 'dayjs';
@@ -6,24 +13,18 @@ import * as SecureStore from 'expo-secure-store';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import RecommendCal from '@/app/(tabs)/recommend-tab/RecommendCal';
-import RecommendHeader from '@/app/(tabs)/recommend-tab/RecommendHeader';
-import RecommendList, {
-  RecommendListRef,
-} from '@/app/(tabs)/recommend-tab/RecommendList';
-import Dropdown from '@/assets/icons/size_m/dropdown.svg';
-import { Typography } from '@/constants/typography';
-
 type RecommendItem = {
   date: string;
-  recommending: {
+  recommending?: {
     title: string;
+    artistId: string;
     artistName: string;
     imageUrl: string;
     comment: string;
   };
   recommended?: {
     title: string;
+    artistId: string;
     artistName: string;
     imageUrl: string;
     comment: string;
@@ -81,7 +82,7 @@ export default function RecommendScreen() {
         const result = await fetchRecommendList();
         setData(result);
       } catch (e) {
-        console.error('API 호출 실패:', e);
+        console.error('API 호출 실패1:', e);
       } finally {
         setLoading(false);
       }
