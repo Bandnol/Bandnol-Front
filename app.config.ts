@@ -1,4 +1,3 @@
-import 'dotenv/config';
 export default {
   expo: {
     name: 'Bandnol',
@@ -32,6 +31,11 @@ export default {
       output: 'static',
       favicon: './assets/images/favicon.png',
     },
+    // EAS Update
+    updates: {
+      url: 'https://u.expo.dev/e22ee9c3-9022-4d36-8e63-d8a411ac0ccd',
+    },
+    runtimeVersion: '1.0.0',
     plugins: [
       'expo-router',
       [
@@ -47,24 +51,27 @@ export default {
         'expo-build-properties',
         {
           android: {
+            compileSdkVersion: 34,
+            targetSdkVersion: 34,
+            kotlinVersion: '1.9.24',
             extraMavenRepos: [
               'https://devrepo.kakao.com/nexus/content/groups/public/',
             ],
           },
         },
       ],
-      [
-        '@react-native-kakao/core',
-        {
-          nativeAppKey: process.env.EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY,
-          android: {
-            authCodeHandlerActivity: true,
-          },
-          ios: {
-            handleKakaoOpenUrl: true,
-          },
-        },
-      ],
+      ...(process.env.EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY
+        ? [
+            [
+              '@react-native-kakao/core',
+              {
+                nativeAppKey: process.env.EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY,
+                android: { authCodeHandlerActivity: true },
+                ios: { handleKakaoOpenUrl: true },
+              },
+            ],
+          ]
+        : []),
       [
         'expo-notifications',
         {

@@ -15,14 +15,23 @@
     },
     "production": {
       "ios": {
-        "simulator": false
+        "simulator": false,
+        "env": {
+          "EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY": "3f1a335fff3a83c39dd10e4443ed3159"
+        }
       },
       "android": {
-        "gradleCommand": ":app:assembleRelease"
+        "gradleCommand": ":app:assembleRelease",
+        "env": {
+          "EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY": "3f1a335fff3a83c39dd10e4443ed3159"
+        }
       },
       "distribution": "store",
       "channel": "production",
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY": "3f1a335fff3a83c39dd10e4443ed3159"
+      }
     }
   },
   "submit": {
