@@ -4,6 +4,7 @@ import * as SecureStore from 'expo-secure-store';
 import * as React from 'react';
 import {
   Keyboard,
+  Modal,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -39,6 +40,7 @@ export default function Step1Personal() {
   const [isDuplicate, setIsDuplicate] = React.useState<boolean | null>(null);
   const [isIdValid, setIsIdValid] = React.useState(true);
   const [hasCheckedId, setHasCheckedId] = React.useState(false);
+  const [isBackModalVisible, setIsBackModalVisible] = React.useState(false);
 
   const isFormFilled = id && nickname && birth && selectedGender;
 
@@ -144,7 +146,7 @@ export default function Step1Personal() {
             showsHorizontalScrollIndicator={false}
             horizontal={false}
           >
-            <StatusBarHeader />
+            <StatusBarHeader onBackPress={() => setIsBackModalVisible(true)} />
 
             <View style={{ height: 35 }} />
 
@@ -426,6 +428,45 @@ export default function Step1Personal() {
           colors={['transparent', Colors.palette.Gray900]}
           style={styles.fadeOverlay}
         />
+        {/* 뒤로가기 확인 모달 */}
+        <Modal
+          transparent
+          animationType="fade"
+          visible={isBackModalVisible}
+          onRequestClose={() => setIsBackModalVisible(false)}
+        >
+          <View style={styles.modalBackground}>
+            <View style={styles.withdrawWrapper}>
+              {/* 상단 텍스트 박스 */}
+              <View style={styles.withdrawHeaderBox}>
+                <Text style={styles.withdrawHeaderText}>
+                  <Text>현재까지 작성한 내용이 초기화되고{'\n'}</Text>
+                  <Text>처음 화면으로 돌아갑니다.</Text>
+                  정말 나가시겠습니까?
+                </Text>
+              </View>
+
+              {/* 확인 버튼: splash로 이동 */}
+              <TouchableOpacity
+                style={styles.logoutConfirmBtn}
+                onPress={() => {
+                  setIsBackModalVisible(false);
+                  router.push('/(auth)/splash');
+                }}
+              >
+                <Text style={styles.logoutConfirmText}>확인</Text>
+              </TouchableOpacity>
+
+              {/* 취소 */}
+              <TouchableOpacity
+                style={styles.logoutCancelWrapper}
+                onPress={() => setIsBackModalVisible(false)}
+              >
+                <Text style={styles.logoutCancelText}>취소</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </View>
     </SafeAreaView>
   );
@@ -528,5 +569,56 @@ const styles = StyleSheet.create({
     right: 0,
     height: 100,
     zIndex: 0,
+  }, // 모달 css
+  modalBackground: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  withdrawWrapper: {
+    width: 324,
+    height: 213,
+    alignItems: 'center',
+  },
+  withdrawHeaderBox: {
+    width: 324,
+    paddingHorizontal: 16,
+    paddingVertical: 40,
+    backgroundColor: '#333',
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+    alignItems: 'center',
+  },
+  withdrawHeaderText: {
+    color: '#F4F4F4',
+    fontSize: 16,
+    textAlign: 'center',
+    fontWeight: '400',
+    letterSpacing: -0.48,
+    fontFamily: 'Pretendard',
+    fontStyle: 'normal',
+  },
+  logoutConfirmBtn: {
+    width: 324,
+    height: 50,
+    backgroundColor: '#FB4932',
+    borderBottomLeftRadius: 10,
+    borderBottomRightRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logoutConfirmText: {
+    color: '#FFF',
+    ...Typography.subtitle3,
+  },
+  logoutCancelWrapper: {
+    marginTop: 25,
+  },
+  logoutCancelText: {
+    ...Typography.subtitle3,
+    color: '#FFF',
+    textDecorationLine: 'underline',
+    textDecorationStyle: 'solid',
   },
 });

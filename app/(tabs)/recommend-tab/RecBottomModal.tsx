@@ -1,11 +1,13 @@
-import type { CalendarItem } from '@/app/(tabs)/recommend-tab/RecommendCal';
-import Share from '@/assets/icons/size_m/share.svg';
-import { Typography } from '@/constants/typography';
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import Modal from 'react-native-modal';
+
+import type { CalendarItem } from '@/app/(tabs)/recommend-tab/RecommendCal';
+import Share from '@/assets/icons/size_m/share.svg';
+import { Typography } from '@/constants/typography';
+
 import RecShareModal from './RecShareModal';
 
 type RecBottomModalProps = {

@@ -21,8 +21,9 @@ import DateHeader from '@/components/common/DateHeader';
 import { Typography } from '@/constants/typography';
 import { useAuthFetch } from '@/hooks/useAxios';
 import { API_URL } from '@env';
+import { fetchReplyComment } from '@/api/replies';
 
-const albumImage = require('@/assets/images/album-cover.jpg');
+const defaultAlbumImage = require('@/assets/images/album-cover.jpg'); // 임시 이미지..
 
 type SentRecomResponse = {
   success: boolean;
@@ -42,6 +43,8 @@ type SentRecomResponse = {
 };
 
 export default function MyRecommendSwiper() {
+  const { title, artist, image, recomsId, comment, content } =
+    useLocalSearchParams();
   const router = useRouter();
   const swiperRef = useRef<any>(null);
   const authFetch = useAuthFetch();
@@ -50,6 +53,13 @@ export default function MyRecommendSwiper() {
   const [timeLeft, setTimeLeft] = useState(10);
   const [isMyCommentVisible, setIsMyCommentVisible] = useState(false);
   const [isReplyCommentVisible, setIsReplyCommentVisible] = useState(false);
+  const [replyComment, setReplyComment] = useState<string | null>(null);
+  const [replySender, setReplySender] = useState<string | null>(null); // 보낸 사람 이름
+
+  const albumSource =
+    typeof image === 'string' && image.length > 0
+      ? { uri: image }
+      : defaultAlbumImage;
 
   useEffect(() => {
     let cancelled = false;
@@ -99,6 +109,30 @@ export default function MyRecommendSwiper() {
     const secRemain = String(sec % 60).padStart(2, '0');
     return `00:${min}:${secRemain}`;
   };
+  useEffect(() => {
+    const getReply = async () => {
+      try {
+        const reply = await fetchReplyComment(recomsId, 'received');
+        console.log('📦 reply:', reply);
+
+        if (reply) {
+          setReplyComment(reply.content);
+          setReplySender(reply.nickname);
+        } else {
+          setReplyComment(null);
+          setReplySender(null);
+        }
+      } catch (error) {
+        console.error('❌ replyComment API 오류:', error);
+        setReplyComment(null);
+        setReplySender(null);
+      }
+    };
+
+    if (recomsId) {
+      getReply();
+    }
+  }, [recomsId]); // 답장 조회하기 API
 
   const songTitle = sent?.recomsSong?.title ?? '—';
   const artistName = sent?.recomsSong?.artistName ?? '';
@@ -118,7 +152,7 @@ export default function MyRecommendSwiper() {
         {/* 나의 추천곡 */}
         <View style={styles.container}>
           <ImageBackground
-            source={bgSource}
+            source={albumSource}
             style={styles.backgroundImage}
             imageStyle={{ opacity: 0.8 }}
           >
@@ -149,7 +183,7 @@ export default function MyRecommendSwiper() {
 
                 {/* 앨범 커버 + 재생버튼 */}
                 <View style={styles.albumWrapper}>
-                  <Image source={bgSource} style={styles.albumImage} />
+                  <Image source={albumSource} style={styles.albumImage} />
                   <PlayIcon width={58.1} height={58.1} />
                 </View>
 
@@ -164,11 +198,23 @@ export default function MyRecommendSwiper() {
 
                 {/* 답장 상태 버튼 */}
                 <Pressable
-                  style={styles.replyStatusButton}
-                  onPress={() => setIsReplyCommentVisible(true)}
+                  style={[
+                    styles.replyStatusButton,
+                    replyComment && { backgroundColor: '#F4F4F4' }, // 답장이 오면 배경 흰색
+                  ]}
+                  onPress={() => {
+                    if (replyComment) setIsReplyCommentVisible(true);
+                  }}
                 >
-                  <Text style={styles.replyText}>
-                    아직 답장이 도착하지 않았어요
+                  <Text
+                    style={[
+                      styles.replyText,
+                      replyComment && { color: '#000000' },
+                    ]}
+                  >
+                    {replyComment
+                      ? `${replySender} 님의 답장 확인하기`
+                      : '아직 답장이 도착하지 않았어요'}
                   </Text>
                 </Pressable>
               </View>
@@ -216,7 +262,7 @@ export default function MyRecommendSwiper() {
         visible={isMyCommentVisible}
         onClose={() => setIsMyCommentVisible(false)}
         title="MY COMMENT"
-        description="여름에 참 잘 어울리는 노래입니다~ 같은 앨범 수록곡도 다 너무 좋아서 요즘 듣기 딱이에요! 추천합니다 ㅎㅎ"
+        description={comment as string}
         closeColor="#1F1F1F"
         closeText="닫기"
       />
@@ -224,8 +270,8 @@ export default function MyRecommendSwiper() {
       <CommentModal
         visible={isReplyCommentVisible}
         onClose={() => setIsReplyCommentVisible(false)}
-        title={`From. ${sent?.receiver?.nickname ?? ''}`}
-        description="와 노래 좋아요 좋은 노래 알아갑니다!! 감사합니다~~"
+        title={`From. ${replySender || ''}`} // senderName 적용
+        description={replyComment || ''} // content 적용
         closeColor="#1F1F1F"
         closeText="닫기"
       />

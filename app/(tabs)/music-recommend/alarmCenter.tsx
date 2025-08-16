@@ -1,12 +1,9 @@
-import Backarrow from '@/assets/icons/size_m/backarrow.svg';
-import { IconType } from '@/components/NotificationIcon';
-import NotificationItem from '@/components/NotificationItem';
-import { Typography } from '@/constants/typography';
 import { useAuthFetch } from '@/hooks/useAxios';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { DeviceEventEmitter } from 'react-native';
 import { useCallback, useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   Dimensions,
   FlatList,
   Pressable,
@@ -14,18 +11,13 @@ import {
   Text,
   View,
 } from 'react-native';
-type Notification = {
-  id: string;
-  createdAt: string;
-  type: string;
-  isConfirmed: boolean;
-  link: string;
-  sender: {
-    id: string;
-    nickname: string;
-  } | null;
-  content: string | null;
-};
+
+import Backarrow from '@/assets/icons/size_m/backarrow.svg';
+import { IconType } from '@/components/NotificationIcon';
+import type { NotificationItemProps } from '@/components/NotificationItem';
+import NotificationItem from '@/components/NotificationItem';
+import { Typography } from '@/constants/typography';
+
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function AlarmCenterPage() {
@@ -73,16 +65,16 @@ export default function AlarmCenterPage() {
     return () => sub.remove();
   }, [load]);
 
+  const handleEndReached = () => {
+    if (!isFetching && hasNextPage) {
+      fetchNotifications();
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Pressable
-          onPress={() => {
-            router.back();
-            console.log('Back pressed');
-          }}
-          style={styles.backArrow}
-        >
+        <Pressable onPress={() => router.back()} style={styles.backArrow}>
           <Backarrow width={22} height={18} />
         </Pressable>
         <Text style={styles.title}>알림</Text>
@@ -95,7 +87,7 @@ export default function AlarmCenterPage() {
           <NotificationItem
             id={item.id}
             createdAt={item.createdAt}
-            type={item.type as IconType} // 타입 명시적 변환 필요
+            type={item.type as IconType}
             isConfirmed={item.isConfirmed}
             link={item.link}
             sender={item.sender}
@@ -126,7 +118,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
     paddingTop: 60,
     paddingHorizontal: 20,
-    //paddingBottom: 10,
   },
   header: {
     height: 64,
@@ -135,7 +126,6 @@ const styles = StyleSheet.create({
     position: 'relative',
     backgroundColor: '#000',
   },
-
   title: {
     ...Typography.subtitle1B,
     position: 'absolute',
@@ -144,7 +134,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#fff',
   },
-
   backArrow: {
     position: 'absolute',
     left: 0,
@@ -152,7 +141,6 @@ const styles = StyleSheet.create({
     transform: [{ translateY: -9 }],
     zIndex: 1,
   },
-
   list: {
     paddingTop: 10,
     paddingBottom: 10,

@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { Text, View, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useEffect } from 'react';
 
 export default function Index() {
   const router = useRouter();

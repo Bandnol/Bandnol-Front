@@ -1,12 +1,4 @@
-import Backarrow from '@/assets/icons/size_m/backarrow.svg';
-import Gallery from '@/assets/icons/size_m/gallery.svg';
-import Quit from '@/assets/icons/size_m/quit.svg';
-import Friend from '@/assets/icons/size_s/friend.svg';
-import Global from '@/assets/icons/size_s/global.svg';
-import Private from '@/assets/icons/size_s/private.svg';
 import * as ImagePicker from 'expo-image-picker';
-
-import { Typography } from '@/constants/typography';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -18,6 +10,14 @@ import {
   TextInput,
   View,
 } from 'react-native';
+
+import Backarrow from '@/assets/icons/size_m/backarrow.svg';
+import Gallery from '@/assets/icons/size_m/gallery.svg';
+import Quit from '@/assets/icons/size_m/quit.svg';
+import Friend from '@/assets/icons/size_s/friend.svg';
+import Global from '@/assets/icons/size_s/global.svg';
+import Private from '@/assets/icons/size_s/private.svg';
+import { Typography } from '@/constants/typography';
 
 export default function PostWrite() {
   const router = useRouter();

@@ -9,7 +9,7 @@ export function useAIRecommend() {
   const getAIComment = useCallback(
     async (title: string, artist: string) => {
       console.log('[AIRecommend] 요청 데이터:', { title, artist });
-      const res = await authFetch.json<any>('/api/v1/recoms/ai-comment', {
+      const res = await authFetch.json('/api/v1/recoms/ai-comment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title, artist }),

@@ -1,12 +1,10 @@
 import { initializeKakaoSDK } from '@react-native-kakao/core';
 import React, { useEffect, useRef } from 'react';
 import 'react-native-reanimated';
-
 import axios from 'axios';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { Alert } from 'react-native';
-
 import { useFonts } from 'expo-font';
 import { Slot } from 'expo-router';
 

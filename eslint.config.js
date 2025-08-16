@@ -16,5 +16,13 @@ module.exports = defineConfig([
       'simple-import-sort/exports': 'error',
       'react/react-in-jsx-scope': 'off',
     },
+    settings: {
+      'import/resolver': {
+        node: {
+          paths: ['.'],
+          extensions: ['.js', '.jsx', '.ts', '.tsx'],
+        },
+      },
+    },
   },
 ]);

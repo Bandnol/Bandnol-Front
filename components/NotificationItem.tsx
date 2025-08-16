@@ -1,22 +1,25 @@
-import type { IconType } from '@/components/NotificationIcon';
-import NotificationIcon from '@/components/NotificationIcon';
-import dayjs from 'dayjs';
 import 'dayjs/locale/ko';
+
+import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { StyleSheet, Text, View } from 'react-native';
+
+import type { IconType } from '@/components/NotificationIcon';
+import NotificationIcon from '@/components/NotificationIcon';
+import { Colors } from '@/constants/Colors';
 
 dayjs.extend(relativeTime);
 dayjs.locale('ko');
 
-type NotificationItemProps = {
+export type NotificationItemProps = {
   id: string;
   createdAt: string;
   type: IconType;
   isConfirmed: boolean;
   link: string;
   sender: {
-    id: string;
-    nickname: string;
+    id: string | null;
+    nickname: string | null;
   } | null;
   content: string | null;
 };
@@ -28,13 +31,23 @@ export default function NotificationItem(props: NotificationItemProps) {
 
   if (type === 'RECOMS_RECEIVED') {
     message = (
-      <Text style={styles.cardDescription}>
+      <Text
+        style={[
+          styles.cardDescription,
+          isConfirmed && { color: Colors.palette.Gray500 },
+        ]}
+      >
         띵동~ 오늘의 추천곡이 도착했어요!{'\n'}지금 바로 확인해보세요.
       </Text>
     );
   } else if (type === 'RECOMS_SENT' && sender) {
     message = (
-      <Text style={styles.cardDescription}>
+      <Text
+        style={[
+          styles.cardDescription,
+          isConfirmed && { color: Colors.palette.Gray500 },
+        ]}
+      >
         내가 추천한 곡이{' '}
         <Text style={{ fontWeight: 'bold' }}>{sender.nickname}</Text> 님에게
         전달됐어요.
@@ -42,7 +55,13 @@ export default function NotificationItem(props: NotificationItemProps) {
     );
   } else if (type === 'NOT_RECOMS' && sender) {
     message = (
-      <Text style={styles.cardDescription}>
+      <Text
+        style={[
+          styles.cardDescription,
+          isConfirmed && { color: Colors.palette.Gray500 },
+        ]}
+      >
+        {' '}
         오늘의 추천곡을 확인해주세요.{'\n'}
         <Text style={{ fontWeight: 'bold' }}>{sender.nickname}</Text> 님이
         애타게 기다리고 있어요 ㅜ.ㅜ
@@ -50,7 +69,13 @@ export default function NotificationItem(props: NotificationItemProps) {
     );
   } else if (type === 'COMMENT_ARRIVED' && sender) {
     message = (
-      <Text style={styles.cardDescription}>
+      <Text
+        style={[
+          styles.cardDescription,
+          isConfirmed && { color: Colors.palette.Gray500 },
+        ]}
+      >
+        {' '}
         띵동~ 오늘의 추천곡에 대한{'\n'}
         <Text style={{ fontWeight: 'bold' }}>{sender.nickname}</Text> 님의
         코멘트가 도착했어요!
@@ -58,7 +83,13 @@ export default function NotificationItem(props: NotificationItemProps) {
     );
   } else if (type === 'ANNOUNCEMENT') {
     message = (
-      <Text style={[styles.cardDescription, { width: '71%' }]}>
+      <Text
+        style={[
+          styles.cardDescription,
+          isConfirmed && { color: Colors.palette.Gray500 },
+        ]}
+      >
+        {' '}
         <Text style={{ fontWeight: 'bold', color: '#fff' }}>{content}</Text>
       </Text>
     );
@@ -67,7 +98,12 @@ export default function NotificationItem(props: NotificationItemProps) {
     //&& artist
   ) {
     message = (
-      <Text style={styles.cardDescription}>
+      <Text
+        style={[
+          styles.cardDescription,
+          isConfirmed && { color: Colors.palette.Gray500 },
+        ]}
+      >
         대단해요! {'\n'}
         {/* <Text style={{ fontWeight: 'bold' }}>{artist}</Text> */}고구마 의
         SUPERFAN이 되었습니다.
@@ -78,7 +114,13 @@ export default function NotificationItem(props: NotificationItemProps) {
     //&& reportMonth
   ) {
     message = (
-      <Text style={styles.cardDescription}>
+      <Text
+        style={[
+          styles.cardDescription,
+          isConfirmed && { color: Colors.palette.Gray500 },
+        ]}
+      >
+        {' '}
         지금 바로{'\n'}
         나의 <Text style={{ fontWeight: 'bold' }}>{/* {reportMonth} */}</Text>
         밴놀 리포트를 확인해보세요!
@@ -86,14 +128,25 @@ export default function NotificationItem(props: NotificationItemProps) {
     );
   } else if (type === 'BOOKMARK' && sender) {
     message = (
-      <Text style={styles.cardDescription}>
+      <Text
+        style={[
+          styles.cardDescription,
+          isConfirmed && { color: Colors.palette.Gray500 },
+        ]}
+      >
+        {' '}
         <Text style={{ fontWeight: 'bold' }}>{sender.nickname}</Text> 님이 내
         포스트를 북마크했습니다.
       </Text>
     );
   } else if (type === 'LIKE' && sender) {
     message = (
-      <Text style={styles.cardDescription}>
+      <Text
+        style={[
+          styles.cardDescription,
+          isConfirmed && { color: Colors.palette.Gray500 },
+        ]}
+      >
         <Text style={{ fontWeight: 'bold' }}>{sender.nickname}</Text> 님이 내
         포스트를 좋아합니다.
       </Text>
@@ -101,7 +154,14 @@ export default function NotificationItem(props: NotificationItemProps) {
   } else {
     // 타입 오류
     message = (
-      <Text style={styles.cardDescription}>유효하지 않은 알림입니다.</Text>
+      <Text
+        style={[
+          styles.cardDescription,
+          isConfirmed && { color: Colors.palette.Gray500 },
+        ]}
+      >
+        유효하지 않은 알림입니다.
+      </Text>
     );
   }
   const time = (() => {

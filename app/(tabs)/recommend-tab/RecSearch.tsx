@@ -1,6 +1,3 @@
-import Dropdown from '@/assets/icons/size_m/dropdown.svg';
-import Search from '@/assets/icons/size_m/search.svg';
-import { Typography } from '@/constants/typography';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import { useRouter } from 'expo-router';
@@ -15,6 +12,10 @@ import {
   TextInput,
   View,
 } from 'react-native';
+
+import Dropdown from '@/assets/icons/size_m/dropdown.svg';
+import Search from '@/assets/icons/size_m/search.svg';
+import { Typography } from '@/constants/typography';
 
 export type SendSong = {
   date: string;
@@ -335,6 +336,7 @@ const styles = StyleSheet.create({
     ...Typography.caption2,
     color: '#fff',
     fontWeight: '400',
+    flexShrink: 1,
   },
   dateText: {
     ...Typography.subtitle4,

@@ -1,7 +1,3 @@
-import Filter from '@/assets/icons/size_m/filter.svg';
-import Search from '@/assets/icons/size_m/search.svg';
-import { MockData, mockPostApi } from '@/components/mockPostApi';
-import { Typography } from '@/constants/typography';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -12,6 +8,12 @@ import {
   TextInput,
   View,
 } from 'react-native';
+
+import Filter from '@/assets/icons/size_m/filter.svg';
+import Search from '@/assets/icons/size_m/search.svg';
+import { MockData, mockPostApi } from '@/components/mockPostApi';
+import { Typography } from '@/constants/typography';
+
 import PostFilterModal from './post-tab/PostFilterModal';
 
 export type FilterProps = {

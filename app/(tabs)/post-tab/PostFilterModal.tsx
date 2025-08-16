@@ -1,10 +1,11 @@
-import type { FilterProps } from '@/app/(tabs)/post';
-import Checked from '@/assets/icons/checkbox-checked.svg';
-import Unchecked from '@/assets/icons/checkbox.svg';
-import Quit from '@/assets/icons/size_m/quit.svg';
-import { Typography } from '@/constants/typography';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Modal from 'react-native-modal';
+
+import type { FilterProps } from '@/app/(tabs)/post';
+import Unchecked from '@/assets/icons/checkbox.svg';
+import Checked from '@/assets/icons/checkbox-checked.svg';
+import Quit from '@/assets/icons/size_m/quit.svg';
+import { Typography } from '@/constants/typography';
 
 export default function PostFilterModal({
   visible,

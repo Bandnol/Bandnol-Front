@@ -1,4 +1,4 @@
-import { Typography } from '@/constants/typography';
+import 'dayjs/locale/ko';
 
 import dayjs from 'dayjs';
 import 'dayjs/locale/ko';
@@ -21,6 +21,8 @@ import {
 } from 'react-native';
 
 const fallbackImage = require('@/assets/images/album-cover.jpg');
+
+import { Typography } from '@/constants/typography';
 
 dayjs.locale('ko');
 

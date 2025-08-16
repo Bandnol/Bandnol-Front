@@ -16,9 +16,8 @@ import {
 } from 'react-native';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-import BookmarkFillIcon from '@/assets/icons/bookmark-fill.svg';
 import BookmarkIcon from '@/assets/icons/bookmark.svg';
+import BookmarkFillIcon from '@/assets/icons/bookmark-fill.svg';
 import ClipIcon from '@/assets/icons/clip.svg';
 import CloseIcon from '@/assets/icons/close.svg';
 import LikeIcon from '@/assets/icons/heart.svg';
@@ -27,8 +26,6 @@ import SearchIcon from '@/assets/icons/search.svg';
 import SettingIcon2 from '@/assets/icons/setting.svg';
 import ShareIcon from '@/assets/icons/share.svg';
 import WriteIcon from '@/assets/icons/write.svg';
-import DummyImage from '@/assets/images/dummy1.png';
-import ProfileImage from '@/assets/images/profile.png';
 import { Typography } from '@/constants/typography';
 
 const screenWidth = Dimensions.get('window').width;

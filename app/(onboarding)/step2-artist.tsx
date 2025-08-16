@@ -1,3 +1,6 @@
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import React, { useCallback } from 'react';
 import RoadingIcon from '@/assets/onboarding/roading.svg';
 import BottomNextButton from '@/components/common/BottomNextButton';
 import InterestedArtistList from '@/components/common/InterestedArtistList';
@@ -6,9 +9,6 @@ import StatusBarHeader from '@/components/common/StatusBarHeader';
 import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
 import api from '@/store/api'; // axios instance 불러오기
-import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
-import React, { useCallback } from 'react';
 
 const log = (...args: any[]) => console.log('[관심 아티스트]', ...args);
 

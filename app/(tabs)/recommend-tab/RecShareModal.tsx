@@ -1,15 +1,9 @@
-import Logo from '@/assets/icons/logo.svg';
-import Insta from '@/assets/icons/size_m/insta.svg';
-import Link from '@/assets/icons/size_m/link.svg';
-import Quit from '@/assets/icons/size_m/quit.svg';
-import X from '@/assets/icons/size_m/x.svg';
-import { Typography } from '@/constants/typography';
 import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
 import { useRef } from 'react';
 import {
   Alert,
-  Dimensions,
+  Dimensions, //나중에 toast로 변경하기
   Image,
   Platform,
   Pressable,
@@ -21,6 +15,13 @@ import Modal from 'react-native-modal';
 import Share, { Social } from 'react-native-share';
 import Svg, { Circle } from 'react-native-svg';
 import ViewShot from 'react-native-view-shot';
+
+import Logo from '@/assets/icons/logo.svg';
+import Insta from '@/assets/icons/size_m/insta.svg';
+import Link from '@/assets/icons/size_m/link.svg';
+import Quit from '@/assets/icons/size_m/quit.svg';
+import X from '@/assets/icons/size_m/x.svg';
+import { Typography } from '@/constants/typography';
 import type { CalendarItem } from './RecommendCal';
 
 type RecShareModalProps = {
@@ -193,7 +194,7 @@ export default function RecShareModal({
                 </View>
 
                 {/* To. me — 말줄임 적용 (혹시 닉네임 길어질 대비) */}
-                {!isTabRecommending && (
+                {isRecommended && (
                   <Text
                     style={styles.toText}
                     numberOfLines={1} // NEW: 말줄임
@@ -240,7 +241,7 @@ export default function RecShareModal({
                 >
                   From.{' '}
                   <Text style={{ color: '#F4F4F4' }}>
-                    {!isTabRecommending ? recData.senderNickname : 'me'}
+                    {isRecommended ? recData.senderNickname : 'me'}
                   </Text>
                 </Text>
 
@@ -364,7 +365,7 @@ export default function RecShareModal({
 
               <View style={styles.XRight}>
                 {/* To. me — 1줄, ... */}
-                {!isTabRecommending && (
+                {isRecommended && (
                   <Text
                     style={styles.XtoText}
                     numberOfLines={1} // NEW
@@ -411,7 +412,7 @@ export default function RecShareModal({
                 >
                   From.{' '}
                   <Text style={{ color: '#F4F4F4' }}>
-                    {!isTabRecommending ? recData.senderNickname : 'me'}
+                    {isRecommended ? recData.senderNickname : 'me'}
                   </Text>
                 </Text>
               </View>

@@ -11,8 +11,8 @@ import {
   View,
 } from 'react-native';
 
-import BookmarkFillIcon from '@/assets/icons/bookmark-fill.svg';
 import BookmarkIcon from '@/assets/icons/bookmark.svg';
+import BookmarkFillIcon from '@/assets/icons/bookmark-fill.svg';
 import DeleteIcon from '@/assets/icons/delete.svg';
 import LikeIcon from '@/assets/icons/heart.svg';
 import MoreIcon from '@/assets/icons/more.svg';
