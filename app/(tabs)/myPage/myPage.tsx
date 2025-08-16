@@ -6,6 +6,7 @@ import {
   Image,
   ImageBackground,
   Modal,
+  Pressable,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -265,26 +266,29 @@ export default function MyPage() {
         </View>
         <View style={styles.textFieldContainer}>
           {/* 프로필  + 글쓰기  */}
-          <View style={styles.textFieldHeader}>
-            <Image
-              source={require('@/assets/images/profile.png')}
-              style={styles.textFieldProfile}
-            />
-            <View style={styles.textFieldTextWrapper}>
-              <Text style={styles.textFieldName}>sayoxx</Text>
-              <View style={styles.textFieldRow}>
-                <WriteIcon
-                  width={18}
-                  height={18}
-                  style={{ marginRight: 5, marginTop: 5 }}
-                />
-                <Text style={styles.textFieldGuide}>
-                  오늘의 밴놀을 공유해주세요!
-                </Text>
+          <Pressable onPress={() => router.push('/postWrite')}>
+            <View style={styles.textFieldHeader}>
+              <Image
+                source={require('@/assets/images/profile.png')}
+                style={styles.textFieldProfile}
+              />
+              <View style={styles.textFieldTextWrapper}>
+                <Text style={styles.textFieldName}>sayoxx</Text>
+                <View style={styles.textFieldRow}>
+                  <WriteIcon
+                    width={18}
+                    height={18}
+                    style={{ marginRight: 5, marginTop: 5 }}
+                  />
+                  <Text style={styles.textFieldGuide}>
+                    오늘의 밴놀을 공유해주세요!
+                  </Text>
+                </View>
               </View>
             </View>
-          </View>
+          </Pressable>
         </View>
+
         <View contentContainerStyle={styles.scrollContainer}>
           {posts.map((post, i) => (
             <View key={post.id ?? i} style={styles.postContainer}>

@@ -147,43 +147,17 @@ export default function postPage() {
           </Pressable>
         </View>
 
-        {/* ✅ CHANGED: ScrollView 제거 → FlatList로 교체 */}
         <FlatList
           data={threeGroup}
           keyExtractor={(_, idx) => `row-${idx}`}
           renderItem={renderRow}
-          // 성능 기본값 (원하면 조정)
           initialNumToRender={8}
           maxToRenderPerBatch={8}
           windowSize={11}
           removeClippedSubviews
           showsVerticalScrollIndicator={false}
-          // 헤더/푸터가 있다면 ListHeaderComponent/Spacer 등 추가 가능
         />
       </View>
-
-      <Pressable //임시로 추가해 둠!!
-        style={{
-          position: 'absolute',
-          bottom: 30,
-          right: 30,
-          width: 60,
-          height: 60,
-          borderRadius: 30,
-          backgroundColor: '#FF5C5C',
-          justifyContent: 'center',
-          alignItems: 'center',
-          elevation: 5,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.3,
-          shadowRadius: 4,
-          zIndex: 100,
-        }}
-        onPress={() => router.push('/postWrite')}
-      >
-        <Filter />
-      </Pressable>
 
       <PostFilterModal
         visible={isFilterVisible}
