@@ -1,12 +1,10 @@
+import type { CalendarItem } from '@/app/(tabs)/recommend-tab/RecommendCal';
+import Share from '@/assets/icons/size_m/share.svg';
+import { Typography } from '@/constants/typography';
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import Modal from 'react-native-modal';
-
-import type { CalendarItem } from '@/app/(tabs)/recommend-tab/RecommendCal';
-import Share from '@/assets/icons/size_m/share.svg';
-import { Typography } from '@/constants/typography';
-
 import RecShareModal from './RecShareModal';
 
 type RecBottomModalProps = {
@@ -83,8 +81,20 @@ export default function RecBottomModal({
               />
 
               <View style={styles.myrecSong}>
-                <Text style={styles.myrecTitle}>{songData.title}</Text>
-                <Text style={styles.myrecArtist}>{songData.artistName}</Text>
+                <Text
+                  style={styles.myrecTitle}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {songData.title}
+                </Text>
+                <Text
+                  style={styles.myrecArtist}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {songData.artistName}
+                </Text>
               </View>
 
               <View
@@ -95,7 +105,13 @@ export default function RecBottomModal({
                 }}
               ></View>
 
-              <Text style={styles.myrecComment}>{songData.comment}</Text>
+              <Text
+                style={styles.myrecComment}
+                numberOfLines={3}
+                ellipsizeMode="tail"
+              >
+                {songData.comment}
+              </Text>
             </View>
           </View>
         </View>
@@ -105,6 +121,7 @@ export default function RecBottomModal({
         visible={isShareVisible}
         onClose={() => setIsShareVisible(false)}
         recData={songData as CalendarItem}
+        isTabRecommending={isTabRecommending} // isTabRecommending이 false면 From.@@@ & To.me 다 있고 true면 From.me만 있음
       />
     </>
   );

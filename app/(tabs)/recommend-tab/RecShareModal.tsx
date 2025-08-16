@@ -1,9 +1,15 @@
+import Logo from '@/assets/icons/logo.svg';
+import Insta from '@/assets/icons/size_m/insta.svg';
+import Link from '@/assets/icons/size_m/link.svg';
+import Quit from '@/assets/icons/size_m/quit.svg';
+import X from '@/assets/icons/size_m/x.svg';
+import { Typography } from '@/constants/typography';
 import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
 import { useRef } from 'react';
 import {
   Alert,
-  Dimensions, //나중에 toast로 변경하기
+  Dimensions,
   Image,
   Platform,
   Pressable,
@@ -15,20 +21,13 @@ import Modal from 'react-native-modal';
 import Share, { Social } from 'react-native-share';
 import Svg, { Circle } from 'react-native-svg';
 import ViewShot from 'react-native-view-shot';
-
-import Logo from '@/assets/icons/logo.svg';
-import Insta from '@/assets/icons/size_m/insta.svg';
-import Link from '@/assets/icons/size_m/link.svg';
-import Quit from '@/assets/icons/size_m/quit.svg';
-import X from '@/assets/icons/size_m/x.svg';
-import { Typography } from '@/constants/typography';
-
 import type { CalendarItem } from './RecommendCal';
 
 type RecShareModalProps = {
   visible: boolean;
   onClose: () => void;
   recData: CalendarItem | undefined;
+  isTabRecommending?: boolean; //false면 From.@@@ & To.me 다 있고 true면 From.me만 있음
 };
 const { width: screenWidth } = Dimensions.get('window');
 let scale = 1;
@@ -40,12 +39,12 @@ export default function RecShareModal({
   visible,
   onClose,
   recData,
+  isTabRecommending = true, // 기본값 true로 설정
 }: RecShareModalProps) {
   const viewShotRefInsta = useRef<ViewShot>(null);
   const viewShotRefX = useRef<ViewShot>(null);
   const viewShotRefBg = useRef<ViewShot>(null);
   if (!recData) return null;
-  const isRecommended = 'senderNickname' in recData;
 
   const handleCopyLink = async () => {
     if (!recData) return;
@@ -57,14 +56,12 @@ export default function RecShareModal({
     if (Platform.OS === 'ios') {
       try {
         if (!recData) return;
-        // 1) 캡쳐
         const stickerUri = await viewShotRefInsta.current?.capture?.();
         if (!stickerUri) throw new Error('이미지 캡처 실패');
 
         const backgroundUri = await viewShotRefBg.current?.capture?.();
         if (!backgroundUri) throw new Error('배경 이미지 캡처 실패');
 
-        // 4) react-native-share: 특정 앱(IG Stories)로 바로 공유
         await Share.shareSingle({
           social: Social.InstagramStories,
           appId: 'YOUR_FB_APP_ID',
@@ -88,14 +85,12 @@ export default function RecShareModal({
           );
           return;
         }
-        // 1) 캡쳐
         const stickerUri = await viewShotRefInsta.current?.capture?.();
         if (!stickerUri) throw new Error('이미지 캡처 실패');
 
         const backgroundUri = await viewShotRefBg.current?.capture?.();
         if (!backgroundUri) throw new Error('배경 이미지 캡처 실패');
 
-        // 4) react-native-share: 특정 앱(IG Stories)로 바로 공유
         await Share.shareSingle({
           social: Social.InstagramStories,
           appId: 'YOUR_FB_APP_ID',
@@ -194,7 +189,7 @@ export default function RecShareModal({
                 </View>
 
                 {/* To. me — 말줄임 적용 (혹시 닉네임 길어질 대비) */}
-                {isRecommended && (
+                {!isTabRecommending && (
                   <Text
                     style={styles.toText}
                     numberOfLines={1} // NEW: 말줄임
@@ -241,7 +236,7 @@ export default function RecShareModal({
                 >
                   From.{' '}
                   <Text style={{ color: '#F4F4F4' }}>
-                    {isRecommended ? recData.senderNickname : 'me'}
+                    {!isTabRecommending ? recData.senderNickname : 'me'}
                   </Text>
                 </Text>
 
@@ -365,7 +360,7 @@ export default function RecShareModal({
 
               <View style={styles.XRight}>
                 {/* To. me — 1줄, ... */}
-                {isRecommended && (
+                {!isTabRecommending && (
                   <Text
                     style={styles.XtoText}
                     numberOfLines={1} // NEW
@@ -412,7 +407,7 @@ export default function RecShareModal({
                 >
                   From.{' '}
                   <Text style={{ color: '#F4F4F4' }}>
-                    {isRecommended ? recData.senderNickname : 'me'}
+                    {!isTabRecommending ? recData.senderNickname : 'me'}
                   </Text>
                 </Text>
               </View>
@@ -520,11 +515,11 @@ const styles = StyleSheet.create({
   logoContainer: {
     position: 'absolute',
     bottom: -1,
-    right: -1,
+    right: -0.98,
     height: 29.838,
     width: 46.469,
     flexShrink: 0,
-    borderTopLeftRadius: 10, // RN은 각 코너별로 radius 지정
+    borderTopLeftRadius: 10,
     borderBottomRightRadius: 10,
     borderTopWidth: 1,
     borderLeftWidth: 1,
@@ -554,16 +549,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     padding: 20,
-    flexDirection: 'row', // 가로형 레이아웃
-    gap: 12, // 카드 간격
+    flexDirection: 'row',
+    gap: 12,
   },
   XLeft: {
-    width: 130, // 카드 높이와 동일
+    width: 130,
     left: -50,
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    position: 'relative', // 자식 요소의 절대 위치 지정
+    position: 'relative',
   },
   XRight: {
     flex: 1,

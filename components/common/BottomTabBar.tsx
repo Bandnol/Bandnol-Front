@@ -1,5 +1,10 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 import HomeActive from '@/components/common/icons/Home-active.svg';
 import HomeInactive from '@/components/common/icons/Home-inactive.svg';
@@ -10,6 +15,7 @@ import PostInactive from '@/components/common/icons/Post-inactive.svg';
 import RecommendActive from '@/components/common/icons/Recommend-active.svg';
 import RecommendInactive from '@/components/common/icons/Recommend-inactive.svg';
 import { Typography } from '@/constants/typography';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const TAB_CONFIG = [
   {
@@ -40,67 +46,65 @@ const TAB_CONFIG = [
 
 export default function BottomTabBar({ currentTab, onTabPress }) {
   return (
-    <View style={styles.container}>
-      {TAB_CONFIG.map(
-        ({
-          key,
-          label,
-          activeIcon: ActiveIcon,
-          inactiveIcon: InactiveIcon,
-        }) => {
-          const isActive = currentTab === key;
-          const Icon = isActive ? ActiveIcon : InactiveIcon;
-          return (
-            <TouchableOpacity
-              key={key}
-              onPress={() => onTabPress(key)}
-              style={styles.tabItem}
-            >
-              <Icon width={28} height={28} />
-              <Text style={[styles.label, isActive && styles.activeLabel]}>
-                {label}
-              </Text>
-            </TouchableOpacity>
-          );
-        },
-      )}
-    </View>
+    <SafeAreaView edges={['bottom']} style={styles.safeArea}>
+      <View style={styles.container}>
+        {TAB_CONFIG.map(
+          ({
+            key,
+            label,
+            activeIcon: ActiveIcon,
+            inactiveIcon: InactiveIcon,
+          }) => {
+            const isActive = currentTab === key;
+            const Icon = isActive ? ActiveIcon : InactiveIcon;
+            return (
+              <TouchableOpacity
+                key={key}
+                onPress={() => onTabPress(key)}
+                style={styles.tabItem}
+              >
+                <Icon width={28} height={28} />
+                <Text style={[styles.label, isActive && styles.activeLabel]}>
+                  {label}
+                </Text>
+              </TouchableOpacity>
+            );
+          },
+        )}
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    backgroundColor: '#1F1F1F',
+  },
   container: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'flex-start',
+    justifyContent: 'space-evenly',
+    alignItems: 'center',
     width: '100%',
-    height: 90,
     paddingTop: 12,
     backgroundColor: '#1F1F1F',
-    flexShrink: 0,
   },
   tabItem: {
-    width: 50,
-    height: 52,
+    flex: 1,
     flexDirection: 'column',
     alignItems: 'center',
-    flexShrink: 0,
-    marginHorizontal: 10.5, // 아이템 간 가로 간격.. native에서는 gap이 안 됨
+    justifyContent: 'center',
   },
   icon: {
     width: 28,
     height: 28,
     flexShrink: 0,
-    aspectRatio: 1,
-    marginBottom: 10, // 아이콘 <-> 텍스트
     marginTop: 12,
   },
   label: {
-    alignSelf: 'stretch',
-    fontSize: 10,
     color: '#555555',
     textAlign: 'center',
     ...Typography.caption2,
+    marginTop: 10,
   },
   activeLabel: {
     color: '#FFFFFF',
