@@ -81,8 +81,20 @@ export default function RecBottomModal({
               />
 
               <View style={styles.myrecSong}>
-                <Text style={styles.myrecTitle}>{songData.title}</Text>
-                <Text style={styles.myrecArtist}>{songData.artistName}</Text>
+                <Text
+                  style={styles.myrecTitle}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {songData.title}
+                </Text>
+                <Text
+                  style={styles.myrecArtist}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {songData.artistName}
+                </Text>
               </View>
 
               <View
@@ -93,7 +105,13 @@ export default function RecBottomModal({
                 }}
               ></View>
 
-              <Text style={styles.myrecComment}>{songData.comment}</Text>
+              <Text
+                style={styles.myrecComment}
+                numberOfLines={3}
+                ellipsizeMode="tail"
+              >
+                {songData.comment}
+              </Text>
             </View>
           </View>
         </View>

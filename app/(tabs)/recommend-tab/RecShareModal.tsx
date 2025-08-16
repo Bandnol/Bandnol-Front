@@ -56,14 +56,12 @@ export default function RecShareModal({
     if (Platform.OS === 'ios') {
       try {
         if (!recData) return;
-        // 1) 캡쳐
         const stickerUri = await viewShotRefInsta.current?.capture?.();
         if (!stickerUri) throw new Error('이미지 캡처 실패');
 
         const backgroundUri = await viewShotRefBg.current?.capture?.();
         if (!backgroundUri) throw new Error('배경 이미지 캡처 실패');
 
-        // 4) react-native-share: 특정 앱(IG Stories)로 바로 공유
         await Share.shareSingle({
           social: Social.InstagramStories,
           appId: 'YOUR_FB_APP_ID',
@@ -87,14 +85,12 @@ export default function RecShareModal({
           );
           return;
         }
-        // 1) 캡쳐
         const stickerUri = await viewShotRefInsta.current?.capture?.();
         if (!stickerUri) throw new Error('이미지 캡처 실패');
 
         const backgroundUri = await viewShotRefBg.current?.capture?.();
         if (!backgroundUri) throw new Error('배경 이미지 캡처 실패');
 
-        // 4) react-native-share: 특정 앱(IG Stories)로 바로 공유
         await Share.shareSingle({
           social: Social.InstagramStories,
           appId: 'YOUR_FB_APP_ID',
@@ -523,7 +519,7 @@ const styles = StyleSheet.create({
     height: 29.838,
     width: 46.469,
     flexShrink: 0,
-    borderTopLeftRadius: 10, // RN은 각 코너별로 radius 지정
+    borderTopLeftRadius: 10,
     borderBottomRightRadius: 10,
     borderTopWidth: 1,
     borderLeftWidth: 1,
@@ -553,16 +549,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     padding: 20,
-    flexDirection: 'row', // 가로형 레이아웃
-    gap: 12, // 카드 간격
+    flexDirection: 'row',
+    gap: 12,
   },
   XLeft: {
-    width: 130, // 카드 높이와 동일
+    width: 130,
     left: -50,
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    position: 'relative', // 자식 요소의 절대 위치 지정
+    position: 'relative',
   },
   XRight: {
     flex: 1,
