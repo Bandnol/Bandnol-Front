@@ -1,16 +1,41 @@
 import { useRouter } from 'expo-router';
+import { Text, View, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
 
 export default function Index() {
   const router = useRouter();
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      router.replace('/(auth)/splash' as const);
-    }, 0);
+    let isMounted = true;
 
-    return () => clearTimeout(timeout);
+    async function checkLogin() {
+      let token = await AsyncStorage.getItem('accessToken');
+      if (!token) token = await AsyncStorage.getItem('token');
+
+      let profileString = await AsyncStorage.getItem('profile');
+      if (!profileString) profileString = await AsyncStorage.getItem('user');
+      let profile = null;
+      try {
+        profile = profileString ? JSON.parse(profileString) : null;
+      } catch {
+        profile = null;
+      }
+
+      if (isMounted) {
+        if (token && profile && (profile.name || profile.nickname)) {
+          router.replace('/(tabs)');
+        } else {
+          router.replace('/(auth)/splash');
+        }
+      }
+    }
+
+    checkLogin();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (

@@ -31,22 +31,29 @@ export function useSocialAuth() {
         console.log('서버 응답:', data);
 
         if (data.success) {
-          // 액세스 토큰 저장 (필수)
-          await SecureStore.setItemAsync('JWTToken', data.data.token);
+          // 액세스/리프레시 토큰 저장 (키 이름 호환)
+          const accessToken =
+            data?.data?.token ?? data?.data?.accessToken ?? null;
+          const refreshToken =
+            data?.data?.refreshToken ?? data?.refreshToken ?? null;
 
-          // 리프레시 토큰이 응답에 있을 때만 저장 (백엔드 캐시 전환 대응)
-          if (data?.data?.refreshToken) {
-            await SecureStore.setItemAsync(
-              'JWTRefreshToken',
-              data.data.refreshToken,
+          if (!accessToken) {
+            console.error(
+              '[인증] 로그인 응답에 access token 없음:',
+              JSON.stringify(data),
             );
-            console.log('리프레시 토큰 저장 완료');
           } else {
-            // 서버가 쿠키/캐시로만 관리하는 경우 대비
-            await SecureStore.deleteItemAsync('JWTRefreshToken');
-            console.log(
-              '리프레시 토큰 미수신: 서버에서 캐시/쿠키로 관리하는 것으로 판단',
-            );
+            await SecureStore.setItemAsync('JWTToken', accessToken);
+          }
+
+          // 리프레시 토큰은 "있을 때만" 갱신, 없으면 기존 값 유지 (모바일 환경에서 쿠키 미사용 대비)
+          if (refreshToken) {
+            await SecureStore.setItemAsync('JWTRefreshToken', refreshToken);
+            const mask = (t?: string | null) =>
+              t ? `${t.slice(0, 6)}...${t.slice(-6)}(len:${t.length})` : 'null';
+            console.log('[인증] 리프레시 토큰 저장 완료:', mask(refreshToken));
+          } else {
+            console.log('[인증] 리프레시 토큰 미수신 → 기존 값 유지');
           }
 
           // 사용자 정보 저장
