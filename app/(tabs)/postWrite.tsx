@@ -1,6 +1,7 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import * as SecureStore from 'expo-secure-store';
 import {
   Image,
   Pressable,
@@ -25,6 +26,26 @@ export default function PostWrite() {
   const [range, setRange] = useState<'public' | 'friend' | 'private'>('public');
   const [images, setImages] = useState<string[]>([]);
   const [isConfirmVisible, setConfirmVisible] = useState(false);
+  const [userProfile, setUserProfile] = useState<{
+    nickname?: string;
+    photo?: string | null;
+  }>({});
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const raw = await SecureStore.getItemAsync('user');
+        if (!raw) return;
+        const u = JSON.parse(raw);
+        setUserProfile({
+          nickname: u?.nickname ?? u?.name ?? '',
+          photo: u?.photo ?? null,
+        });
+      } catch (e) {
+        console.warn('[PostWrite] failed to load user from SecureStore', e);
+      }
+    })();
+  }, []);
 
   const pickImages = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -97,10 +118,19 @@ export default function PostWrite() {
         </View>
       </View>
       <View style={styles.inputContainer}>
-        <View style={styles.profilePic}></View>
+        <Image
+          source={
+            userProfile.photo
+              ? { uri: userProfile.photo }
+              : require('@/assets/images/profile.png')
+          }
+          style={styles.profilePic}
+        />
         <View style={styles.inputWrapper}>
           <View>
-            <Text style={styles.nicknameText}>Nickname</Text>
+            <Text style={styles.nicknameText}>
+              {userProfile.nickname || 'Nickname'}
+            </Text>
           </View>
           <TextInput
             value={content}

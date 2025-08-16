@@ -23,6 +23,7 @@ import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
 import { useUpdateOwnId } from '@/hooks/useUpdateOwnId';
 import api from '@/store/api';
+import { clearOnLogout, clearOnWithdraw } from '@/hooks/useAuthClean';
 
 export default function UserInfo() {
   const router = useRouter();
@@ -126,7 +127,33 @@ export default function UserInfo() {
       // 사용 가능하면 실제 업데이트
       await updateOwnId(id, {
         onSuccess: (serverOwnId: string) => {
+          // UI 즉시 반영
           setOwnId(serverOwnId);
+          setId(serverOwnId);
+          setHasCheckedId(true);
+          setIsDuplicate(false);
+          setIdDirty(false);
+
+          // SecureStore('user')에 ownId 갱신
+          (async () => {
+            try {
+              const rawUser = await SecureStore.getItemAsync('user');
+              const prev = rawUser ? JSON.parse(rawUser) : {};
+              await SecureStore.setItemAsync(
+                'user',
+                JSON.stringify({
+                  ...prev,
+                  ownId: serverOwnId,
+                }),
+              );
+              console.log(
+                '[회원정보] SecureStore 업데이트 완료: ownId →',
+                serverOwnId,
+              );
+            } catch (e) {
+              console.warn('[회원정보] SecureStore 업데이트 실패', e);
+            }
+          })();
         },
       });
     } catch (e) {
@@ -296,12 +323,10 @@ export default function UserInfo() {
               } catch {}
             } finally {
               try {
-                await SecureStore.deleteItemAsync('JWTToken');
-                await SecureStore.deleteItemAsync('JWTRefreshToken');
-                await SecureStore.deleteItemAsync('user');
+                await clearOnLogout(); // 관심 아티스트 스토리지만 제거 (JWTToken/user 유지)
               } catch {}
               setLogoutVisible(false);
-              router.push('/(auth)/splash');
+              router.replace('/(auth)/splash');
             }
           }}
           onCancel={() => setLogoutVisible(false)}
@@ -320,12 +345,10 @@ export default function UserInfo() {
               } catch {}
             } finally {
               try {
-                await SecureStore.deleteItemAsync('JWTToken');
-                await SecureStore.deleteItemAsync('JWTRefreshToken');
-                await SecureStore.deleteItemAsync('user');
+                await clearOnWithdraw(); // 토큰/유저/관심 아티스트 모두 삭제
               } catch {}
               setWithdrawVisible(false);
-              router.push('/(auth)/splash');
+              router.replace('/(auth)/splash');
             }
           }}
           onCancel={() => setWithdrawVisible(false)}
