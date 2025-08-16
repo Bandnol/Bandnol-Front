@@ -1,3 +1,6 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { IA_STORAGE_KEY } from '@/hooks/useAuthClean';
+import { shouldSkipOnboarding } from '@/hooks/useAuthClean';
 import { API_URL } from '@env';
 import { login } from '@react-native-kakao/user';
 import { useRouter } from 'expo-router';
@@ -61,6 +64,27 @@ export function useSocialAuth() {
             'user',
             JSON.stringify(data.data.user),
           );
+
+          // 온보딩 스킵 판단
+          const skipAuth = await shouldSkipOnboarding(); // SecureStore에 토큰+user 존재 여부
+
+          // 관심 아티스트 존재 여부 확인
+          let hasArtists = false;
+          try {
+            const raw = await AsyncStorage.getItem(IA_STORAGE_KEY);
+            const arr = raw ? JSON.parse(raw) : [];
+            hasArtists = Array.isArray(arr) && arr.length > 0;
+          } catch {}
+
+          // 조건: 토큰+유저만 있고 아티스트 없음 → 온보딩 전체 스킵
+          if (skipAuth && !hasArtists) {
+            console.log(
+              '[온보딩] 토큰+유저 존재, 아티스트 없음 → 전체 스킵하여 탭으로 이동',
+            );
+            router.replace('/(tabs)/home');
+            return;
+          }
+
           // user 정보 가져오기
           const { name, email } = data.data.user;
           router.push({
