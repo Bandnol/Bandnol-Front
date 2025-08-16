@@ -515,7 +515,7 @@ const styles = StyleSheet.create({
   logoContainer: {
     position: 'absolute',
     bottom: -1,
-    right: -1,
+    right: -0.98,
     height: 29.838,
     width: 46.469,
     flexShrink: 0,
