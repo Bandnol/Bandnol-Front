@@ -10,13 +10,9 @@ export default {
     userInterfaceStyle: 'automatic',
     newArchEnabled: true,
     ios: {
-      bundleIdentifier: 'com.bandnol.Bandnol20',
+      bundleIdentifier: 'com.bandnol.goBandnolApp20',
       supportsTablet: false,
-    },
-    extra: {
-      eas: {
-        projectId: '3d7bb85e-e4d5-4f9a-86be-aafb4ed0e3c9',
-      },
+      icon: './assets/images/Bandnol-logo-2.png'
     },
     android: {
       package: 'com.bandnol.Bandnol',
@@ -94,6 +90,7 @@ export default {
       eas: {
         projectId: 'e22ee9c3-9022-4d36-8e63-d8a411ac0ccd',
       },
+      KAKAO_NATIVE_APP_KEY: process.env.EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY,
     },
   },
 };

@@ -6,7 +6,8 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "store"
+      "distribution": "store",
+      "node": "20.19.0"
     },
     "development-simulator": {
       "developmentClient": true,
@@ -17,7 +18,8 @@
       "distribution": "store"
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "node": "20.19.0"
     }
   },
   "submit": {

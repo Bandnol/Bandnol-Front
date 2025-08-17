@@ -7,6 +7,8 @@ import * as SecureStore from 'expo-secure-store';
 import { Alert } from 'react-native';
 import { useFonts } from 'expo-font';
 import { Slot } from 'expo-router';
+import Constants from 'expo-constants';
+
 
 import { AuthProvider } from '@/hooks/useAuthContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -14,10 +16,11 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const kakaoNativeAppKey = process.env.EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY || '';
+  const kakaoNativeAppKey = Constants.expoConfig?.extra?.KAKAO_NATIVE_APP_KEY || '';
 
   const API_URL = process.env.EXPO_PUBLIC_API_URL || '';
   const router = useRouter();
+  const kakaoInitialized = useRef(false);
 
   const [loaded] = useFonts({
     Pretendard: require('../assets/fonts/Pretendard-Regular.ttf'),
@@ -28,8 +31,10 @@ export default function RootLayout() {
   //usePushNotifications(); 애플 팀계정 필요
 
   useEffect(() => {
-    if (kakaoNativeAppKey) {
+    console.log('Kakao Key:', kakaoNativeAppKey)
+    if (!kakaoInitialized.current &&kakaoNativeAppKey) {
       initializeKakaoSDK(kakaoNativeAppKey);
+      kakaoInitialized.current = true;
     } else {
       console.warn('Kakao Native App Key가 설정되지 않았습니다.');
     }
