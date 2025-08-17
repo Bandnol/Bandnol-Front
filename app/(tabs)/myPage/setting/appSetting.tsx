@@ -112,7 +112,12 @@ export default function AppSetting() {
 
           <TouchableOpacity
             style={styles.listItem}
-            onPress={() => router.push('/(auth)/inquiry')}
+            onPress={() =>
+              router.push({
+                pathname: '/(auth)/inquiry',
+                params: { returnTo: '/(tabs)/myPage/setting/appSetting' },
+              })
+            }
           >
             <Text style={styles.itemText}>문의하기</Text>
           </TouchableOpacity>
