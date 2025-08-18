@@ -20,15 +20,16 @@ import BottomNextButton from '@/components/common/BottomNextButton';
 import StatusBarHeader from '@/components/common/StatusBarHeader';
 import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
-import { useAuth } from '@/hooks/useAuthContext';
 import api from '@/store/api'; // axios instance 불러오기
+import { useAuth as useAuthContext } from '@/hooks/useAuthContext';
+import { useAuth as useAuthApi, SignupBody } from '@/hooks/useAuth';
 
 export default function Step1Personal() {
   const router = useRouter();
-  const { name: authName, email: authEmail } = useAuth();
-  const params = useLocalSearchParams<{ name?: string; email?: string }>();
-  const name = params.name || authName;
-  const email = params.email || authEmail;
+  const { name: authName, email: authEmail } = useAuthContext();
+  // params are not used for name/email anymore
+  // const params = useLocalSearchParams<{ name?: string; email?: string }>();
+  const [email, setEmail] = React.useState(authEmail || '');
   const [id, setId] = React.useState('');
   const [nickname, setNickname] = React.useState('');
   const [birth, setBirth] = React.useState('');
@@ -41,8 +42,18 @@ export default function Step1Personal() {
   const [isIdValid, setIsIdValid] = React.useState(true);
   const [hasCheckedId, setHasCheckedId] = React.useState(false);
   const [isBackModalVisible, setIsBackModalVisible] = React.useState(false);
+  const [password, setPassword] = React.useState('');
+  const [confirmPassword, setConfirmPassword] = React.useState('');
 
-  const isFormFilled = id && nickname && birth && selectedGender;
+  const isFormFilled = Boolean(
+    id &&
+      password &&
+      confirmPassword &&
+      nickname &&
+      email &&
+      birth &&
+      selectedGender,
+  );
 
   const validateId = (id: string) => {
     return /^[a-zA-Z0-9._]{1,20}$/.test(id);
@@ -86,58 +97,38 @@ export default function Step1Personal() {
       setIsChecking(false);
     }
   };
+  const { signup } = useAuthApi();
 
-  const onNextPress = async () => {
-    if (!isFormFilled || !hasCheckedId || !isIdValid || isDuplicate) return;
+  const onSubmit = async () => {
+    // Basic validations
+    if (!isFormFilled) return;
+    if (!hasCheckedId || !isIdValid || isDuplicate) return;
+    if (password !== confirmPassword) return;
+
+    const body: SignupBody = {
+      ownId: id,
+      password,
+      nickname,
+      email,
+      gender: genderValue,
+      birth, // already formatted as YYYY-MM-DD
+    };
 
     try {
-      const token = await SecureStore.getItemAsync('JWTToken');
-      console.log('PATCH 요청 데이터:', {
-        ownId: id,
-        nickname,
-        gender: genderValue,
-        birth,
-      });
-      console.log('Authorization:', token);
-
-      await api.patch(
-        '/api/v1/users/me/profiles',
-        {
-          ownId: id,
-          nickname,
-          gender: genderValue,
-          birth,
-        },
-        {
-          headers: {
-            Authorization: token ? `Bearer ${token}` : undefined,
-          },
-        },
-      );
-
-      // SecureStore에 user 정보 업데이트
-      const userStr = await SecureStore.getItemAsync('user');
-      const user = userStr ? JSON.parse(userStr) : {};
-      await SecureStore.setItemAsync(
-        'user',
-        JSON.stringify({
-          ...user,
-          ownId: id,
-          nickname,
-          gender: genderValue,
-          birth,
-        }),
-      );
-
+      const userId = await signup(body);
+      console.log('회원가입 성공, userId:', userId);
+      // Proceed to next onboarding step (artist selection)
       router.push('/step2-artist');
-    } catch (error) {
-      console.error('프로필 저장 실패:', error);
+    } catch (e: any) {
+      console.error('회원가입 실패:', e?.message || e);
     }
   };
 
   return (
     <SafeAreaView style={styles.viewBg}>
       <View style={styles.view}>
+        {/* Fixed header at the top */}
+        <StatusBarHeader onBackPress={() => setIsBackModalVisible(true)} />
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
           <ScrollView
             style={styles.scrollView}
@@ -146,8 +137,6 @@ export default function Step1Personal() {
             showsHorizontalScrollIndicator={false}
             horizontal={false}
           >
-            <StatusBarHeader onBackPress={() => setIsBackModalVisible(true)} />
-
             <View style={{ height: 35 }} />
 
             <View style={styles.group}>
@@ -168,52 +157,7 @@ export default function Step1Personal() {
 
             <View style={styles.frameParent}>
               <View style={styles.textfieldParent}>
-                <View style={styles.textfield}>
-                  <Text
-                    style={[
-                      Typography.subtitle2,
-                      { color: Colors.palette.Gray500 },
-                    ]}
-                  >
-                    이름
-                  </Text>
-                  <View style={[styles.frameShadowBox]}>
-                    <TextInput
-                      style={[
-                        styles.inputText,
-                        { flex: 1, paddingVertical: 0 },
-                      ]}
-                      value={name}
-                      editable={false}
-                      placeholder="이름"
-                      placeholderTextColor={Colors.palette.Gray500}
-                      numberOfLines={1}
-                    />
-                  </View>
-                </View>
-                <View style={styles.textfield}>
-                  <Text
-                    style={[
-                      Typography.subtitle2,
-                      { color: Colors.palette.Gray500 },
-                    ]}
-                  >
-                    이메일
-                  </Text>
-                  <View style={[styles.frameShadowBox]}>
-                    <TextInput
-                      style={[
-                        styles.inputText,
-                        { flex: 1, paddingVertical: 0 },
-                      ]}
-                      value={email}
-                      editable={false}
-                      placeholder="이메일"
-                      placeholderTextColor={Colors.palette.Gray500}
-                      numberOfLines={1}
-                    />
-                  </View>
-                </View>
+                {/* 아이디 */}
                 <View style={styles.textfield}>
                   <Text
                     style={[
@@ -325,6 +269,71 @@ export default function Step1Personal() {
                     사용 가능한 아이디입니다.
                   </Text>
                 )}
+                {/* 비밀번호 */}
+                <View style={styles.textfield}>
+                  <Text
+                    style={[
+                      Typography.subtitle2,
+                      { color: Colors.palette.Gray500 },
+                    ]}
+                  >
+                    비밀번호
+                  </Text>
+                  <View style={[styles.frameShadowBox]}>
+                    <TextInput
+                      style={[
+                        styles.inputText,
+                        { flex: 1, paddingVertical: 0 },
+                      ]}
+                      value={password}
+                      onChangeText={setPassword}
+                      placeholder="비밀번호 입력"
+                      placeholderTextColor={Colors.palette.Gray500}
+                      secureTextEntry
+                    />
+                  </View>
+                </View>
+                {/* 비밀번호 확인 */}
+                <View style={styles.textfield}>
+                  <Text
+                    style={[
+                      Typography.subtitle2,
+                      { color: Colors.palette.Gray500 },
+                    ]}
+                  >
+                    비밀번호 확인
+                  </Text>
+                  <View style={[styles.frameShadowBox]}>
+                    <TextInput
+                      style={[
+                        styles.inputText,
+                        { flex: 1, paddingVertical: 0 },
+                      ]}
+                      value={confirmPassword}
+                      onChangeText={setConfirmPassword}
+                      placeholder="비밀번호 확인 입력"
+                      placeholderTextColor={Colors.palette.Gray500}
+                      secureTextEntry
+                    />
+                  </View>
+                </View>
+                {/* 비밀번호 불일치 에러 메시지 */}
+                {password &&
+                  confirmPassword &&
+                  password !== confirmPassword && (
+                    <Text
+                      style={[
+                        Typography.body2,
+                        {
+                          color: Colors.palette.point,
+                          alignSelf: 'flex-start',
+                        },
+                      ]}
+                    >
+                      비밀번호가 일치하지 않습니다.
+                    </Text>
+                  )}
+                {/* 닉네임 */}
                 <View style={styles.textfield}>
                   <Text
                     style={[
@@ -348,6 +357,31 @@ export default function Step1Personal() {
                     />
                   </View>
                 </View>
+                {/* 이메일 */}
+                <View style={styles.textfield}>
+                  <Text
+                    style={[
+                      Typography.subtitle2,
+                      { color: Colors.palette.Gray500 },
+                    ]}
+                  >
+                    이메일
+                  </Text>
+                  <View style={[styles.frameShadowBox]}>
+                    <TextInput
+                      style={[
+                        styles.inputText,
+                        { flex: 1, paddingVertical: 0 },
+                      ]}
+                      value={email}
+                      onChangeText={(text) => setEmail(text)}
+                      placeholder="이메일"
+                      placeholderTextColor={Colors.palette.Gray500}
+                      numberOfLines={1}
+                    />
+                  </View>
+                </View>
+                {/* 생년월일 */}
                 <View style={styles.textfield}>
                   <Text
                     style={[
@@ -371,6 +405,7 @@ export default function Step1Personal() {
                     />
                   </View>
                 </View>
+                {/* 젠더 선택 */}
                 <View style={[styles.frameGroupFlexBox]}>
                   <TouchableOpacity
                     onPress={() => setSelectedGender('여성')}
@@ -423,7 +458,16 @@ export default function Step1Personal() {
             </View>
           </ScrollView>
         </TouchableWithoutFeedback>
-        <BottomNextButton onPress={onNextPress} enabled={true} />
+        <BottomNextButton
+          onPress={onSubmit}
+          enabled={Boolean(
+            isFormFilled &&
+              hasCheckedId &&
+              isIdValid &&
+              isDuplicate === false &&
+              password === confirmPassword,
+          )}
+        />
         <LinearGradient
           colors={['transparent', Colors.palette.Gray900]}
           style={styles.fadeOverlay}
@@ -485,8 +529,8 @@ const styles = StyleSheet.create({
     paddingBottom: 150,
   },
   frameShadowBox: {
-    padding: 16,
-    height: 50,
+    paddingHorizontal: 16,
+    minHeight: 50,
     borderWidth: 1,
     borderColor: Colors.palette.Gray700,
     borderStyle: 'solid',
