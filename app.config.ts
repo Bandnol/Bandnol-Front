@@ -16,8 +16,9 @@ export default {
     },
     android: {
       package: 'com.bandnol.Bandnol',
+      versionCode: 5,
       adaptiveIcon: {
-        foregroundImage: './assets/images/adaptive-icon.png',
+        foregroundImage: './assets/images/Bandnol-logo-2.png',
         backgroundColor: '#ffffff',
       },
       edgeToEdgeEnabled: true,
@@ -47,12 +48,8 @@ export default {
         'expo-build-properties',
         {
           android: {
-            compileSdkVersion: 34,
-            targetSdkVersion: 34,
-            kotlinVersion: '1.9.24',
-            extraMavenRepos: [
-              'https://devrepo.kakao.com/nexus/content/groups/public/',
-            ],
+            compileSdkVersion: 35,
+            targetSdkVersion: 35,
           },
         },
       ],
