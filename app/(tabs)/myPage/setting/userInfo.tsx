@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import { useAuth } from '@/hooks/useAuth';
 import * as SecureStore from 'expo-secure-store';
 import { jwtDecode } from 'jwt-decode';
 import React, { useEffect, useState } from 'react';
@@ -13,19 +14,16 @@ import {
 } from 'react-native';
 
 import BackArrow from '@/assets/icons/back-arrow.svg';
+import KaKao from '@/assets/icons/size_s/kakao.svg';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
 import { useUpdateOwnId } from '@/hooks/useUpdateOwnId';
 import api from '@/store/api';
-import { clearOnLogout, clearOnWithdraw } from '@/hooks/useAuthClean';
-
-//
-const Logout = async () => {};
-const Unlink = async () => {};
 
 export default function UserInfo() {
   const router = useRouter();
+  const { logout, withdraw } = useAuth();
   const [logoutVisible, setLogoutVisible] = useState(false);
   const [withdrawVisible, setWithdrawVisible] = useState(false);
 
@@ -186,9 +184,10 @@ export default function UserInfo() {
         </View>
 
         <View style={styles.content}>
-          {/* 로그인 계정 */}
-          <Text style={styles.label}>이메일</Text>
+          {/* 연결된 소셜 로그인 계정 */}
+          <Text style={styles.label}>연결된 이메일 계정</Text>
           <View style={styles.textBox}>
+            {/* <KaKao width={20} height={20} style={{ marginRight: 10 }} /> */}
             <Text
               style={[styles.textValue, { flex: 1 }]}
               numberOfLines={1}
@@ -316,13 +315,16 @@ export default function UserInfo() {
           headerText={'로그아웃하시겠습니까?'}
           onConfirm={async () => {
             try {
-              try {
-                await Logout();
-              } catch {}
+              console.log('[로그아웃] 로그아웃을 진행합니다.');
+              await logout();
+              console.log('[로그아웃] 로그아웃이 완료되었습니다.');
+            } catch (e: any) {
+              console.warn(
+                '[로그아웃] 로그아웃 과정에서 문제가 발생했습니다.',
+                e?.message || String(e),
+              );
             } finally {
-              try {
-                await clearOnLogout(); // 관심 아티스트 스토리지만 제거 (JWTToken/user 유지)
-              } catch {}
+              console.log('[로그아웃] 스플래시 화면으로 이동합니다.');
               setLogoutVisible(false);
               router.replace('/(auth)/splash');
             }
@@ -338,13 +340,16 @@ export default function UserInfo() {
           }
           onConfirm={async () => {
             try {
-              try {
-                await Unlink();
-              } catch {}
+              console.warn('[회원탈퇴] 회원 탈퇴를 진행합니다.');
+              await withdraw();
+              console.log('[회원탈퇴] 회원 탈퇴가 완료되었습니다.');
+            } catch (e: any) {
+              console.error(
+                '[회원탈퇴] 회원 탈퇴 과정에서 문제가 발생했습니다.',
+                e?.message || String(e),
+              );
             } finally {
-              try {
-                await clearOnWithdraw(); // 토큰/유저/관심 아티스트 모두 삭제
-              } catch {}
+              console.log('[회원탈퇴] 스플래시 화면으로 이동합니다.');
               setWithdrawVisible(false);
               router.replace('/(auth)/splash');
             }
