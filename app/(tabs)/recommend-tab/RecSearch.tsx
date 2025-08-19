@@ -2,7 +2,7 @@ import axios from 'axios';
 import dayjs from 'dayjs';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import {
   Image,
   Pressable,
@@ -33,7 +33,19 @@ export type ReceiveSong = {
   imageUrl: string;
   senderNickname: string | null;
 };
-
+function useDebouncedCallback<T extends any[]>(
+  fn: (...args: T) => void,
+  delay = 220,
+) {
+  const t = useRef<ReturnType<typeof setTimeout> | null>(null);
+  return useCallback(
+    (...args: T) => {
+      if (t.current) clearTimeout(t.current);
+      t.current = setTimeout(() => fn(...args), delay);
+    },
+    [fn, delay],
+  );
+}
 export default function RecSearch() {
   const [query, setQuery] = useState('');
   const [sendResults, setSendResults] = useState<SendSong[]>([]);
@@ -73,13 +85,14 @@ export default function RecSearch() {
       setSendResults(send);
       setReceiveResults(receive);
     } catch (error) {
-      console.error('🔴 검색 API 실패:', error);
+      console.error('검색 API 실패:', error);
       setSendResults([]);
       setReceiveResults([]);
     }
   };
 
   const handleSubmit = () => handleSearch(query);
+  const debouncedHandleSearch = useDebouncedCallback(handleSearch, 220);
 
   const renderItem = (
     item: SendSong | ReceiveSong,
@@ -139,7 +152,15 @@ export default function RecSearch() {
           <View style={styles.searchBox}>
             <TextInput
               value={query}
-              onChangeText={handleSearch}
+              onChangeText={(text) => {
+                setQuery(text);
+                if (!text.trim()) {
+                  setSendResults([]);
+                  setReceiveResults([]);
+                  return;
+                }
+                debouncedHandleSearch(text);
+              }}
               onSubmitEditing={handleSubmit}
               style={styles.searchInput}
               placeholder="검색어를 입력하세요"

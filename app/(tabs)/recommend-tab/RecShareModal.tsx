@@ -106,7 +106,6 @@ export default function RecShareModal({
       }
     }
   };
-
   const handleShareToX = () => {
     if (!recData) return;
     const shareUrl = `https://bandnol.app/recoms/${recData.id}`;
@@ -259,7 +258,7 @@ export default function RecShareModal({
           <View style={styles.buttonGroup}>
             <Pressable
               style={styles.shareItem}
-              onPress={handleShareToInstagramStory}
+              //              onPress={handleShareToInstagramStory}
             >
               <View style={styles.shareButton}>
                 <Insta />

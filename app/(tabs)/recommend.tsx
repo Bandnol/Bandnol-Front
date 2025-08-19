@@ -31,16 +31,43 @@ type RecommendItem = {
   };
 };
 const fetchRecommendList = async (): Promise<RecommendItem[]> => {
-  const token = await SecureStore.getItemAsync('JWTToken');
-  if (!token) throw new Error('JWT 토큰 없음');
+  try {
+    const token = await SecureStore.getItemAsync('JWTToken');
+    if (!token) throw new Error('JWT 토큰 없음');
 
-  const response = await axios.get('https://bandnol.app/api/v1/recoms/lists', {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  return response.data.data;
+    const response = await axios.get(
+      'https://bandnol.app/api/v1/recoms/lists',
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
+    const { success, data, error } = response.data;
+
+    if (!success) {
+      console.error('[api/v1/recoms/lists] 에서 success=false:', error);
+      return [];
+    }
+
+    if (Array.isArray(data) && data.length === 0) {
+      console.log('[api/v1/recoms/lists] 에서 요청 성공했지만 데이터 없음');
+      return [];
+    }
+
+    console.log(
+      '[api/v1/recoms/lists] 에서 요청 성공, 데이터 있음:',
+      data.length,
+      '개',
+    );
+    return data;
+  } catch (err: any) {
+    console.error('❌ 요청 실패:', err.message || err);
+    return [];
+  }
 };
+
 export default function RecommendScreen() {
   useEffect(() => {
     const storeDummyToken = async () => {
@@ -124,6 +151,12 @@ export default function RecommendScreen() {
               setSelectedDate={setSelectedDate}
               isTabRecommending={isTabRecommending}
             />
+          ) : data.length === 0 ? (
+            <View style={styles.emptyBox}>
+              <Text style={styles.emptyText}>
+                추천 기록이 없습니다. {'\n'}좋아하는 노래를 추천해보세요!
+              </Text>
+            </View>
           ) : (
             <RecommendList
               ref={listRef}
@@ -235,5 +268,18 @@ const styles = StyleSheet.create({
   artistText: {
     ...Typography.caption1,
     color: '#fff',
+  },
+  emptyBox: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyText: {
+    ...Typography.body1,
+    color: '#aaa',
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });
