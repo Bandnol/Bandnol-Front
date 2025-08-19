@@ -1,7 +1,3 @@
-import {
-  logout as kakaoLogout,
-  unlink as kakaoUnlink,
-} from '@react-native-kakao/user';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { jwtDecode } from 'jwt-decode';
@@ -17,13 +13,16 @@ import {
 } from 'react-native';
 
 import BackArrow from '@/assets/icons/back-arrow.svg';
-import KaKao from '@/assets/icons/size_s/kakao.svg';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
 import { useUpdateOwnId } from '@/hooks/useUpdateOwnId';
 import api from '@/store/api';
 import { clearOnLogout, clearOnWithdraw } from '@/hooks/useAuthClean';
+
+//
+const Logout = async () => {};
+const Unlink = async () => {};
 
 export default function UserInfo() {
   const router = useRouter();
@@ -187,10 +186,9 @@ export default function UserInfo() {
         </View>
 
         <View style={styles.content}>
-          {/* 연결된 소셜 로그인 계정 */}
-          <Text style={styles.label}>연결된 소셜 로그인 계정</Text>
+          {/* 로그인 계정 */}
+          <Text style={styles.label}>이메일</Text>
           <View style={styles.textBox}>
-            <KaKao width={20} height={20} style={{ marginRight: 10 }} />
             <Text
               style={[styles.textValue, { flex: 1 }]}
               numberOfLines={1}
@@ -319,7 +317,7 @@ export default function UserInfo() {
           onConfirm={async () => {
             try {
               try {
-                await kakaoLogout();
+                await Logout();
               } catch {}
             } finally {
               try {
@@ -341,7 +339,7 @@ export default function UserInfo() {
           onConfirm={async () => {
             try {
               try {
-                await kakaoUnlink();
+                await Unlink();
               } catch {}
             } finally {
               try {

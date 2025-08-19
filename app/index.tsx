@@ -24,7 +24,7 @@ export default function Index() {
 
       if (isMounted) {
         if (token && profile && (profile.name || profile.nickname)) {
-          router.replace('/(tabs)');
+          router.replace('/(tabs)/home');
         } else {
           router.replace('/(auth)/splash');
         }
