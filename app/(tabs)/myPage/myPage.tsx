@@ -1,7 +1,5 @@
-import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
-import { useFocusEffect } from '@react-navigation/native';
 import { useEffect, useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   Dimensions,
   Image,
@@ -15,7 +13,11 @@ import {
   Text,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from 'react-native';
+import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as SecureStore from 'expo-secure-store';
 
 import BookmarkIcon from '@/assets/icons/bookmark.svg';
 import BookmarkFillIcon from '@/assets/icons/bookmark-fill.svg';
@@ -72,6 +74,8 @@ export default function MyPage() {
   const router = useRouter();
   const ownId = useUserOwnId();
   const [userProfile, setUserProfile] = useState<AppUserProfile | null>(null);
+  const { width: windowWidth } = useWindowDimensions();
+
 
   const fetchUserProfile = useCallback(async () => {
     if (ownId) {
@@ -140,7 +144,10 @@ export default function MyPage() {
               ? { uri: userProfile.backgroundImg }
               : require('@/assets/images/profile-background.jpg')
           }
-          style={styles.topImage}
+          style={[
+            styles.topImage,
+            { width: windowWidth, height: Math.max(160, windowWidth * 0.45) },
+          ]}
           resizeMode="cover"
           imageStyle={styles.imageInner}
         >
@@ -185,13 +192,22 @@ export default function MyPage() {
             <Text style={styles.userId}>@{userProfile.ownId || 'user_id'}</Text>
           </View>
 
-          {/* 공유 아이콘 */}
-          <TouchableOpacity
-            style={styles.shareButton}
-            onPress={() => setIsShareModalVisible(true)}
-          >
-            <ShareIcon width={24} height={24} />
-          </TouchableOpacity>
+          {/* 우측 액션 (공유, 프로필 편집) */}
+          <View style={styles.profileActions}>
+            <TouchableOpacity
+              style={styles.shareButton}
+              onPress={() => setIsShareModalVisible(true)}
+            >
+              <ShareIcon width={24} height={24} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => router.push('/myPage/editProfile')}
+              style={styles.editButton}
+            >
+              <Text style={styles.editButtonText}>프로필 편집</Text>
+            </TouchableOpacity>
+          </View>
+
           {/* 공유 모달 */}
           <Modal visible={isShareModalVisible} transparent animationType="fade">
             <View style={styles.modalBackground}>
@@ -225,13 +241,6 @@ export default function MyPage() {
               </View>
             </View>
           </Modal>
-          {/* 프로필 편집 버튼 */}
-          <TouchableOpacity
-            onPress={() => router.push('/myPage/editProfile')}
-            style={styles.editButton}
-          >
-            <Text style={styles.editButtonText}>프로필 편집</Text>
-          </TouchableOpacity>
         </View>
         <TouchableOpacity
           style={styles.followerRow}
@@ -356,7 +365,7 @@ export default function MyPage() {
           </Pressable>
         </View>
 
-        <View contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.scrollContainer}>
           {posts.map((post, i) => (
             <View key={post.id ?? i} style={styles.postContainer}>
               {/* 1. 유저 정보 + 더보기 */}
@@ -476,21 +485,27 @@ const styles = StyleSheet.create({
     marginTop: 15,
     marginLeft: 15,
     justifyContent: 'center',
+    flex: 1,
   },
   userId: {
     ...Typography.body2,
     color: '#7C7C7C',
     marginTop: 2,
   },
+  profileActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 12,
+  },
   shareButton: {
-    marginLeft: 58,
     marginTop: 16,
   },
   editButton: {
     marginLeft: 20,
-    marginTop: 13,
-    width: 82,
-    height: 30,
+    marginTop: 16,
+    marginRight: 20,
+    minHeight: 35,
+    paddingHorizontal: 14,
     backgroundColor: '#121212',
     borderRadius: 10,
     borderWidth: 1,
@@ -676,6 +691,7 @@ const styles = StyleSheet.create({
   textFieldRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
   },
   textFieldGuide: {
     color: '#B3B3B3',
@@ -685,7 +701,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     lineHeight: 14,
     letterSpacing: -0.42,
-    marginTop: 8.5,
+    flexShrink: 1,
   }, //오늘의 밴놀을 공유해 주세요
   scrollContainer: {
     paddingVertical: 20,

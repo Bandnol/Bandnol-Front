@@ -31,6 +31,7 @@ type RecommendItem = {
   };
 };
 const fetchRecommendList = async (): Promise<RecommendItem[]> => {
+
   const token = await SecureStore.getItemAsync('JWTToken');
   if (!token) throw new Error('JWT 토큰 없음');
 
@@ -40,7 +41,9 @@ const fetchRecommendList = async (): Promise<RecommendItem[]> => {
     },
   });
   return response.data.data;
+ 
 };
+
 export default function RecommendScreen() {
   useEffect(() => {
     const storeDummyToken = async () => {
@@ -124,6 +127,12 @@ export default function RecommendScreen() {
               setSelectedDate={setSelectedDate}
               isTabRecommending={isTabRecommending}
             />
+          ) : data.length === 0 ? (
+            <View style={styles.emptyBox}>
+              <Text style={styles.emptyText}>
+                추천 기록이 없습니다. {'\n'}좋아하는 노래를 추천해보세요!
+              </Text>
+            </View>
           ) : (
             <RecommendList
               ref={listRef}
@@ -235,5 +244,18 @@ const styles = StyleSheet.create({
   artistText: {
     ...Typography.caption1,
     color: '#fff',
+  },
+  emptyBox: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyText: {
+    ...Typography.body1,
+    color: '#aaa',
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });

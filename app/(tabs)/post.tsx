@@ -1,19 +1,12 @@
-import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import {
-  Image,
-  Pressable,
-  StyleSheet,
-  TextInput,
-  View,
-  FlatList, // ✅ CHANGED: FlatList 추가
-} from 'react-native';
+import { memo, useCallback, useMemo, useRef, useState } from 'react';
+import { Pressable, StyleSheet, TextInput, View, FlatList } from 'react-native';
+
+import { Image } from 'expo-image';
 
 import Filter from '@/assets/icons/size_m/filter.svg';
 import Search from '@/assets/icons/size_m/search.svg';
 import { MockData, mockPostApi } from '@/components/mockPostApi';
 import { Typography } from '@/constants/typography';
-
 import PostFilterModal from './post-tab/PostFilterModal';
 
 export type FilterProps = {
@@ -27,58 +20,38 @@ export type FilterProps = {
   setRange: (value: 'all' | 'following' | 'mutualFollowing') => void;
 };
 
-export default function postPage() {
-  const router = useRouter();
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<MockData[]>(mockPostApi);
-  const [isFilterVisible, setFilterVisible] = useState(false);
-
-  const [mediaPostOnly, setMediaPostOnly] = useState(true);
-  const [sortOrder, setSortOrder] = useState<'popular' | 'latest'>('latest');
-  const [range, setRange] = useState<'all' | 'following' | 'mutualFollowing'>(
-    'all',
+function useDebouncedCallback<T extends any[]>(
+  fn: (...args: T) => void,
+  delay = 200,
+) {
+  const t = useRef<ReturnType<typeof setTimeout> | null>(null);
+  return useCallback(
+    (...args: T) => {
+      if (t.current) clearTimeout(t.current);
+      t.current = setTimeout(() => fn(...args), delay);
+    },
+    [fn, delay],
   );
+}
 
-  const handleSearch = (text: string) => {
-    setQuery(text);
-    if (!text.trim()) {
-      setResults(mockPostApi);
-      return;
-    }
-
-    const lowerQuery = text.toLowerCase();
-    const searched = mockPostApi.filter((item) => {
-      const target = `${item.comment}`.toLowerCase();
-      return target.includes(lowerQuery);
-    });
-
-    setResults(searched);
-  };
-
-  const handleSubmit = () => handleSearch(query);
-
-  // ✅ 그대로 유지: 3개씩 묶기
-  const threeGroup: MockData[][] = [];
-  for (let i = 0; i < results.length; i += 3) {
-    threeGroup.push(results.slice(i, i + 3));
-  }
-
-  // ✅ FlatList용 렌더러 (ScrollView 때와 동일한 UI)
-  const renderRow = ({
-    item: row,
-    index: rowIndex,
-  }: {
-    item: MockData[];
-    index: number;
-  }) => {
-    return row.length === 3 && rowIndex % 3 === 2 ? (
-      // ✅ 특수 배치: 3개일 때 마지막 줄마다 한 번
+const Row = memo(function Row({
+  row,
+  rowIndex,
+}: {
+  row: MockData[];
+  rowIndex: number;
+}) {
+  if (row.length === 3 && rowIndex % 3 === 2) {
+    // 큰 1, 작은 2 배치
+    return (
       <View style={styles.rowWrapper}>
         <View style={{ width: '66.666666%', aspectRatio: 1 }}>
           <Image
-            source={row[0].image}
+            source={row[0].image as any}
             style={styles.image}
-            resizeMode="cover"
+            contentFit="cover"
+            cachePolicy="memory-disk"
+            recyclingKey={`big-${(row[0] as any).id ?? rowIndex}-0`}
           />
         </View>
         <View
@@ -91,38 +64,112 @@ export default function postPage() {
         >
           <View style={{ flex: 1 }}>
             <Image
-              source={row[1].image}
+              source={row[1].image as any}
               style={styles.image}
-              resizeMode="cover"
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              recyclingKey={`small-${(row[1] as any).id ?? rowIndex}-1`}
             />
           </View>
           <View style={{ flex: 1 }}>
             <Image
-              source={row[2].image}
+              source={row[2].image as any}
               style={styles.image}
-              resizeMode="cover"
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              recyclingKey={`small-${(row[2] as any).id ?? rowIndex}-2`}
             />
           </View>
         </View>
       </View>
-    ) : (
-      // ✅ 일반 1:1 배치
+    );
+  }
+
+  // 일반 1:1 배치
+  else
+    return (
       <View style={styles.rowWrapper}>
         {row.map((item, colIndex) => (
           <View
-            key={`${(item as any).image}-${colIndex}`}
+            key={`${(item as any).id ?? (item as any).image}-${colIndex}`}
             style={styles.itemWrapper}
           >
             <Image
-              source={item.image}
+              source={item.image as any}
               style={styles.image}
-              resizeMode="cover"
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              recyclingKey={`grid-${(item as any).id ?? colIndex}`}
             />
           </View>
         ))}
       </View>
     );
-  };
+});
+
+export default function postPage() {
+  const indexed = useMemo(
+    () =>
+      mockPostApi.map((m) => ({
+        ...m,
+        _lc: (m.comment ?? '').toLowerCase(),
+        _id: (m as any).id ?? String((m as any).image ?? Math.random()),
+      })),
+    [],
+  );
+
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<MockData[]>(indexed);
+  const [isFilterVisible, setFilterVisible] = useState(false);
+
+  const [mediaPostOnly, setMediaPostOnly] = useState(true);
+  const [sortOrder, setSortOrder] = useState<'popular' | 'latest'>('latest');
+  const [range, setRange] = useState<'all' | 'following' | 'mutualFollowing'>(
+    'all',
+  );
+
+  const runFilter = useCallback(
+    (text: string) => {
+      const q = text.trim().toLowerCase();
+      if (!q) {
+        setResults(indexed);
+        return;
+      }
+      const filtered = indexed.filter((item) => item._lc.includes(q));
+      setResults(filtered);
+    },
+    [indexed],
+  );
+  const debouncedRunFilter = useDebouncedCallback(runFilter, 220);
+
+  const handleSearchChange = useCallback(
+    (text: string) => {
+      setQuery(text);
+      debouncedRunFilter(text);
+    },
+    [debouncedRunFilter],
+  );
+
+  const handleSubmit = useCallback(() => runFilter(query), [runFilter, query]);
+
+  const threeGroup: MockData[][] = useMemo(() => {
+    const out: MockData[][] = [];
+    for (let i = 0; i < results.length; i += 3)
+      out.push(results.slice(i, i + 3));
+    return out;
+  }, [results]);
+
+  const renderRow = useCallback(
+    ({ item, index }: { item: MockData[]; index: number }) => (
+      <Row row={item} rowIndex={index} />
+    ),
+    [],
+  );
+
+  const keyExtractor = useCallback(
+    (_item: MockData[], idx: number) => `row-${idx}`,
+    [],
+  );
 
   return (
     <View style={styles.container}>
@@ -133,11 +180,13 @@ export default function postPage() {
             <View style={styles.searchBox}>
               <TextInput
                 value={query}
-                onChangeText={handleSearch}
+                onChangeText={handleSearchChange}
                 onSubmitEditing={handleSubmit}
                 style={styles.searchInput}
                 placeholder="검색어를 입력하세요"
                 placeholderTextColor="#888"
+                clearButtonMode="while-editing"
+                returnKeyType="search"
               />
             </View>
           </View>
@@ -149,11 +198,11 @@ export default function postPage() {
 
         <FlatList
           data={threeGroup}
-          keyExtractor={(_, idx) => `row-${idx}`}
+          keyExtractor={keyExtractor}
           renderItem={renderRow}
-          initialNumToRender={8}
-          maxToRenderPerBatch={8}
-          windowSize={11}
+          initialNumToRender={6}
+          maxToRenderPerBatch={6}
+          windowSize={9}
           removeClippedSubviews
           showsVerticalScrollIndicator={false}
         />
@@ -209,26 +258,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#555',
   },
-  searchBox: {
-    flex: 1,
-    justifyContent: 'center',
-  },
+  searchBox: { flex: 1, justifyContent: 'center' },
   searchInput: {
     ...Typography.body1,
     color: '#F4F4F4',
     textAlignVertical: 'center',
   },
-  rowWrapper: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  itemWrapper: {
-    flex: 1,
-    aspectRatio: 1,
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-    aspectRatio: 1,
-  },
+  rowWrapper: { flexDirection: 'row', justifyContent: 'space-between' },
+  itemWrapper: { flex: 1, aspectRatio: 1 },
+  image: { width: '100%', height: '100%', aspectRatio: 1 },
 });

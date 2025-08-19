@@ -18,7 +18,9 @@ import {
   View,
 } from 'react-native';
 import Modal from 'react-native-modal';
-//import Share, { Social } from 'react-native-share';
+
+// import Share, { Social } from 'react-native-share';
+
 import Svg, { Circle } from 'react-native-svg';
 import ViewShot from 'react-native-view-shot';
 import type { CalendarItem } from './RecommendCal';
@@ -106,7 +108,6 @@ export default function RecShareModal({
       }
     }
   };
-
   const handleShareToX = () => {
     if (!recData) return;
     const shareUrl = `https://bandnol.app/recoms/${recData.id}`;
@@ -259,7 +260,7 @@ export default function RecShareModal({
           <View style={styles.buttonGroup}>
             <Pressable
               style={styles.shareItem}
-              onPress={handleShareToInstagramStory}
+              //              onPress={handleShareToInstagramStory}
             >
               <View style={styles.shareButton}>
                 <Insta />

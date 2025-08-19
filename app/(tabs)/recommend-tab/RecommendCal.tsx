@@ -36,7 +36,7 @@ export type CalendarItem = {
   imageUrl: string;
   comment: string;
   senderNickname: string;
-  recevierNickname: string; //오타 수정??
+  recevierNickname: string;
 };
 
 export default function RecommendCal({
@@ -45,10 +45,9 @@ export default function RecommendCal({
   setSelectedDate,
   isTabRecommending,
 }: RecommendCalProps) {
-  const [songDataList, setSongDataList] = useState<CalendarItem[]>([]); // ✅ API 데이터 상태
+  const [songDataList, setSongDataList] = useState<CalendarItem[]>([]);
   const today = dayjs().format('YYYY-MM-DD');
 
-  // ✅ API 호출
   useEffect(() => {
     const fetchCalendarData = async () => {
       try {
@@ -62,22 +61,41 @@ export default function RecommendCal({
         const response = await axios.get(
           `https://bandnol.app/api/v1/recoms/calendars?year=${year}&month=${month}&status=${status}`,
           {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
           },
         );
 
-        const data = response.data?.data ?? []; // ✅ null이면 빈 배열 처리
+        const { success, data, error } = response.data;
+
+        if (!success) {
+          console.error('[api/v1/recoms/calendars] success=false:', error);
+          setSongDataList([]);
+          return;
+        }
+
+        if (Array.isArray(data) && data.length === 0) {
+          console.log(`[api/v1/recoms/calendars] ${year}-${month} 데이터 없음`);
+          setSongDataList([]);
+          return;
+        }
+
+        console.log(
+          `[api/v1/recoms/calendars] ${year}-${month} 데이터:`,
+          data.length,
+          '개',
+        );
         setSongDataList(data);
-      } catch (e) {
-        //console.error('캘린더 API 에러:', e);
+      } catch (e: any) {
+        console.error(
+          '❌ [api/v1/recoms/calendars] 요청 실패:',
+          e.message || e,
+        );
         setSongDataList([]);
       }
     };
 
     fetchCalendarData();
-  }, [selectedMonth, isTabRecommending]); // ✅ 연동 조건
+  }, [selectedMonth, isTabRecommending]);
 
   const dates: CalendarDate[] = useMemo(() => {
     const startOfMonth = selectedMonth.startOf('month');
@@ -87,11 +105,11 @@ export default function RecommendCal({
 
     const prevMonth = selectedMonth.subtract(1, 'month');
     const prevMonthEndDate = prevMonth.endOf('month').date();
-
     const nextMonth = selectedMonth.add(1, 'month');
 
     const temp: CalendarDate[] = [];
 
+    // 이전 달
     for (let i = startDay - 1; i >= 0; i--) {
       const date = prevMonthEndDate - i;
       temp.push({
@@ -101,6 +119,7 @@ export default function RecommendCal({
       });
     }
 
+    // 이번 달
     for (let i = 1; i <= daysInMonth; i++) {
       temp.push({
         date: i,
@@ -109,6 +128,7 @@ export default function RecommendCal({
       });
     }
 
+    // 다음 달
     const remaining = 42 - temp.length;
     for (let i = 1; i <= remaining; i++) {
       temp.push({
@@ -141,14 +161,16 @@ export default function RecommendCal({
             (rec) => rec.date === item.fullDate,
           );
 
-          const CellWrapper = isSongData ? ImageBackground : View;
+          const CellWrapper: any = isSongData ? ImageBackground : View;
           const wrapperProps = isSongData
             ? {
                 source: { uri: isSongData.imageUrl },
                 style: styles.thumbnailWrapper,
                 imageStyle: styles.thumbnail,
               }
-            : {};
+            : { style: styles.thumbnailWrapper };
+
+          const isSelected = selectedDate === item.fullDate;
 
           return (
             <Pressable
@@ -160,6 +182,10 @@ export default function RecommendCal({
                 !item.isCurrentMonth && styles.cellDimmed,
               ]}
             >
+              {isSelected && (
+                <View pointerEvents="none" style={styles.cellBorderOverlay} />
+              )}
+
               <CellWrapper {...wrapperProps}>
                 <Text
                   style={[
@@ -187,10 +213,9 @@ export default function RecommendCal({
     </View>
   );
 }
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   weekHeader: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -199,7 +224,7 @@ const styles = StyleSheet.create({
   },
   weekdayText: {
     ...Typography.caption1,
-    width: `${100 / 7}%`,
+    width: `14.285%`,
     textAlign: 'center',
     color: '#fff',
     fontSize: 12,
@@ -212,17 +237,28 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   cell: {
-    width: `${100 / 7}%`,
-    height: `${100 / 6}%`,
+    width: `14.285%`,
+    height: `16.66%`,
     justifyContent: 'flex-start',
     alignItems: 'center',
     backgroundColor: 'Gray900',
+    position: 'relative',
   },
   selectedCell: {
     backgroundColor: '#333',
+  },
+
+  cellBorderOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     borderWidth: 1,
     borderColor: '#fff',
+    zIndex: 1,
   },
+
   cellDimmed: {
     backgroundColor: 'Gray900',
     opacity: 0.3,
@@ -237,6 +273,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     alignSelf: 'stretch',
   },
+  // 배경(이미지/빈 뷰) 래퍼: 항상 셀을 꽉 채우게
   thumbnailWrapper: {
     flex: 1,
     width: '100%',
