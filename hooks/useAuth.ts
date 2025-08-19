@@ -1,0 +1,147 @@
+import { API_URL } from '@env';
+import * as SecureStore from 'expo-secure-store';
+import { clearOnLogout, clearOnWithdraw } from '@/hooks/useAuthClean';
+
+// 응답 바디 타입 정의
+export type LoginBody = {
+  ownId: string;
+  password: string;
+};
+
+export type SignupBody = {
+  ownId: string;
+  password: string;
+  nickname: string;
+  email: string;
+  gender: 'MAN' | 'WOMAN' | string;
+  birth: string; // e.g. '2004-03-08'
+};
+
+export type ApiSuccess<T> = {
+  success: true;
+  data: T;
+  error: null;
+};
+
+export type ApiError = {
+  success: false;
+  data: null;
+  error: { code?: string; message?: string } | null;
+};
+
+const jsonFetch = async <T>(url: string, init: RequestInit): Promise<T> => {
+  const res = await fetch(url, {
+    headers: { 'Content-Type': 'application/json', ...(init.headers || {}) },
+    ...init,
+  });
+
+  let data: any = null;
+  try {
+    data = await res.json();
+  } catch (_) {
+    // ignore JSON parse errors;
+  }
+
+  if (!res.ok || (data && data.success === false)) {
+    const msg = data?.error?.message || data?.message || `HTTP ${res.status}`;
+    throw new Error(msg);
+  }
+  return data as T;
+};
+
+export function useAuth() {
+  /**
+   * 로그인: POST /api/v2/oauth2/login
+   * body: { ownId, password }
+   * 성공 시 accessToken, refreshToken, user 저장
+   */
+  const login = async ({ ownId, password }: LoginBody) => {
+    const result = await jsonFetch<
+      | ApiSuccess<{
+          user: any;
+          token: string;
+          refreshToken?: string | null;
+          isActive?: boolean;
+        }>
+      | ApiError
+    >(`${API_URL}/api/v2/oauth2/login`, {
+      method: 'POST',
+      body: JSON.stringify({ ownId, password }),
+    });
+
+    if ('success' in result && result.success) {
+      const { user, token, refreshToken } = result.data;
+
+      // 토큰 저장
+      if (token) await SecureStore.setItemAsync('JWTToken', token);
+      if (refreshToken)
+        await SecureStore.setItemAsync('JWTRefreshToken', refreshToken);
+
+      // 유저 정보 저장
+      if (user) await SecureStore.setItemAsync('user', JSON.stringify(user));
+
+      return result.data;
+    }
+
+    throw new Error('로그인 실패');
+  };
+
+  /**
+   * 회원가입: POST /api/v2/oauth2/signup
+   * body: { ownId, password, nickname, email, gender, birth }
+   * 성공 시 userId(string) 반환
+   */
+  const signup = async (body: SignupBody) => {
+    const result = await jsonFetch<ApiSuccess<string> | ApiError>(
+      `${API_URL}/api/v2/oauth2/signup`,
+      {
+        method: 'POST',
+        body: JSON.stringify(body),
+      },
+    );
+
+    if ('success' in result && result.success) {
+      return result.data; // userId
+    }
+    throw new Error('회원가입 실패');
+  };
+
+  /**
+   * 로그아웃: GET /api/v1/oauth2/logout
+   * body: { accessToken }
+   * 성공 시 로컬 스토리지 정리
+   */
+  const logout = async () => {
+    const accessToken = await SecureStore.getItemAsync('JWTToken');
+    await jsonFetch<ApiSuccess<{ message: string }> | ApiError>(
+      `${API_URL}/api/v1/oauth2/logout`,
+      {
+        method: 'GET',
+        body: JSON.stringify({ accessToken }),
+      },
+    );
+
+    await clearOnLogout();
+  };
+
+  /**
+   * 회원탈퇴: GET /api/v1/oauth2/withdraw
+   * body: { accessToken }
+   * 성공 시 로컬 스토리지 정리
+   */
+  const withdraw = async () => {
+    const accessToken = await SecureStore.getItemAsync('JWTToken');
+    const result = await jsonFetch<
+      | ApiSuccess<{ id: string; inactiveAt: string; inactiveStatus: boolean }>
+      | ApiError
+    >(`${API_URL}/api/v1/oauth2/withdraw`, {
+      method: 'GET',
+      body: JSON.stringify({ accessToken }),
+    });
+
+    await clearOnWithdraw();
+    return 'success' in result && result.success ? result.data : null;
+  };
+
+  return { login, signup, logout, withdraw };
+}

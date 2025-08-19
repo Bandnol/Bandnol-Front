@@ -27,11 +27,10 @@ export default function StatusBarHeader({ onBackPress }: Props) {
 const styles = StyleSheet.create({
   container: {
     width: '100%',
+    height: 44,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-start',
     paddingHorizontal: 20,
-    paddingVertical: 10,
-    marginTop: 10,
   },
 });

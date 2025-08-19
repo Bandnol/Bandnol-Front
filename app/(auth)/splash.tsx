@@ -2,20 +2,26 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import KakaoIcon from '@/assets/auth/splash/kakao.svg';
+import LoginIcon from '@/assets/auth/splash/loginIcon.svg';
 import Logo from '@/assets/auth/splash/logo.svg';
 import GuestIcon from '@/assets/auth/splash/nonlogin.svg';
 import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
-import { useSocialAuth } from '@/hooks/useSocialAuth';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function SplashScreen() {
   const router = useRouter();
 
-  const { loginWithKakao } = useSocialAuth();
-
   const handleGuest = () => {
     router.replace('/(tabs)/home'); // 로그인 없이 바로 홈으로
+  };
+
+  const handleLogin = () => {
+    router.push('/(auth)/login');
+  };
+
+  const handleSignup = () => {
+    router.replace('/(onboarding)/step1-personal');
   };
 
   const handleInquiry = () => {
@@ -32,17 +38,20 @@ export default function SplashScreen() {
       <Text style={styles.text}>{`하루 한 곡, 음악 취향을 공유하고 
 밴놀을 즐겨보세요!`}</Text>
 
-      {/* 카카오 로그인 */}
+      {/* 로그인 */}
       <TouchableOpacity
+        onPress={handleLogin}
         style={[styles.Button, { marginTop: 66 }]}
-        onPress={loginWithKakao}
       >
-        <KakaoIcon />
+        <LoginIcon />
       </TouchableOpacity>
 
       {/* 로그인 없이 둘러보기 */}
       <TouchableOpacity onPress={handleGuest} style={styles.Button}>
         <GuestIcon />
+      </TouchableOpacity>
+      <TouchableOpacity onPress={handleSignup}>
+        <Text style={[styles.inquiry, { marginTop: 20 }]}>회원가입</Text>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={handleInquiry}>
