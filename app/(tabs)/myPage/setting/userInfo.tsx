@@ -30,7 +30,6 @@ export default function UserInfo() {
   const [withdrawVisible, setWithdrawVisible] = useState(false);
 
   const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
   const [ownId, setOwnId] = useState('');
   const [id, setId] = useState('');
   const [isChecking, setIsChecking] = useState(false);
@@ -59,7 +58,6 @@ export default function UserInfo() {
             const userObj = { ...root, ...inner } as any; // inner가 우선, 없으면 root 값 사용
 
             if (userObj?.email) setEmail(userObj.email);
-            if (userObj?.name) setName(userObj.name);
             if (userObj?.ownId) setOwnId(userObj.ownId);
             if (userObj?.ownId) setId(userObj.ownId);
 
@@ -70,8 +68,6 @@ export default function UserInfo() {
             console.log(
               '[회원정보] email:',
               userObj?.email,
-              'name:',
-              userObj?.name,
               'ownId:',
               userObj?.ownId,
             );
@@ -89,7 +85,6 @@ export default function UserInfo() {
           console.log('디코딩된 토큰:', decoded);
           // 토큰에 email/name이 없다면 빈 값 유지
           if (decoded?.email) setEmail(decoded.email);
-          if (decoded?.name) setName(decoded.name);
         }
         // (step 3: 서버 me 조회는 제거됨)
       } catch (error) {
@@ -198,19 +193,7 @@ export default function UserInfo() {
             </Text>
           </View>
 
-          {/* 이름 */}
-          <View style={styles.marginBlock}>
-            <Text style={styles.label}>이름</Text>
-            <View style={styles.textBox}>
-              <Text
-                style={[styles.textValue, { flex: 1 }]}
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                {name}
-              </Text>
-            </View>
-          </View>
+          
 
           {/* 아이디 */}
           <View style={styles.marginBlock}>

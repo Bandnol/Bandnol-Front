@@ -2,7 +2,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { useEffect, useState, useCallback } from 'react';
-import * as SecureStore from 'expo-secure-store';
 import {
   Dimensions,
   Image,
@@ -31,6 +30,8 @@ import WriteIcon from '@/assets/icons/write.svg';
 import DummyImage from '@/assets/images/dummy1.png';
 import ProfileImage from '@/assets/images/profile.png';
 import { Typography } from '@/constants/typography';
+import { useUserOwnId } from '@/store/userStore';
+import { getUserProfile } from '@/api/user';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -60,42 +61,40 @@ const postData = [
 ];
 
 interface AppUserProfile {
-  nickname?: string;
-  ownId?: string;
-  bio?: string;
-  photo?: string | null;
-  backgroundImg?: string | null;
+  nickname: string;
+  ownId: string;
+  bio: string;
+  photo: string | null;
+  backgroundImg: string | null;
 }
 
 export default function MyPage() {
-  const [userProfile, setUserProfile] = useState<AppUserProfile>({});
+  const router = useRouter();
+  const ownId = useUserOwnId();
+  const [userProfile, setUserProfile] = useState<AppUserProfile | null>(null);
 
-  const loadUserFromSecureStore = async () => {
-    try {
-      const raw = await SecureStore.getItemAsync('user');
-      if (!raw) return;
-      const u = JSON.parse(raw);
-      setUserProfile({
-        nickname: u?.nickname ?? u?.name ?? '',
-        ownId: u?.ownId ?? u?.id ?? '',
-        bio: u?.bio ?? u?.introduction ?? '',
-        photo: u?.photo ?? null,
-        backgroundImg: u?.backgroundImg ?? null,
-      });
-    } catch (e) {
-      console.warn('[MyPage] failed to load user from SecureStore', e);
+  const fetchUserProfile = useCallback(async () => {
+    if (ownId) {
+      try {
+        const data = await getUserProfile(ownId);
+        setUserProfile(data);
+      } catch (error) {
+        console.error('Failed to fetch user profile:', error);
+      }
     }
-  };
+  }, [ownId]);
 
   useEffect(() => {
-    loadUserFromSecureStore();
-  }, []);
+    fetchUserProfile();
+  }, [fetchUserProfile]);
+
   useFocusEffect(
     useCallback(() => {
-      loadUserFromSecureStore();
+      fetchUserProfile();
       return () => {};
-    }, []),
+    }, [fetchUserProfile]),
   );
+
   const [activeTab, setActiveTab] = useState<'post' | 'media' | 'bookmark'>(
     'post',
   );
@@ -110,13 +109,22 @@ export default function MyPage() {
     );
   };
 
-  const router = useRouter();
-
   const filteredPosts = postData.filter((post) => {
     if (activeTab === 'post') return true;
     if (activeTab === 'media') return post.hasImage;
     if (activeTab === 'bookmark') return post.isBookmarked;
   });
+
+  if (!userProfile) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading profile...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView>
@@ -740,5 +748,15 @@ const styles = StyleSheet.create({
   actionText: {
     color: '#fff',
     ...Typography.caption2,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#121212',
+  },
+  loadingText: {
+    color: '#fff',
+    fontSize: 18,
   },
 });

@@ -5,7 +5,7 @@ import RecommendList, {
 } from '@/app/(tabs)/recommend-tab/RecommendList';
 import Dropdown from '@/assets/icons/size_m/dropdown.svg';
 import { Typography } from '@/constants/typography';
-import { EXPO_PUBLIC_API_TOKEN } from '@env';
+import { API_TOKEN, API_URL } from '@/constants/env';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import { useRouter } from 'expo-router';
@@ -34,7 +34,7 @@ const fetchRecommendList = async (): Promise<RecommendItem[]> => {
   const token = await SecureStore.getItemAsync('JWTToken');
   if (!token) throw new Error('JWT 토큰 없음');
 
-  const response = await axios.get('https://bandnol.app/api/v1/recoms/lists', {
+  const response = await axios.get(`${API_URL}/api/v1/recoms/lists`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -44,7 +44,7 @@ const fetchRecommendList = async (): Promise<RecommendItem[]> => {
 export default function RecommendScreen() {
   useEffect(() => {
     const storeDummyToken = async () => {
-      await SecureStore.setItemAsync('JWTToken', EXPO_PUBLIC_API_TOKEN);
+      await SecureStore.setItemAsync('JWTToken', API_TOKEN);
     };
 
     storeDummyToken();

@@ -17,7 +17,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
-import { useAuthFetch } from '@/hooks/useAuthFetch';
+import axiosInstance from '@/hooks/useAxios';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import StatusBarHeader from '@/components/common/StatusBarHeader';
 
@@ -60,7 +60,6 @@ export default function ArtistPage() {
     '→ normalized:',
     normalizedId,
   );
-  const authFetch = useAuthFetch();
 
   const [artist, setArtist] = React.useState<ArtistDetail | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -77,18 +76,16 @@ export default function ArtistPage() {
     try {
       console.log('[ArtistPage] start load, artistId:', normalizedId);
       // GET /api/v1/artists/{artistId}
-      const res = await authFetch.json<{
+      const res = await axiosInstance.get<{
         success: boolean;
         data: any;
         error: any;
         name?: string;
-      }>(`/api/v1/artists/${encodeURIComponent(normalizedId)}`, {
-        method: 'GET',
-      });
-      console.log('[ArtistPage] API raw response:', res);
+      }>(`/api/v1/artists/${encodeURIComponent(normalizedId)}`);
+      console.log('[ArtistPage] API raw response:', res.data);
       // API success=false 처리 (예: A1300)
-      if ((res as any)?.success === false && (res as any)?.error?.code) {
-        const code = (res as any)?.error?.code;
+      if ((res.data as any)?.success === false && (res.data as any)?.error?.code) {
+        const code = (res.data as any)?.error?.code;
         if (code === 'A1300') {
           Alert.alert('안내', '해당 아티스트가 존재하지 않습니다.', [
             { text: '확인', onPress: () => router.back() },
@@ -96,9 +93,9 @@ export default function ArtistPage() {
           return;
         }
       }
-      if (res.name) setArtistName(res.name);
+      if (res.data.name) setArtistName(res.data.name);
       // 백엔드 스키마에 맞춰 매핑
-      const d = (res?.data ?? res) as any;
+      const d = (res.data?.data ?? res.data) as any;
       const payload = d?.data ?? d; // 백엔드가 { success, data } 형태로 줄 수 있음
       console.log('[ArtistPage] mapped source object:', payload);
       const mapped: ArtistDetail = {
@@ -143,7 +140,7 @@ export default function ArtistPage() {
       setLoading(false);
       if (refreshing) setRefreshing(false);
     }
-  }, [normalizedId, authFetch, refreshing, router]);
+  }, [normalizedId, refreshing, router]);
 
   React.useEffect(() => {
     load();
