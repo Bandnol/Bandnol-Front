@@ -5,7 +5,7 @@ import RecommendList, {
 } from '@/app/(tabs)/recommend-tab/RecommendList';
 import Dropdown from '@/assets/icons/size_m/dropdown.svg';
 import { Typography } from '@/constants/typography';
-import { EXPO_PUBLIC_API_TOKEN } from '@env';
+import { API_TOKEN, API_URL } from '@/constants/env';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import { useRouter } from 'expo-router';
@@ -31,47 +31,23 @@ type RecommendItem = {
   };
 };
 const fetchRecommendList = async (): Promise<RecommendItem[]> => {
-  try {
-    const token = await SecureStore.getItemAsync('JWTToken');
-    if (!token) throw new Error('JWT 토큰 없음');
 
-    const response = await axios.get(
-      'https://bandnol.app/api/v1/recoms/lists',
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    );
+  const token = await SecureStore.getItemAsync('JWTToken');
+  if (!token) throw new Error('JWT 토큰 없음');
 
-    const { success, data, error } = response.data;
-
-    if (!success) {
-      console.error('[api/v1/recoms/lists] 에서 success=false:', error);
-      return [];
-    }
-
-    if (Array.isArray(data) && data.length === 0) {
-      console.log('[api/v1/recoms/lists] 에서 요청 성공했지만 데이터 없음');
-      return [];
-    }
-
-    console.log(
-      '[api/v1/recoms/lists] 에서 요청 성공, 데이터 있음:',
-      data.length,
-      '개',
-    );
-    return data;
-  } catch (err: any) {
-    console.error('❌ 요청 실패:', err.message || err);
-    return [];
-  }
+  const response = await axios.get(`${API_URL}/api/v1/recoms/lists`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data.data;
+ 
 };
 
 export default function RecommendScreen() {
   useEffect(() => {
     const storeDummyToken = async () => {
-      await SecureStore.setItemAsync('JWTToken', EXPO_PUBLIC_API_TOKEN);
+      await SecureStore.setItemAsync('JWTToken', API_TOKEN);
     };
 
     storeDummyToken();

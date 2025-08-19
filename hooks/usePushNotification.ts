@@ -2,7 +2,7 @@ import * as Notifications from 'expo-notifications';
 import { Platform, DeviceEventEmitter } from 'react-native';
 import Constants from 'expo-constants';
 import { useEffect, useRef, useState } from 'react';
-import { useAuthFetch } from '@/hooks/useAxios';
+import axiosInstance from '@/hooks/useAxios';
 import { useRouter } from 'expo-router';
 
 // 앱이 포그라운드일 때 알림을 어떻게 보여줄지 제어 (alert만 표시)
@@ -52,7 +52,6 @@ export function usePushNotifications() {
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
   const notificationListener = useRef<Notifications.Subscription | null>(null);
   const responseListener = useRef<Notifications.Subscription | null>(null);
-  const authFetch = useAuthFetch();
   const router = useRouter();
 
   useEffect(() => {
@@ -64,12 +63,8 @@ export function usePushNotifications() {
         console.log('[Push] Expo token:', token);
         // 1-1. 발급 받은 Expo Push Token을 서버에 저장 (POST /api/v1/users/expo-token)
         try {
-          const res = await authFetch.json<any>('/api/v1/users/expo-token', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token }),
-          });
-          console.log('[Push] 토큰 등록 응답(POST /users/expo-token):', res);
+          const res = await axiosInstance.post<any>('/api/v1/users/expo-token', { token });
+          console.log('[Push] 토큰 등록 응답(POST /users/expo-token):', res.data);
         } catch (e) {
           console.log('[Push] 토큰 등록 실패:', e);
         }
@@ -96,14 +91,8 @@ export function usePushNotifications() {
             try {
               const endpoint = `/api/v1/users/notification/${encodeURIComponent(String(notificationId))}`;
               const body = nType ? JSON.stringify({ type: nType }) : undefined;
-              const res = await authFetch.json<any>(endpoint, {
-                method: 'PATCH',
-                headers: body
-                  ? { 'Content-Type': 'application/json' }
-                  : undefined,
-                body,
-              });
-              console.log('[Push] 읽음 처리 성공:', res);
+              const res = await axiosInstance.patch<any>(endpoint, body ? JSON.parse(body) : undefined);
+              console.log('[Push] 읽음 처리 성공:', res.data);
               // 3-1. 읽음 처리 성공 시 알림함 새로고침 이벤트 방송
               DeviceEventEmitter.emit('NOTI_REFRESH');
             } catch (e) {
@@ -132,7 +121,7 @@ export function usePushNotifications() {
       notificationListener.current = null;
       responseListener.current = null;
     };
-  }, [authFetch, router]);
+  }, [router]);
 
   return { expoPushToken };
 }

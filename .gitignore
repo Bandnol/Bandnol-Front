@@ -45,3 +45,4 @@ app-example
 # IDE
 .vscode/
 .idea/
+ios/

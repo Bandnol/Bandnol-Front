@@ -14,8 +14,7 @@ import {
 
 import BackArrow from '@/assets/icons/back-arrow.svg';
 import { Typography } from '@/constants/typography';
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import axiosInstance from '@/hooks/useAxios';
 
 type ToggleProps = {
   value: boolean;
@@ -102,28 +101,7 @@ function toApi(state: NotiState): BackendPayload {
   };
 }
 
-// !💣💣💣💣💣💣💣💣 API 설정 💣💣💣💣💣💣💣💣!
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
-const API_TOKEN = process.env.EXPO_PUBLIC_API_TOKEN;
-
 const ENDPOINT = '/api/v1/users/notification-settings';
-
-const api = axios.create({ baseURL: BASE_URL });
-
-api.interceptors.request.use((cfg) => {
-  if (API_TOKEN) {
-    cfg.headers = cfg.headers ?? {};
-    cfg.headers.Authorization = `Bearer ${API_TOKEN}`;
-  } else {
-    console.log('⚠️ EXPO_PUBLIC_API_TOKEN이 비어 있습니다. 요청이 401 날 수 있어요.');
-  }
-  console.log('➡️', cfg.method?.toUpperCase(), (cfg.baseURL || '') + (cfg.url || ''), cfg.data ?? '');
-  return cfg;
-});
-api.interceptors.response.use(
-  (res) => { console.log('✅', res.status, res.config.url, res.data); return res; },
-  (err) => { console.log('❌', err.response?.status ?? 'NO_STATUS', err.config?.url, err.response?.data ?? err.message); return Promise.reject(err); }
-);
 
 // ! 💣💣💣💣💣💣💣💣 화면 💣💣💣💣💣💣💣💣 !
 export default function Notification() {
@@ -157,16 +135,20 @@ export default function Notification() {
     s.serviceAnnouncement;
 
   useEffect(() => {
-    (async () => {
+    const fetchSettings = async () => {
       try {
-        const res = await api.get<BackendPayload>(ENDPOINT);
+        const res = await axiosInstance.get<BackendPayload>(ENDPOINT);
         setNoti(fromApi(res.data));
       } catch {
-        Alert.alert('알림 설정', '설정 조회에 실패했어요. 로그인/네트워크를 확인해주세요.');
+        Alert.alert(
+          '알림 설정',
+          '설정 조회에 실패했어요. 로그인/네트워크를 확인해주세요.',
+        );
       } finally {
         setLoading(false);
       }
-    })();
+    };
+    fetchSettings();
   }, []);
 
   // 저장 (optimistic + 실패 시 롤백)
@@ -174,13 +156,9 @@ export default function Notification() {
     setNoti(next);
     setSaving(true);
     try {
-      await api.patch(ENDPOINT, toApi(next));
+      await axiosInstance.patch(ENDPOINT, toApi(next));
     } catch (e: any) {
-      if (e?.response?.status === 401) {
-        Alert.alert('로그인 필요', '권한이 없어요. EXPO_PUBLIC_API_TOKEN을 확인해주세요.');
-      } else {
-        Alert.alert('알림 설정', '저장에 실패했어요. 다시 시도해주세요.');
-      }
+      Alert.alert('알림 설정', '저장에 실패했어요. 다시 시도해주세요.');
       setNoti(prev);
     } finally {
       setSaving(false);
