@@ -116,7 +116,7 @@ export function useAuth() {
     await jsonFetch<ApiSuccess<{ message: string }> | ApiError>(
       `${API_URL}/api/v1/oauth2/logout`,
       {
-        method: 'GET',
+        method: 'POST',
         body: JSON.stringify({ accessToken }),
       },
     );
@@ -135,7 +135,7 @@ export function useAuth() {
       | ApiSuccess<{ id: string; inactiveAt: string; inactiveStatus: boolean }>
       | ApiError
     >(`${API_URL}/api/v1/oauth2/withdraw`, {
-      method: 'GET',
+      method: 'POST',
       body: JSON.stringify({ accessToken }),
     });
 

@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import { useAuth } from '@/hooks/useAuth';
 import * as SecureStore from 'expo-secure-store';
 import { jwtDecode } from 'jwt-decode';
 import React, { useEffect, useState } from 'react';
@@ -19,10 +20,10 @@ import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
 import { useUpdateOwnId } from '@/hooks/useUpdateOwnId';
 import api from '@/store/api';
-import { clearOnLogout, clearOnWithdraw } from '@/hooks/useAuthClean';
 
 export default function UserInfo() {
   const router = useRouter();
+  const { logout, withdraw } = useAuth();
   const [logoutVisible, setLogoutVisible] = useState(false);
   const [withdrawVisible, setWithdrawVisible] = useState(false);
 
@@ -315,7 +316,7 @@ export default function UserInfo() {
           onConfirm={async () => {
             try {
               console.log('[로그아웃] 로그아웃을 진행합니다.');
-              await clearOnLogout();
+              await logout();
               console.log('[로그아웃] 로그아웃이 완료되었습니다.');
             } catch (e: any) {
               console.warn(
@@ -340,7 +341,7 @@ export default function UserInfo() {
           onConfirm={async () => {
             try {
               console.warn('[회원탈퇴] 회원 탈퇴를 진행합니다.');
-              await clearOnWithdraw();
+              await withdraw();
               console.log('[회원탈퇴] 회원 탈퇴가 완료되었습니다.');
             } catch (e: any) {
               console.error(
