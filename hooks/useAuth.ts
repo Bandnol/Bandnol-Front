@@ -1,6 +1,7 @@
 import { API_URL } from '@env';
 import * as SecureStore from 'expo-secure-store';
 import { clearOnLogout, clearOnWithdraw } from '@/hooks/useAuthClean';
+import { useAuthStore } from '@/store/auth';
 
 // 응답 바디 타입 정의
 export type LoginBody = {
@@ -72,6 +73,8 @@ export function useAuth() {
     if ('success' in result && result.success) {
       const { user, token, refreshToken } = result.data;
 
+      useAuthStore.getState().setJWTToken(token);
+
       // 토큰 저장
       if (token) await SecureStore.setItemAsync('JWTToken', token);
       if (refreshToken)
@@ -120,6 +123,7 @@ export function useAuth() {
         body: JSON.stringify({ accessToken }),
       },
     );
+    useAuthStore.getState().clearJWTToken();
 
     await clearOnLogout();
   };
@@ -138,6 +142,7 @@ export function useAuth() {
       method: 'GET',
       body: JSON.stringify({ accessToken }),
     });
+    useAuthStore.getState().clearJWTToken();
 
     await clearOnWithdraw();
     return 'success' in result && result.success ? result.data : null;
