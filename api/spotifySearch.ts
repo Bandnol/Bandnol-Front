@@ -1,4 +1,4 @@
-import { EXPO_PUBLIC_API_TOKEN } from '@env';
+import { API_URL } from '@/constants/env';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 
@@ -7,7 +7,7 @@ export const searchSpotifySong = async (keyword: string) => {
     const jwtToken = await SecureStore.getItemAsync('JWTToken');
     console.log('Retrieved JWT Token:', jwtToken);
     const response = await axios.get(
-      'https://bandnol.app/api/v1/recoms/search/song',
+      `${API_URL}/api/v1/recoms/search/song`,
       {
         params: { keyword },
         headers: {

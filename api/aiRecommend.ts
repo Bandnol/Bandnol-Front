@@ -1,23 +1,18 @@
 import * as SecureStore from 'expo-secure-store';
 import { useCallback } from 'react';
-import { useAuthFetch } from '@/hooks/useAxios';
+import axiosInstance from '@/hooks/useAxios';
 import axios from 'axios';
 
 export function useAIRecommend() {
-  const authFetch = useAuthFetch();
 
   const getAIComment = useCallback(
     async (title: string, artist: string) => {
       console.log('[AIRecommend] 요청 데이터:', { title, artist });
-      const res = await authFetch.json('/api/v1/recoms/ai-comment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, artist }),
-      });
-      console.log('[AIRecommend] 응답 데이터:', res);
-      return res;
+      const res = await axiosInstance.post('/api/v1/recoms/ai-comment', { title, artist });
+      console.log('[AIRecommend] 응답 데이터:', res.data);
+      return res.data;
     },
-    [authFetch],
+    [],
   );
 
   return { getAIComment };
