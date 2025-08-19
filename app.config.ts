@@ -12,7 +12,7 @@ export default {
     ios: {
       bundleIdentifier: 'com.bandnol.goBandnolApp20',
       supportsTablet: false,
-      icon: './assets/images/Bandnol-logo-2.png'
+      icon: './assets/images/Bandnol-logo-2.png',
     },
     android: {
       package: 'com.bandnol.Bandnol',
@@ -21,11 +21,6 @@ export default {
         backgroundColor: '#ffffff',
       },
       edgeToEdgeEnabled: true,
-      useNextNotificationsApi: true,
-      notification: {
-        icon: './assets/notification-icon.png',
-        color: '#FB4932',
-      },
     },
     web: {
       bundler: 'metro',
@@ -61,27 +56,6 @@ export default {
           },
         },
       ],
-      ...(process.env.EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY
-        ? [
-            [
-              '@react-native-kakao/core',
-              {
-                nativeAppKey: process.env.EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY,
-                android: { authCodeHandlerActivity: true },
-                ios: { handleKakaoOpenUrl: true },
-              },
-            ],
-          ]
-        : []),
-      [
-        'expo-notifications',
-        {
-          mode:
-            process.env.EAS_BUILD_PROFILE === 'production'
-              ? 'production'
-              : 'development',
-        },
-      ],
     ],
     experiments: {
       typedRoutes: true,
@@ -90,7 +64,6 @@ export default {
       eas: {
         projectId: 'e22ee9c3-9022-4d36-8e63-d8a411ac0ccd',
       },
-      KAKAO_NATIVE_APP_KEY: process.env.EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY,
     },
   },
 };
