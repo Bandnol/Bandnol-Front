@@ -8,9 +8,10 @@ import { Typography } from '@/constants/typography';
 type Props = {
   onPress: () => void;
   enabled?: boolean;
+  text?: string;
 };
 
-export default function BottomNextButton({ onPress, enabled = true }: Props) {
+export default function BottomNextButton({ onPress, enabled = true, text = "다음" }: Props) {
   return (
     <View style={styles.bottomView}>
       <TouchableOpacity
@@ -29,7 +30,7 @@ export default function BottomNextButton({ onPress, enabled = true }: Props) {
             },
           ]}
         >
-          다음
+          {text}
         </Text>
       </TouchableOpacity>
     </View>
