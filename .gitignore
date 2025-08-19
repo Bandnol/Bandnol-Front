@@ -2,7 +2,6 @@
 
 # dependencies
 node_modules/
-
 # Expo
 .expo/
 .expo
@@ -46,3 +45,4 @@ app-example
 # IDE
 .vscode/
 .idea/
+ios/

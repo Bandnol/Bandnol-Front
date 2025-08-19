@@ -1,8 +1,5 @@
-import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
-import { useFocusEffect } from '@react-navigation/native';
 import { useEffect, useState, useCallback } from 'react';
-import * as SecureStore from 'expo-secure-store';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   Dimensions,
   Image,
@@ -16,7 +13,11 @@ import {
   Text,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from 'react-native';
+import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as SecureStore from 'expo-secure-store';
 
 import BookmarkIcon from '@/assets/icons/bookmark.svg';
 import BookmarkFillIcon from '@/assets/icons/bookmark-fill.svg';
@@ -31,6 +32,8 @@ import WriteIcon from '@/assets/icons/write.svg';
 import DummyImage from '@/assets/images/dummy1.png';
 import ProfileImage from '@/assets/images/profile.png';
 import { Typography } from '@/constants/typography';
+import { useUserOwnId } from '@/store/userStore';
+import { getUserProfile } from '@/api/user';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -60,42 +63,42 @@ const postData = [
 ];
 
 interface AppUserProfile {
-  nickname?: string;
-  ownId?: string;
-  bio?: string;
-  photo?: string | null;
-  backgroundImg?: string | null;
+  nickname: string;
+  ownId: string;
+  bio: string;
+  photo: string | null;
+  backgroundImg: string | null;
 }
 
 export default function MyPage() {
-  const [userProfile, setUserProfile] = useState<AppUserProfile>({});
+  const router = useRouter();
+  const ownId = useUserOwnId();
+  const [userProfile, setUserProfile] = useState<AppUserProfile | null>(null);
+  const { width: windowWidth } = useWindowDimensions();
 
-  const loadUserFromSecureStore = async () => {
-    try {
-      const raw = await SecureStore.getItemAsync('user');
-      if (!raw) return;
-      const u = JSON.parse(raw);
-      setUserProfile({
-        nickname: u?.nickname ?? u?.name ?? '',
-        ownId: u?.ownId ?? u?.id ?? '',
-        bio: u?.bio ?? u?.introduction ?? '',
-        photo: u?.photo ?? null,
-        backgroundImg: u?.backgroundImg ?? null,
-      });
-    } catch (e) {
-      console.warn('[MyPage] failed to load user from SecureStore', e);
+
+  const fetchUserProfile = useCallback(async () => {
+    if (ownId) {
+      try {
+        const data = await getUserProfile(ownId);
+        setUserProfile(data);
+      } catch (error) {
+        console.error('Failed to fetch user profile:', error);
+      }
     }
-  };
+  }, [ownId]);
 
   useEffect(() => {
-    loadUserFromSecureStore();
-  }, []);
+    fetchUserProfile();
+  }, [fetchUserProfile]);
+
   useFocusEffect(
     useCallback(() => {
-      loadUserFromSecureStore();
+      fetchUserProfile();
       return () => {};
-    }, []),
+    }, [fetchUserProfile]),
   );
+
   const [activeTab, setActiveTab] = useState<'post' | 'media' | 'bookmark'>(
     'post',
   );
@@ -110,13 +113,22 @@ export default function MyPage() {
     );
   };
 
-  const router = useRouter();
-
   const filteredPosts = postData.filter((post) => {
     if (activeTab === 'post') return true;
     if (activeTab === 'media') return post.hasImage;
     if (activeTab === 'bookmark') return post.isBookmarked;
   });
+
+  if (!userProfile) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading profile...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView>
@@ -132,7 +144,10 @@ export default function MyPage() {
               ? { uri: userProfile.backgroundImg }
               : require('@/assets/images/profile-background.jpg')
           }
-          style={styles.topImage}
+          style={[
+            styles.topImage,
+            { width: windowWidth, height: Math.max(160, windowWidth * 0.45) },
+          ]}
           resizeMode="cover"
           imageStyle={styles.imageInner}
         >
@@ -177,13 +192,22 @@ export default function MyPage() {
             <Text style={styles.userId}>@{userProfile.ownId || 'user_id'}</Text>
           </View>
 
-          {/* 공유 아이콘 */}
-          <TouchableOpacity
-            style={styles.shareButton}
-            onPress={() => setIsShareModalVisible(true)}
-          >
-            <ShareIcon width={24} height={24} />
-          </TouchableOpacity>
+          {/* 우측 액션 (공유, 프로필 편집) */}
+          <View style={styles.profileActions}>
+            <TouchableOpacity
+              style={styles.shareButton}
+              onPress={() => setIsShareModalVisible(true)}
+            >
+              <ShareIcon width={24} height={24} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => router.push('/myPage/editProfile')}
+              style={styles.editButton}
+            >
+              <Text style={styles.editButtonText}>프로필 편집</Text>
+            </TouchableOpacity>
+          </View>
+
           {/* 공유 모달 */}
           <Modal visible={isShareModalVisible} transparent animationType="fade">
             <View style={styles.modalBackground}>
@@ -217,13 +241,6 @@ export default function MyPage() {
               </View>
             </View>
           </Modal>
-          {/* 프로필 편집 버튼 */}
-          <TouchableOpacity
-            onPress={() => router.push('/myPage/editProfile')}
-            style={styles.editButton}
-          >
-            <Text style={styles.editButtonText}>프로필 편집</Text>
-          </TouchableOpacity>
         </View>
         <TouchableOpacity
           style={styles.followerRow}
@@ -348,7 +365,7 @@ export default function MyPage() {
           </Pressable>
         </View>
 
-        <View contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.scrollContainer}>
           {posts.map((post, i) => (
             <View key={post.id ?? i} style={styles.postContainer}>
               {/* 1. 유저 정보 + 더보기 */}
@@ -468,21 +485,27 @@ const styles = StyleSheet.create({
     marginTop: 15,
     marginLeft: 15,
     justifyContent: 'center',
+    flex: 1,
   },
   userId: {
     ...Typography.body2,
     color: '#7C7C7C',
     marginTop: 2,
   },
+  profileActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 12,
+  },
   shareButton: {
-    marginLeft: 58,
     marginTop: 16,
   },
   editButton: {
     marginLeft: 20,
-    marginTop: 13,
-    width: 82,
-    height: 30,
+    marginTop: 16,
+    marginRight: 20,
+    minHeight: 35,
+    paddingHorizontal: 14,
     backgroundColor: '#121212',
     borderRadius: 10,
     borderWidth: 1,
@@ -668,6 +691,7 @@ const styles = StyleSheet.create({
   textFieldRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
   },
   textFieldGuide: {
     color: '#B3B3B3',
@@ -677,7 +701,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     lineHeight: 14,
     letterSpacing: -0.42,
-    marginTop: 8.5,
+    flexShrink: 1,
   }, //오늘의 밴놀을 공유해 주세요
   scrollContainer: {
     paddingVertical: 20,
@@ -740,5 +764,15 @@ const styles = StyleSheet.create({
   actionText: {
     color: '#fff',
     ...Typography.caption2,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#121212',
+  },
+  loadingText: {
+    color: '#fff',
+    fontSize: 18,
   },
 });

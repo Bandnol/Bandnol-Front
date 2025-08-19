@@ -1,7 +1,9 @@
-import { API_URL } from '@env';
+import { API_URL } from '@/constants/env';
 import * as SecureStore from 'expo-secure-store';
 import { clearOnLogout, clearOnWithdraw } from '@/hooks/useAuthClean';
 import { useAuthStore } from '@/store/auth';
+import { useUserActions } from '@/store/userStore';
+import { useAuthSession } from './useAuthSession';
 
 // 응답 바디 타입 정의
 export type LoginBody = {
@@ -51,6 +53,9 @@ const jsonFetch = async <T>(url: string, init: RequestInit): Promise<T> => {
 };
 
 export function useAuth() {
+  const { signIn, signOut } = useAuthSession();
+  const { setNickname, setOwnId, setPhoto, clearUser } = useUserActions();
+
   /**
    * 로그인: POST /api/v2/oauth2/login
    * body: { ownId, password }
@@ -73,15 +78,18 @@ export function useAuth() {
     if ('success' in result && result.success) {
       const { user, token, refreshToken } = result.data;
 
-      useAuthStore.getState().setJWTToken(token);
-
-      // 토큰 저장
-      if (token) await SecureStore.setItemAsync('JWTToken', token);
-      if (refreshToken)
-        await SecureStore.setItemAsync('JWTRefreshToken', refreshToken);
+      // Use AuthSession to handle token storage and state update
+      await signIn(token, refreshToken ?? undefined);
 
       // 유저 정보 저장
-      if (user) await SecureStore.setItemAsync('user', JSON.stringify(user));
+      if (user) {
+        await SecureStore.setItemAsync('user', JSON.stringify(user));
+        
+        // userStore에도 유저 정보 저장
+        if (user.nickname) setNickname(user.nickname);
+        if (user.ownId) setOwnId(user.ownId);
+        if (user.photo) setPhoto(user.photo);
+      }
 
       return result.data;
     }
@@ -119,13 +127,14 @@ export function useAuth() {
     await jsonFetch<ApiSuccess<{ message: string }> | ApiError>(
       `${API_URL}/api/v1/oauth2/logout`,
       {
-        method: 'GET',
+        method: 'POST',
         body: JSON.stringify({ accessToken }),
       },
     );
     useAuthStore.getState().clearJWTToken();
 
-    await clearOnLogout();
+    await signOut(); // Use AuthSession to clear tokens and state
+    clearUser(); // Clear user store as well
   };
 
   /**
@@ -139,12 +148,13 @@ export function useAuth() {
       | ApiSuccess<{ id: string; inactiveAt: string; inactiveStatus: boolean }>
       | ApiError
     >(`${API_URL}/api/v1/oauth2/withdraw`, {
-      method: 'GET',
+      method: 'POST',
       body: JSON.stringify({ accessToken }),
     });
     useAuthStore.getState().clearJWTToken();
 
-    await clearOnWithdraw();
+    await signOut(); // Use AuthSession to clear tokens and state
+    clearUser(); // Clear user store as well
     return 'success' in result && result.success ? result.data : null;
   };
 

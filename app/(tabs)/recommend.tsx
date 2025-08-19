@@ -5,7 +5,7 @@ import RecommendList, {
 } from '@/app/(tabs)/recommend-tab/RecommendList';
 import Dropdown from '@/assets/icons/size_m/dropdown.svg';
 import { Typography } from '@/constants/typography';
-import { EXPO_PUBLIC_API_TOKEN } from '@env';
+import { API_TOKEN, API_URL } from '@/constants/env';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import { useRouter } from 'expo-router';
@@ -31,20 +31,23 @@ type RecommendItem = {
   };
 };
 const fetchRecommendList = async (): Promise<RecommendItem[]> => {
+
   const token = await SecureStore.getItemAsync('JWTToken');
   if (!token) throw new Error('JWT 토큰 없음');
 
-  const response = await axios.get('https://bandnol.app/api/v1/recoms/lists', {
+  const response = await axios.get(`${API_URL}/api/v1/recoms/lists`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
   return response.data.data;
+ 
 };
+
 export default function RecommendScreen() {
   useEffect(() => {
     const storeDummyToken = async () => {
-      await SecureStore.setItemAsync('JWTToken', EXPO_PUBLIC_API_TOKEN);
+      await SecureStore.setItemAsync('JWTToken', API_TOKEN);
     };
 
     storeDummyToken();
@@ -124,6 +127,12 @@ export default function RecommendScreen() {
               setSelectedDate={setSelectedDate}
               isTabRecommending={isTabRecommending}
             />
+          ) : data.length === 0 ? (
+            <View style={styles.emptyBox}>
+              <Text style={styles.emptyText}>
+                추천 기록이 없습니다. {'\n'}좋아하는 노래를 추천해보세요!
+              </Text>
+            </View>
           ) : (
             <RecommendList
               ref={listRef}
@@ -235,5 +244,18 @@ const styles = StyleSheet.create({
   artistText: {
     ...Typography.caption1,
     color: '#fff',
+  },
+  emptyBox: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyText: {
+    ...Typography.body1,
+    color: '#aaa',
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });

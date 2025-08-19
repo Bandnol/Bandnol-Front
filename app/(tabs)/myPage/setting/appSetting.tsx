@@ -13,12 +13,10 @@ import {
 
 import BackArrow from '@/assets/icons/back-arrow.svg';
 import { Typography } from '@/constants/typography';
-import { useAuthFetch } from '@/hooks/useAuthFetch';
+import axiosInstance from '@/hooks/useAxios';
 
 export default function AppSetting() {
   const router = useRouter();
-
-  const authFetch = useAuthFetch();
 
   type Noti = {
     id?: string;
@@ -39,14 +37,14 @@ export default function AppSetting() {
       setLoading(true);
       setErrorText('');
       try {
-        const res = await authFetch.json<{
+        const res = await axiosInstance.get<{
           success: boolean;
           data: { data: Noti[]; hasNext?: boolean; nextCursor?: string } | null;
           error: any;
         }>(`/api/v1/users/me/notification`);
-        const list = res?.data?.data || [];
+        const list = res?.data?.data?.data || [];
         setNotis(list);
-        console.log('[알림] 조회 성공:', res);
+        console.log('[알림] 조회 성공:', res.data);
       } catch (error: any) {
         const msg = error?.message || String(error);
         console.log('[알림] 조회 예외:', msg);
@@ -56,7 +54,7 @@ export default function AppSetting() {
       }
     };
     fetchNotifications();
-  }, [authFetch]);
+  }, []);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -91,6 +89,13 @@ export default function AppSetting() {
 
           <TouchableOpacity
             style={styles.listItem}
+            onPress={() => router.push('/myPage/setting/interestedArtists')}
+          >
+            <Text style={styles.itemText}>관심 아티스트 설정</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.listItem}
             onPress={() => router.push('/myPage/setting/receiveTime')}
           >
             <Text style={styles.itemText}>추천곡 수신 시간</Text>
@@ -112,7 +117,12 @@ export default function AppSetting() {
 
           <TouchableOpacity
             style={styles.listItem}
-            onPress={() => router.push('/(auth)/inquiry')}
+            onPress={() =>
+              router.push({
+                pathname: '/(auth)/inquiry',
+                params: { returnTo: '/(tabs)/myPage/setting/appSetting' },
+              })
+            }
           >
             <Text style={styles.itemText}>문의하기</Text>
           </TouchableOpacity>

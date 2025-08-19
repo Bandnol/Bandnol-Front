@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
   Keyboard,
@@ -18,15 +18,25 @@ import { Typography } from '@/constants/typography';
 import api from '@/store/api'; // axios 인스턴스
 const Component = () => {
   const router = useRouter();
+  const { returnTo } = useLocalSearchParams<{ returnTo?: string }>();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [content, setContent] = useState('');
+
+  const goBackSmart = () => {
+    if (returnTo && typeof returnTo === 'string') {
+      router.replace(returnTo as any);
+    } else if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/myPage' as any);
+    }
+  };
 
   const handleSubmit = async () => {
     // 입력값 유효성 검사
     if (!name.trim() || !email.trim() || !content.trim()) {
       alert('모든 항목을 입력해주세요.');
-      console.log('전송 데이터', { name, email, content });
       return;
     }
 
@@ -44,24 +54,10 @@ const Component = () => {
         email,
         content,
       });
-      console.log('문의 전송 성공:', res.data);
       alert('문의가 성공적으로 전송되었습니다.');
-      if (router.canGoBack()) {
-        router.back();
-      } else {
-        // 뒤로 갈 화면이 없으면 특정 화면으로 이동
-        router.replace('/(tabs)/myPage/myPage');
-      }
+      goBackSmart();
     } catch (error: any) {
       console.error('문의 전송 실패:', error);
-      if (error.response) {
-        console.error('응답 상태:', error.response.status);
-        console.error('응답 데이터:', error.response.data);
-      } else if (error.request) {
-        console.error('요청 자체가 실패함:', error.request);
-      } else {
-        console.error('기타 오류:', error.message);
-      }
       alert('문의 전송에 실패했어요. 다시 시도해주세요.');
     }
   };
@@ -71,16 +67,7 @@ const Component = () => {
       <SafeAreaView style={styles.viewBg}>
         <View style={[styles.view, styles.viewBg]}>
           <View style={styles.statusBarLayout}>
-            <TouchableOpacity
-              onPress={() => {
-                if (router.canGoBack()) {
-                  router.back();
-                } else {
-                  router.replace('/(tabs)/myPage/myPage');
-                }
-              }}
-              style={styles.backIcon}
-            >
+            <TouchableOpacity onPress={goBackSmart} style={styles.backIcon}>
               <BackIcon width={24} height={24} />
             </TouchableOpacity>
             <View style={{ flex: 1, alignItems: 'center' }}>
