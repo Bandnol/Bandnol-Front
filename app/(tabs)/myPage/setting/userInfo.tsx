@@ -185,9 +185,9 @@ export default function UserInfo() {
 
         <View style={styles.content}>
           {/* 연결된 소셜 로그인 계정 */}
-          <Text style={styles.label}>연결된 소셜 로그인 계정</Text>
+          <Text style={styles.label}>연결된 이메일 계정</Text>
           <View style={styles.textBox}>
-            <KaKao width={20} height={20} style={{ marginRight: 10 }} />
+            {/* <KaKao width={20} height={20} style={{ marginRight: 10 }} /> */}
             <Text
               style={[styles.textValue, { flex: 1 }]}
               numberOfLines={1}
