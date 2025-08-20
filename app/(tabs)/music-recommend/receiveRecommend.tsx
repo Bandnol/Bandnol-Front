@@ -18,8 +18,8 @@ import {
   Text,
   View,
 } from 'react-native';
-
-const playButton = require('@/assets/images/play.png');
+import AlertIcon from '@/assets/icons/alert.svg';
+import PlayIcon from '@/assets/icons/play-solid.svg';
 
 /* 추천 ID만 추출 
    스웨거 응답상 top-level id가 recomsId 이므로 최우선으로 사용.
@@ -93,7 +93,9 @@ interface ReceiveRecommendProps {
   onReplyComplete?: () => void;
 }
 
-export default function ReceiveRecommend({ onReplyComplete }: ReceiveRecommendProps) {
+export default function ReceiveRecommend({
+  onReplyComplete,
+}: ReceiveRecommendProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [recommend, setRecommend] = useState<any>(null);
@@ -433,145 +435,161 @@ export default function ReceiveRecommend({ onReplyComplete }: ReceiveRecommendPr
   const dislikedActive = isLiked === false;
 
   return (
-    <ImageBackground
-      source={{ uri: recommend?.recomsSong?.imgUrl }}
-      style={styles.backgroundImage}
-      imageStyle={{ opacity: 0.8 }}
-    >
-      <LinearGradient
-        colors={['rgba(0,0,0,1)', 'rgba(0,0,0,0)']}
-        style={{ flex: 1 }}
+    <View style={styles.container}>
+      <ImageBackground
+        source={{ uri: recommend?.recomsSong?.imgUrl }}
+        style={styles.backgroundImage}
+        imageStyle={{ opacity: 0.8 }}
       >
-        <View style={styles.overlay}>
-          {/* 헤더 */}
-          <Text style={styles.headerText}>추천 받은 곡</Text>
-
-          {/* 날짜 */}
-          <Text style={styles.dateText}>
-            <DateHeader />
-          </Text>
-
-          {/* 곡 정보 */}
-          <Text style={styles.songTitle}>{recommend?.recomsSong?.title}</Text>
-          <Text style={styles.artist}>{recommend?.recomsSong?.artistName}</Text>
-
-          {/* 앨범 커버 + 재생 버튼 */}
-          <View style={styles.albumWrapper}>
-            <Image
-              source={{ uri: recommend?.recomsSong?.imgUrl }}
-              style={styles.albumImage}
-            />
-            <Image source={playButton} style={styles.playButton} />
-          </View>
-
-          {/* 보낸 사람 */}
-          <Text style={styles.fromText}>
-            From. <Text style={styles.sender}>{senderNickname}</Text>
-          </Text>
-
-          {/* 좋아요 + 별로예요 */}
-          <View style={styles.likeOptions}>
-            <Pressable
-              onPress={() => sendLike(true)}
-              disabled={!recomsId || likeUpdating}
-            >
-              <View style={styles.likeRow}>
-                <LikeIcon
-                  width={18}
-                  height={18}
-                  style={[styles.like, { opacity: isLiked === true ? 1 : 0.4 }]}
-                />
-                <Text
-                  style={[
-                    styles.likeLabel,
-                    { opacity: isLiked === true ? 1 : 0.6 },
-                  ]}
-                >
-                  좋아요
-                </Text>
-              </View>
-            </Pressable>
-
-            <Pressable
-              onPress={() => sendLike(false)}
-              disabled={!recomsId || likeUpdating}
-            >
-              <View style={styles.likeRow}>
-                <UnlikeIcon
-                  width={18}
-                  height={18}
-                  style={[
-                    styles.unlike,
-                    { opacity: isLiked === false ? 1 : 0.4 },
-                  ]}
-                />
-                <Text
-                  style={[
-                    styles.unlikeLabel,
-                    { opacity: isLiked === false ? 1 : 0.6 },
-                  ]}
-                >
-                  별로예요
-                </Text>
-              </View>
-            </Pressable>
-          </View>
-
-          {/* 버튼 */}
-          <View style={styles.buttonRow}>
-            <Pressable
-              style={styles.confirmComment}
-              onPress={() => openModal('view')}
-            >
-              <Text style={styles.confirmCommentText}>
-                {commentLoading ? '불러오는 중…' : '코멘트 확인하기'}
-              </Text>
-            </Pressable>
-
-            {hasReplied ? (
-              <Pressable style={styles.myReplyBtn} onPress={openMyReplyModal}>
-                <Text style={styles.myReplyBtnText}>내가 보낸 답장 보기</Text>
-              </Pressable>
-            ) : (
+        <LinearGradient
+          colors={['rgba(0,0,0,0.9)', 'rgba(0,0,0,0.2)']}
+          style={{ flex: 1 }}
+        >
+          <View style={styles.overlay}>
+            {/* 헤더 */}
+            <View style={styles.header}>
+              <Text style={styles.headerTitle}>추천 받은 곡</Text>
               <Pressable
-                style={styles.sendReply}
-                onPress={() => openModal('reply')}
+                onPress={() =>
+                  router.push('/(tabs)/music-recommend/alarmCenter')
+                }
+                style={styles.bellWrapper}
               >
-                <Text style={styles.sendReplyText}>답장 보내기</Text>
+                <AlertIcon width={24} height={24} />
               </Pressable>
-            )}
-          </View>
+            </View>
 
-          {/* CommentModal (Alert OK로만 닫힘) */}
-          <CommentModal
-            visible={isModalVisible}
-            onClose={() => {
-              setIsModalVisible(false);
-              setIsReplyMode(false);
-            }}
-            title={modalProps.title}
-            description={modalProps.description}
-            closeText={
-              isReplyMode
-                ? replySubmitting
-                  ? '보내는 중…'
-                  : modalProps.closeText
-                : '닫기'
-            }
-            closeColor={isReplyMode ? '#FB4932' : '#1F1F1F'}
-            editable={isReplyMode}
-            inputValue={replyText}
-            onChangeText={setReplyText}
-            onSubmit={handleSendReply}
-            submitting={replySubmitting}
-          />
-        </View>
-      </LinearGradient>
-    </ImageBackground>
+            {/* 날짜 + 곡 정보 */}
+            <Text style={styles.dateText}>
+              <DateHeader />
+            </Text>
+            <Text style={styles.songTitle}>{recommend?.recomsSong?.title}</Text>
+            <Text style={styles.artist}>
+              {recommend?.recomsSong?.artistName}
+            </Text>
+
+            {/* 앨범 커버 + 재생 버튼 */}
+            <View style={styles.albumWrapper}>
+              <Image
+                source={{ uri: recommend?.recomsSong?.imgUrl }}
+                style={styles.albumImage}
+              />
+              <PlayIcon width={58.1} height={58.1} />
+            </View>
+
+            {/* 보낸 사람 */}
+            <Text style={styles.fromText}>
+              From. <Text style={styles.sender}>{senderNickname}</Text>
+            </Text>
+
+            {/* 좋아요 + 별로예요 */}
+            <View style={styles.likeOptions}>
+              <Pressable
+                onPress={() => sendLike(true)}
+                disabled={!recomsId || likeUpdating}
+              >
+                <View style={styles.likeRow}>
+                  <LikeIcon
+                    width={18}
+                    height={18}
+                    style={[
+                      styles.like,
+                      { opacity: isLiked === true ? 1 : 0.4 },
+                    ]}
+                  />
+                  <Text
+                    style={[
+                      styles.likeLabel,
+                      { opacity: isLiked === true ? 1 : 0.6 },
+                    ]}
+                  >
+                    좋아요
+                  </Text>
+                </View>
+              </Pressable>
+
+              <Pressable
+                onPress={() => sendLike(false)}
+                disabled={!recomsId || likeUpdating}
+              >
+                <View style={styles.likeRow}>
+                  <UnlikeIcon
+                    width={18}
+                    height={18}
+                    style={[
+                      styles.unlike,
+                      { opacity: isLiked === false ? 1 : 0.4 },
+                    ]}
+                  />
+                  <Text
+                    style={[
+                      styles.unlikeLabel,
+                      { opacity: isLiked === false ? 1 : 0.6 },
+                    ]}
+                  >
+                    별로예요
+                  </Text>
+                </View>
+              </Pressable>
+            </View>
+
+            {/* 버튼 */}
+            <View style={styles.buttonRow}>
+              <Pressable
+                style={styles.confirmComment}
+                onPress={() => openModal('view')}
+              >
+                <Text style={styles.confirmCommentText}>
+                  {commentLoading ? '불러오는 중…' : '코멘트 확인하기'}
+                </Text>
+              </Pressable>
+
+              {hasReplied ? (
+                <Pressable style={styles.myReplyBtn} onPress={openMyReplyModal}>
+                  <Text style={styles.myReplyBtnText}>내가 보낸 답장 보기</Text>
+                </Pressable>
+              ) : (
+                <Pressable
+                  style={styles.sendReply}
+                  onPress={() => openModal('reply')}
+                >
+                  <Text style={styles.sendReplyText}>답장 보내기</Text>
+                </Pressable>
+              )}
+            </View>
+
+            {/* CommentModal (Alert OK로만 닫힘) */}
+            <CommentModal
+              visible={isModalVisible}
+              onClose={() => {
+                setIsModalVisible(false);
+                setIsReplyMode(false);
+              }}
+              title={modalProps.title}
+              description={modalProps.description}
+              closeText={
+                isReplyMode
+                  ? replySubmitting
+                    ? '보내는 중…'
+                    : modalProps.closeText
+                  : '닫기'
+              }
+              closeColor={isReplyMode ? '#FB4932' : '#1F1F1F'}
+              editable={isReplyMode}
+              inputValue={replyText}
+              onChangeText={setReplyText}
+              onSubmit={handleSendReply}
+              submitting={replySubmitting}
+            />
+          </View>
+        </LinearGradient>
+      </ImageBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#000' },
   backgroundImage: { flex: 1 },
   overlay: {
     flex: 1,
@@ -580,6 +598,28 @@ const styles = StyleSheet.create({
     paddingTop: 80,
     alignItems: 'center',
   },
+  header: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 120,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 60,
+    zIndex: 10,
+  },
+  headerTitle: {
+    ...Typography.subtitle1B,
+    position: 'absolute',
+    textAlign: 'center',
+    paddingTop: 50,
+    left: 0,
+    right: 0,
+    color: '#fff',
+  },
   headerText: {
     ...Typography.subtitle1B,
     color: '#fff',
@@ -587,8 +627,8 @@ const styles = StyleSheet.create({
   dateText: {
     ...Typography.subtitle2,
     color: '#EAEAEA',
-    marginTop: 50,
-    marginBottom: 40,
+    marginTop: 70,
+    marginBottom: 50,
   },
   songTitle: {
     ...Typography.h1,
@@ -621,7 +661,6 @@ const styles = StyleSheet.create({
     borderRadius: 100,
     position: 'absolute',
   },
-  playButton: { width: 62, height: 62, zIndex: 10 },
   likeOptions: { flexDirection: 'row', marginBottom: 30, alignItems: 'center' },
   likeRow: { flexDirection: 'row', alignItems: 'center', marginRight: 20 },
   like: { marginRight: 4 },
@@ -637,6 +676,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  bellWrapper: {
+    position: 'absolute',
+    right: 24,
+    top: 72,
   },
   sendReply: {
     width: 160,
