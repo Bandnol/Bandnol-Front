@@ -20,6 +20,7 @@ import CommentModal from '@/components/common/CommentModal';
 import DateHeader from '@/components/common/DateHeader';
 import { Typography } from '@/constants/typography';
 import { fetchReplyComment } from '@/api/replies';
+import ReceiveRecommend from './receiveRecommend';
 
 const defaultAlbumImage = require('@/assets/images/album-cover.jpg'); // 임시 이미지..
 
@@ -33,6 +34,7 @@ export default function MyRecommendSwiper() {
   const [isReplyCommentVisible, setIsReplyCommentVisible] = useState(false);
   const [replyComment, setReplyComment] = useState<string | null>(null);
   const [replySender, setReplySender] = useState<string | null>(null); // 보낸 사람 이름
+  const [hasReplied, setHasReplied] = useState(false); // 답장을 보냈는지 상태
 
   const albumSource =
     typeof image === 'string' && image.length > 0
@@ -54,13 +56,10 @@ export default function MyRecommendSwiper() {
     return () => clearInterval(timer);
   }, []);
 
-  // 타이머 종료 시 페이지 이동
+  // 타이머 종료 시 두 번째 페이지를 추천받은 곡으로 변경
   useEffect(() => {
     if (timeLeft === 0) {
-      router.replace({
-        pathname: '/(tabs)/music-recommend/receiveRecommend',
-        params: { title, artist },
-      });
+      setHasReplied(true);
     }
   }, [timeLeft]);
 
@@ -176,40 +175,46 @@ export default function MyRecommendSwiper() {
           </ImageBackground>
         </View>
 
-        {/* 추천 도착 타이머 */}
-        <View style={styles.container}>
-          <View style={styles.timeOverlay}>
-            <View style={styles.header}>
-              <Text style={styles.headerTitle}>추천 받은 곡</Text>
-              <Pressable
-                onPress={() => {
-                  router.push('/(tabs)/music-recommend/alarmCenter');
-                }}
-                style={styles.bellWrapper}
-              >
-                <AlertIcon width={24} height={24} />
-              </Pressable>
-            </View>
-            <Text style={styles.recommendDateText}>
-              <DateHeader />
-            </Text>
-
-            {/* 원형 타이머 박스 */}
-            <View style={styles.circleBox}>
-              <View style={styles.BandnolLogo}>
-                <BandnolIcon width={48} height={48} />
+        {/* 두 번째 페이지: 답장 상태에 따라 동적 변경 */}
+        {hasReplied ? (
+          /* 답장을 보낸 후: 추천받은 곡 페이지 */
+          <ReceiveRecommend onReplyComplete={() => swiperRef.current?.scrollTo(0)} />
+        ) : (
+          /* 답장을 보내기 전: 추천 도착 타이머 */
+          <View style={styles.container}>
+            <View style={styles.timeOverlay}>
+              <View style={styles.header}>
+                <Text style={styles.headerTitle}>추천 받은 곡</Text>
+                <Pressable
+                  onPress={() => {
+                    router.push('/(tabs)/music-recommend/alarmCenter');
+                  }}
+                  style={styles.bellWrapper}
+                >
+                  <AlertIcon width={24} height={24} />
+                </Pressable>
               </View>
-              <Text style={styles.countdownLabel}>오늘의 추천곡 도착까지</Text>
-              <Text style={styles.countdown}>{formatTime(timeLeft)}</Text>
-            </View>
+              <Text style={styles.recommendDateText}>
+                <DateHeader />
+              </Text>
 
-            {/* 하단 설정 버튼 */}
-            <View style={styles.settingRow}>
-              <ErrorIcon width={16} height={16} />
-              <Text style={styles.setting}>추천곡 수신시간 설정</Text>
+              {/* 원형 타이머 박스 */}
+              <View style={styles.circleBox}>
+                <View style={styles.BandnolLogo}>
+                  <BandnolIcon width={48} height={48} />
+                </View>
+                <Text style={styles.countdownLabel}>오늘의 추천곡 도착까지</Text>
+                <Text style={styles.countdown}>{formatTime(timeLeft)}</Text>
+              </View>
+
+              {/* 하단 설정 버튼 */}
+              <View style={styles.settingRow}>
+                <ErrorIcon width={16} height={16} />
+                <Text style={styles.setting}>추천곡 수신시간 설정</Text>
+              </View>
             </View>
           </View>
-        </View>
+        )}
       </Swiper>
 
       <CommentModal

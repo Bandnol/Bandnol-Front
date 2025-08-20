@@ -6,6 +6,7 @@ import CommentModal from '@/components/common/CommentModal';
 import DateHeader from '@/components/common/DateHeader';
 import { Typography } from '@/constants/typography';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -88,7 +89,12 @@ async function getMyRepliesRobust(rid: string) {
   return [];
 }
 
-export default function ReceiveRecommend() {
+interface ReceiveRecommendProps {
+  onReplyComplete?: () => void;
+}
+
+export default function ReceiveRecommend({ onReplyComplete }: ReceiveRecommendProps) {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [recommend, setRecommend] = useState<any>(null);
   const [recomsId, setRecomsId] = useState<string | null>(null);
@@ -255,6 +261,13 @@ export default function ReceiveRecommend() {
               setIsModalVisible(false);
               setIsReplyMode(false);
               setReplyText('');
+              // 답장 완료 후 첫 번째 스와이프 페이지로 돌아가기
+              if (onReplyComplete) {
+                onReplyComplete();
+              } else {
+                // fallback: 독립 실행 시 myRecommend로 네비게이션
+                router.replace('/(tabs)/music-recommend/myRecommend');
+              }
             },
           },
         ]);
