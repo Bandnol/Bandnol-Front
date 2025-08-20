@@ -1,7 +1,7 @@
 import { Alert } from 'react-native';
 import api from '@/store/api';
 import * as FileSystem from 'expo-file-system';
-import * as ImageManipulator from 'expo-image-manipulator';
+// import * as ImageManipulator from 'expo-image-manipulator';
 
 interface ProfileData {
   nickname: string;
