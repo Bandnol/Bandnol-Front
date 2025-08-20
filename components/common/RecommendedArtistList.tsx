@@ -30,12 +30,12 @@ const RecommendedArtistList = ({
   selected = [],
 }: Props) => {
   const isSelected = (artist: Artist) => {
-    return selected.some((a) => a.id === artist.id);
+    return selected && Array.isArray(selected) ? selected.some((a) => a.id === artist.id) : false;
   };
   return (
     <View style={styles.gridWrap}>
       {artistData.map((item, index) => {
-        const selected = isSelected(item);
+        const isItemSelected = isSelected(item);
         return (
           <TouchableOpacity
             key={`${item.id}-${index}`}
@@ -44,7 +44,7 @@ const RecommendedArtistList = ({
           >
             <View style={[
               styles.artistImageWrapper,
-              selected && styles.selectedImageWrapper
+              isItemSelected && styles.selectedImageWrapper
             ]}>
               {item.imgUrl ? (
                 <Image source={{ uri: item.imgUrl }} style={styles.artistImage} />
@@ -56,7 +56,7 @@ const RecommendedArtistList = ({
                   ]}
                 />
               )}
-              {selected && (
+              {isItemSelected && (
                 <View style={styles.selectedOverlay}>
                   <Text style={styles.checkmark}>✓</Text>
                 </View>
@@ -64,7 +64,7 @@ const RecommendedArtistList = ({
             </View>
             <Text style={[
               styles.artistName,
-              selected && styles.selectedArtistName
+              isItemSelected && styles.selectedArtistName
             ]}>{item.name}</Text>
           </TouchableOpacity>
         );

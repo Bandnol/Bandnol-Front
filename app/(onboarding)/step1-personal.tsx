@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import * as React from 'react';
 import {
+  Alert,
   Keyboard,
   Modal,
   SafeAreaView,
@@ -97,7 +98,7 @@ export default function Step1Personal() {
       setIsChecking(false);
     }
   };
-  const { signup } = useAuthApi();
+  const { signup, login } = useAuthApi();
 
   const onSubmit = async () => {
     // Basic validations
@@ -115,12 +116,25 @@ export default function Step1Personal() {
     };
 
     try {
+      // 1. 회원가입 먼저 진행
       const userId = await signup(body);
       console.log('회원가입 성공, userId:', userId);
-      // Proceed to next onboarding step (artist selection)
-      router.push('/step2-artist');
-    } catch (e: any) {
-      console.error('회원가입 실패:', e?.message || e);
+      
+      try {
+        // 2. 회원가입 성공 후 자동 로그인
+        await login({ ownId: id, password });
+        console.log('자동 로그인 성공');
+        
+        // 3. 다음 온보딩 단계로 이동 (아티스트 선택)
+        router.push('/step2-artist');
+      } catch (loginError: any) {
+        console.error('자동 로그인 실패:', loginError?.message || loginError);
+        // 회원가입은 성공했지만 로그인 실패 - 로그인 화면으로 이동하거나 재시도
+        Alert.alert('로그인 실패', '회원가입은 완료되었지만 로그인에 실패했습니다. 다시 시도해주세요.');
+      }
+    } catch (signupError: any) {
+      console.error('회원가입 실패:', signupError?.message || signupError);
+      Alert.alert('회원가입 실패', '회원가입에 실패했습니다: ' + (signupError?.message || '알 수 없는 오류'));
     }
   };
 

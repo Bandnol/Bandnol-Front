@@ -10,16 +10,15 @@ import {
   Pressable,
   ScrollView,
   ActivityIndicator,
-  Alert,
   RefreshControl,
-  StatusBar,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
-import axiosInstance from '@/hooks/useAxios';
+import api from '@/store/api';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import StatusBarHeader from '@/components/common/StatusBarHeader';
+import * as SecureStore from 'expo-secure-store';
 
 // API 응답 타입(필요 속성만 정의)
 interface ArtistDetail {
@@ -75,21 +74,30 @@ export default function ArtistPage() {
     setError(null);
     try {
       console.log('[ArtistPage] start load, artistId:', normalizedId);
+
+      // JWT 토큰 가져오기 (인증이 필요한 경우를 위해)
+      const token = await SecureStore.getItemAsync('JWTToken');
+
       // GET /api/v1/artists/{artistId}
-      const res = await axiosInstance.get<{
+      const res = await api.get<{
         success: boolean;
         data: any;
         error: any;
         name?: string;
-      }>(`/api/v1/artists/${encodeURIComponent(normalizedId)}`);
+      }>(`/api/v1/artists/${encodeURIComponent(normalizedId)}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       console.log('[ArtistPage] API raw response:', res.data);
       // API success=false 처리 (예: A1300)
-      if ((res.data as any)?.success === false && (res.data as any)?.error?.code) {
+      if (
+        (res.data as any)?.success === false &&
+        (res.data as any)?.error?.code
+      ) {
         const code = (res.data as any)?.error?.code;
         if (code === 'A1300') {
-          Alert.alert('안내', '해당 아티스트가 존재하지 않습니다.', [
-            { text: '확인', onPress: () => router.back() },
-          ]);
+          // Alert.alert('안내', '해당 아티스트가 존재하지 않습니다.', [
+          //   { text: '확인', onPress: () => router.back() },
+          // ]);
           return;
         }
       }
@@ -127,9 +135,9 @@ export default function ArtistPage() {
         const parsed = typeof msg === 'string' ? JSON.parse(msg) : null;
         const code = parsed?.error?.code ?? parsed?.code;
         if (code === 'A1300') {
-          Alert.alert('안내', '해당 아티스트가 존재하지 않습니다.', [
-            { text: '확인', onPress: () => router.back() },
-          ]);
+          // Alert.alert('안내', '해당 아티스트가 존재하지 않습니다.', [
+          //   { text: '확인', onPress: () => router.back() },
+          // ]);
           return;
         }
       } catch (_) {}
@@ -149,10 +157,65 @@ export default function ArtistPage() {
   const onBack = () => router.back();
 
   const onToggleInterest = async () => {
-    // TODO: 관심 아티스트 추가/해제 API 연결 (요청 스펙 확정 시 교체)
-    setArtist((prev) =>
-      prev ? { ...prev, isInterested: !prev.isInterested } : prev,
-    );
+    if (!artist) return;
+
+    try {
+      const token = await SecureStore.getItemAsync('JWTToken');
+      if (!token) {
+        // Alert.alert(
+        //   '로그인이 필요해요',
+        //   '관심 아티스트 기능을 사용하려면 로그인이 필요합니다.',
+        // );
+        return;
+      }
+
+      // POST API로 관심 아티스트 추가/제거 (inactive 필드로 제어)
+      const inactiveValue = artist.isInterested; // 현재 관심 아티스트면 inactive: true (해제)
+      console.log('[ArtistPage] 토글 전 상태:', {
+        artistName: artist.name,
+        isInterested: artist.isInterested,
+        inactiveValue,
+      });
+
+      await api.post(
+        '/api/v1/artists/liked',
+        {
+          id: artist.id,
+          name: artist.name,
+          imgUrl: artist.profileUrl,
+          inactive: inactiveValue,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      // 요청 성공 시 로컬 상태 업데이트
+      if (inactiveValue) {
+        // inactive: true = 관심 아티스트 제거
+        console.log('[ArtistPage] 관심 아티스트 제거 완료:', artist.name);
+        setArtist((prev) => {
+          const updated = prev ? { ...prev, isInterested: false } : prev;
+          console.log('[ArtistPage] 상태 업데이트 후:', {
+            isInterested: updated?.isInterested,
+          });
+          return updated;
+        });
+      } else {
+        // inactive: false = 관심 아티스트 추가
+        console.log('[ArtistPage] 관심 아티스트 추가 완료:', artist.name);
+        setArtist((prev) => {
+          const updated = prev ? { ...prev, isInterested: true } : prev;
+          console.log('[ArtistPage] 상태 업데이트 후:', {
+            isInterested: updated?.isInterested,
+          });
+          return updated;
+        });
+      }
+    } catch (e: any) {
+      console.error('[ArtistPage] 관심 아티스트 토글 실패:', e);
+      // Alert.alert('실패', '관심 아티스트 설정 중 문제가 발생했습니다.');
+    }
   };
 
   if (loading) {
@@ -177,7 +240,7 @@ export default function ArtistPage() {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <StatusBarHeader backgroundColor="transparent" />
+      <StatusBarHeader />
       <View style={{ position: 'relative' }}>
         <ImageBackground
           source={artist.bannerUrl ? { uri: artist.bannerUrl } : undefined}
@@ -240,7 +303,7 @@ export default function ArtistPage() {
               style={
                 artist.isInterested
                   ? styles.interestTextOutline
-                  : styles.interestTextFill
+                  : styles.interestTextOutline
               }
             >
               {artist.isInterested

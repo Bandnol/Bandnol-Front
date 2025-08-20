@@ -76,7 +76,9 @@ export function useAuth() {
     });
 
     if ('success' in result && result.success) {
+      console.log('[useAuth] Login API response:', result.data);
       const { user, token, refreshToken } = result.data;
+      console.log('[useAuth] Extracted tokens - access:', !!token, 'refresh:', !!refreshToken);
 
       // Use AuthSession to handle token storage and state update
       await signIn(token, refreshToken ?? undefined);
