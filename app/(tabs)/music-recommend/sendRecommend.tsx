@@ -5,6 +5,7 @@ import {
   Keyboard,
   Pressable,
   StyleSheet,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
@@ -135,14 +136,20 @@ export default function SendRecommendPage() {
         {/* 코멘트 입력 */}
         <View style={styles.commentBox}>
           <Text style={styles.commentLabel}>MY COMMENT</Text>
-          <TextInput
-            placeholder="COMMENT를 작성하세요..."
-            placeholderTextColor="#7C7C7C"
-            value={comment}
-            onChangeText={setComment}
-            multiline
-            style={styles.commentInput}
-          />
+          <ScrollView
+            style={styles.commentInputWrapper}
+            contentContainerStyle={{ paddingVertical: 8 }}
+            keyboardShouldPersistTaps="handled"
+          >
+            <TextInput
+              placeholder="COMMENT를 작성하세요..."
+              placeholderTextColor="#7C7C7C"
+              value={comment}
+              onChangeText={setComment}
+              multiline
+              style={styles.commentInput}
+            />
+          </ScrollView>
           <View style={styles.commentOptions}>
             <TouchableOpacity
               onPress={() => setIsAnonymous(!isAnonymous)}
@@ -285,6 +292,9 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     marginBottom: 15,
+  },
+  commentInputWrapper: {
+    backgroundColor: '#1F1F1F',
   },
   commentInput: {
     ...Typography.body2,
