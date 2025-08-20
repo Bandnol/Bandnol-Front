@@ -13,7 +13,7 @@ export default function SplashScreen() {
   const router = useRouter();
 
   const handleGuest = () => {
-    router.replace('/(tabs)/home'); // 로그인 없이 바로 홈으로
+    router.replace('/(tabs)/post'); // 로그인 없이 바로 홈으로
   };
 
   const handleLogin = () => {
