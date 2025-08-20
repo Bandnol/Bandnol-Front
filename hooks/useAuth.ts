@@ -131,6 +131,7 @@ export function useAuth() {
         body: JSON.stringify({ accessToken }),
       },
     );
+    useAuthStore.getState().clearJWTToken();
 
     await signOut(); // Use AuthSession to clear tokens and state
     clearUser(); // Clear user store as well
@@ -150,6 +151,7 @@ export function useAuth() {
       method: 'POST',
       body: JSON.stringify({ accessToken }),
     });
+    useAuthStore.getState().clearJWTToken();
 
     await signOut(); // Use AuthSession to clear tokens and state
     clearUser(); // Clear user store as well
