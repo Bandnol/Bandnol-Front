@@ -107,6 +107,7 @@ const Component = () => {
               id: artist.id,
               name: artist.name,
               imgUrl: artist.imgUrl,
+              inactive: false, // 관심 아티스트 등록
             },
             {
               headers: {
