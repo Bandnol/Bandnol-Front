@@ -18,8 +18,11 @@ export const setAxiosSignOutCallback = (callback: SignOutCallback) => {
 };
 
 const createAxiosInstance = () => {
+  const baseURL = process.env.EXPO_PUBLIC_API_URL;
+  console.log('[useAxios] Creating axios instance with baseURL:', baseURL);
+  
   const instance = axios.create({
-    baseURL: process.env.EXPO_PUBLIC_API_URL,
+    baseURL,
     headers: {
       'Content-Type': 'application/json',
     },
@@ -31,6 +34,7 @@ const createAxiosInstance = () => {
   instance.interceptors.request.use(
     async (config) => {
       const accessToken = await SecureStore.getItemAsync('JWTToken');
+      console.log('[useAxios] Request interceptor - token exists:', !!accessToken);
       if (accessToken) {
         config.headers.Authorization = `Bearer ${accessToken}`;
       }
@@ -62,9 +66,11 @@ const createAxiosInstance = () => {
 
       // 401 에러이고, 재시도한 요청이 아닐 경우
       if (error.response?.status === 401 && !originalRequest._retry) {
+        console.log('[useAxios] 401 error detected, attempting token refresh');
         originalRequest._retry = true; // 재시도 플래그 설정 (무한 루프 방지)
 
         const refreshToken = await SecureStore.getItemAsync('JWTRefreshToken');
+        console.log('[useAxios] Refresh token exists:', !!refreshToken);
 
         if (refreshToken) {
           try {
@@ -118,12 +124,6 @@ const createAxiosInstance = () => {
             await signOutCallback();
           }
         }
-      } else {
-        // 401 and not a retry, and no refresh token was found or refresh failed
-        // This case might happen if the initial token was invalid and no refresh token was present
-        /*if (signOutCallback) {
-          await signOutCallback();
-        }*/
       }
 
       return Promise.reject(error);

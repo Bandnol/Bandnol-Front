@@ -15,6 +15,12 @@ expo-env.d.ts
 *.apk
 *.aab
 
+# Build outputs
+/dist/
+/build/
+/android/
+/ios/
+
 # Native
 .kotlin/
 *.orig.*

@@ -1,26 +1,57 @@
 import React from 'react';
-import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-
+import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { Typography } from '@/constants/typography';
 
-type CommentModalProps = {
+type Props = {
   visible: boolean;
   onClose: () => void;
-  closeText?: string;
-  closeColor?: string;
-  title: string;
-  description: string;
+
+  // 공통
+  title: string; // "From. ...", "To. ..."
+  closeText?: string; // 읽기: "닫기" / 입력: "답장 보내기"
+  closeColor?: string; // 읽기: '#1F1F1F' / 입력: '#FB4932'
+
+  // 읽기 전용
+  description?: string;
+
+  // 입력 모드
+  editable?: boolean;
+  inputValue?: string;
+  onChangeText?: (t: string) => void;
+  onSubmit?: (t: string) => void;
+  submitting?: boolean;
 };
 
 export default function CommentModal({
   visible,
   onClose,
   title,
-  description,
-  closeText,
-  closeColor,
-}: CommentModalProps) {
-  const isReply = closeText === '답장 보내기';
+  description = '',
+  closeText = '닫기',
+  closeColor = '#1F1F1F',
+  editable = false,
+  inputValue = '',
+  onChangeText,
+  onSubmit,
+  submitting = false,
+}: Props) {
+  const canSubmit = editable && !!inputValue.trim() && !submitting;
+
+  const handlePrimary = () => {
+    if (editable) onSubmit?.(inputValue);
+    else onClose();
+  };
 
   return (
     <Modal
@@ -29,80 +60,110 @@ export default function CommentModal({
       visible={visible}
       onRequestClose={onClose}
     >
-      <View style={styles.modalBackground}>
-        <View style={styles.commentContainer}>
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.description}>{description}</Text>
-        </View>
-        <View style={[styles.buttonContainer, { backgroundColor: closeColor }]}>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Text
-              style={[
-                styles.closeButtonText,
-                {
-                  color: isReply ? '#FFFFFF' : '#B3B3B3',
-                },
-              ]}
+      <KeyboardAvoidingView
+        behavior={Platform.select({ ios: 'padding', android: undefined })}
+        style={styles.backdrop}
+      >
+        {/* 빈 공간 터치 시 키보드 내려감 */}
+        <Pressable style={StyleSheet.absoluteFill} onPress={Keyboard.dismiss} />
+
+        <View style={styles.card}>
+          {/* 상단 영역 */}
+          <View style={styles.content}>
+            <Text style={styles.title}>{title}</Text>
+
+            {editable ? (
+              <TextInput
+                value={inputValue}
+                onChangeText={onChangeText}
+                placeholder="내용을 입력해 주세요"
+                placeholderTextColor="#9A9A9A"
+                multiline
+                autoFocus
+                style={styles.input}
+              />
+            ) : (
+              <Text style={styles.description}>{description}</Text>
+            )}
+          </View>
+
+          {/* 하단 버튼 */}
+          <View style={[styles.footer, { backgroundColor: closeColor }]}>
+            <TouchableOpacity
+              style={styles.footerBtn}
+              onPress={handlePrimary}
+              disabled={editable && !canSubmit}
             >
-              {closeText}
-            </Text>
-          </TouchableOpacity>
+              <Text style={styles.footerTxt}>
+                {editable ? (submitting ? '전송중…' : closeText) : closeText}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
 
+const CARD_BG = '#333';
+
 const styles = StyleSheet.create({
-  modalBackground: {
-    width: 375,
-    height: 812,
+  backdrop: {
+    flex: 1,
     backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 20,
   },
-  commentContainer: {
-    height: 278,
+  card: {
     width: 335,
-    display: 'flex',
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  content: {
+    minHeight: 278,
+    width: '100%',
     paddingTop: 20,
     paddingHorizontal: 16,
     paddingBottom: 16,
-    backgroundColor: '#333',
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
-    flexDirection: 'column',
+    backgroundColor: CARD_BG,
     alignItems: 'center',
-    gap: 10,
-    // alignSelf: 'stretch',
   },
   title: {
     color: '#FFF',
     ...Typography.subtitle1B,
   },
   description: {
-    width: 266,
-    height: 108,
+    width: '100%',
     color: '#FFF',
     ...Typography.body2,
     textAlign: 'left',
     marginTop: 20,
+    paddingHorizontal: 10,
+    lineHeight: 22,
   },
-  buttonContainer: {
+  input: {
+    width: '100%',
+    minHeight: 150,
+    color: '#FFF',
+    ...Typography.body2,
+    textAlignVertical: 'top',
+    marginTop: 20,
+    backgroundColor: CARD_BG,
+    borderRadius: 8,
+    padding: 12,
+  },
+  footer: {
     height: 50,
-    width: 335,
-    // backgroundColor: '#1F1F1F',
-    borderBottomLeftRadius: 10,
-    borderBottomRightRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 16,
   },
-  closeButton: {
-    paddingHorizontal: 16,
+  footerBtn: {
     paddingVertical: 16,
+    paddingHorizontal: 16,
   },
-  closeButtonText: {
+  footerTxt: {
     ...Typography.subtitle3,
+    color: '#FFFFFF',
   },
 });

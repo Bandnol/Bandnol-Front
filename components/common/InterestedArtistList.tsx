@@ -5,6 +5,8 @@ import React from 'react';
 import { Image, Text, View, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 
+import CloseIcon from '@/assets/icons/close.svg';
+
 interface Artist {
   id: string;
   name: string;
@@ -16,12 +18,15 @@ const IA_STORAGE_KEY = '@interested_artists_v1';
 interface Props {
   selectedArtists: Artist[];
   onArtistPress?: (artist: Artist) => void;
+  showRemoveButton?: boolean;
+  onRemoveArtist?: (artist: Artist) => void;
 }
 
-const InterestedArtistList = ({ selectedArtists, onArtistPress }: Props) => {
+const InterestedArtistList = ({ selectedArtists, onArtistPress, showRemoveButton = false, onRemoveArtist }: Props) => {
   const router = useRouter();
 
   const [persisted, setPersisted] = React.useState<Artist[]>([]);
+  const [initialized, setInitialized] = React.useState(false);
 
   // Load persisted artists on mount
   React.useEffect(() => {
@@ -32,19 +37,21 @@ const InterestedArtistList = ({ selectedArtists, onArtistPress }: Props) => {
           const arr = JSON.parse(raw);
           if (Array.isArray(arr)) setPersisted(arr);
         }
+        setInitialized(true);
       } catch (e) {
         console.warn('[InterestedArtistList] load persisted failed', e);
+        setInitialized(true);
       }
     })();
   }, []);
 
-  // Persist when incoming prop updates with non-empty list
+  // Persist when incoming prop updates (including empty arrays) and component is initialized
   React.useEffect(() => {
+    if (!initialized) return;
     const arr = Array.isArray(selectedArtists) ? selectedArtists : [];
-    if (!arr.length) return;
     setPersisted(arr);
     AsyncStorage.setItem(IA_STORAGE_KEY, JSON.stringify(arr)).catch(() => {});
-  }, [selectedArtists]);
+  }, [selectedArtists, initialized]);
 
   // Make a 3-column grid layout stable by adding placeholders when items < multiple of 3
   const buildGrid = (items: Artist[]) => {
@@ -61,15 +68,17 @@ const InterestedArtistList = ({ selectedArtists, onArtistPress }: Props) => {
     return [...sliced, ...placeholders];
   };
 
-  const source = (selectedArtists?.length ? selectedArtists : persisted) ?? [];
-  const raw = source.slice(0, 6);
+  // Use selectedArtists if provided and initialized, otherwise use persisted data
+  const source = initialized && selectedArtists != null ? selectedArtists : persisted;
+  const list = Array.isArray(source) ? source : [];
+  const raw = list.slice(0, 6);
   const data = buildGrid(raw);
   console.log('[InterestedArtistList] selectedArtists:', selectedArtists);
   console.log('[InterestedArtistList] data (first 6):', data);
 
   return (
     <View style={styles.container}>
-      {!raw.length && !persisted.length ? (
+      {!raw.length ? (
         <Text style={styles.noArtistText}>선택한 아티스트가 없습니다.</Text>
       ) : (
         data.map((item, idx) => {
@@ -88,15 +97,19 @@ const InterestedArtistList = ({ selectedArtists, onArtistPress }: Props) => {
               key={item.id}
               style={cellStyle}
               onPress={() => {
-                console.log(
-                  '[InterestedArtistList] navigating to artist page:',
-                  item.id,
-                  item.name,
-                );
-                router.push({
-                  pathname: `/artist/${item.id}`,
-                  params: { name: item.name },
-                });
+                if (onArtistPress) {
+                  onArtistPress(item);
+                } else {
+                  console.log(
+                    '[InterestedArtistList] navigating to artist page:',
+                    item.id,
+                    item.name,
+                  );
+                  router.push({
+                    pathname: `/artist/${item.id}`,
+                    params: { name: item.name },
+                  });
+                }
               }}
               activeOpacity={0.7}
               hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
@@ -114,6 +127,18 @@ const InterestedArtistList = ({ selectedArtists, onArtistPress }: Props) => {
                       { backgroundColor: Colors.palette.Gray800 },
                     ]}
                   />
+                )}
+                {showRemoveButton && (
+                  <TouchableOpacity
+                    style={styles.removeButton}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      onRemoveArtist?.(item);
+                    }}
+                    hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+                  >
+                    <CloseIcon width={12} height={12} />
+                  </TouchableOpacity>
                 )}
               </View>
               <Text style={styles.artistName}>{item.name}</Text>
@@ -165,6 +190,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     width: '100%',
+  },
+  removeButton: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: Colors.palette.point,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
   },
 });
 

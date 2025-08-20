@@ -14,10 +14,7 @@ export const postReplyAsRecoms = async (
   console.log('🚀 POST BODY:', body);
 
   try {
-    const response = await axiosInstance.post(
-      `/api/v1/recoms/`,
-      body,
-    );
+    const response = await axiosInstance.post(`/api/v1/recoms/`, body);
 
     return { success: true, data: response.data };
   } catch (error) {

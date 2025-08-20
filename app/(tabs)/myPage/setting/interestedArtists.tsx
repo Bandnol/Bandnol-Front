@@ -1,5 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback } from 'react';
 import {
   ActivityIndicator,
@@ -38,6 +39,7 @@ export default function InterestedArtists() {
     'popularity',
   );
   const [selectedArtists, setSelectedArtists] = React.useState<any[]>([]);
+  const [likedArtists, setLikedArtists] = React.useState<any[]>([]);
   const [saving, setSaving] = React.useState(false);
 
   const selectedRef = React.useRef<any[]>([]);
@@ -51,8 +53,33 @@ export default function InterestedArtists() {
     );
   }, [selectedArtists]);
 
+  // 현재 관심 아티스트 목록 로드 (API에서)
+  const loadLikedArtists = async () => {
+    try {
+      const token = await SecureStore.getItemAsync('JWTToken');
+      if (!token) return;
+
+      const response = await api.get('/api/v1/artists/liked/list', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.data.success) {
+        const artists = response.data.data?.artists || response.data.data || [];
+        setLikedArtists(artists);
+        log('현재 관심 아티스트 불러옴 →', artists.length, '명');
+        log('API 응답 구조 확인:', response.data.data);
+      }
+    } catch (e) {
+      console.warn('[관심 아티스트 설정] 관심 아티스트 불러오기 실패', e);
+    }
+  };
+
   // 기존 관심 아티스트 로드
   React.useEffect(() => {
+    loadLikedArtists();
+
     (async () => {
       try {
         if (selectedArtists.length > 0) return;
@@ -70,6 +97,13 @@ export default function InterestedArtists() {
     })();
   }, []);
 
+  // 화면이 포커스될 때마다 관심 아티스트 목록 새로고침
+  useFocusEffect(
+    useCallback(() => {
+      loadLikedArtists();
+    }, []),
+  );
+
   React.useEffect(() => {
     if (!selectedArtists.length) return;
     AsyncStorage.setItem(IA_STORAGE_KEY, JSON.stringify(selectedArtists)).catch(
@@ -81,7 +115,7 @@ export default function InterestedArtists() {
   const saveLikedArtists = async () => {
     const list = selectedRef.current ?? [];
     log('저장 시도 시 선택된 수:', list.length);
-    
+
     if (list.length === 0) {
       Alert.alert('알림', '관심 아티스트를 선택해주세요.');
       return false;
@@ -107,6 +141,7 @@ export default function InterestedArtists() {
               id: artist.id,
               name: artist.name,
               imgUrl: artist.imgUrl,
+              inactive: false, // 관심 아티스트 등록
             },
             {
               headers: {
@@ -127,9 +162,13 @@ export default function InterestedArtists() {
         return false;
       }
 
-      console.log('[관심 아티스트 설정] 저장 완료. 총', list.length, '명 저장됨');
+      console.log(
+        '[관심 아티스트 설정] 저장 완료. 총',
+        list.length,
+        '명 저장됨',
+      );
       Alert.alert('완료', '관심 아티스트가 저장되었습니다.', [
-        { text: '확인', onPress: () => router.back() }
+        { text: '확인', onPress: () => router.back() },
       ]);
       return true;
     } catch (e) {
@@ -141,36 +180,104 @@ export default function InterestedArtists() {
     }
   };
 
+  // 관심 아티스트 제거 API 호출
+  const removeLikedArtist = async (artist: any) => {
+    try {
+      const token = await SecureStore.getItemAsync('JWTToken');
+      if (!token) {
+        Alert.alert('로그인이 필요해요', '토큰이 없어 제거할 수 없어요.');
+        return;
+      }
+
+      // POST API로 관심 아티스트 제거 (inactive: true로 설정)
+      await api.post(
+        '/api/v1/artists/liked',
+        {
+          id: artist.id,
+          name: artist.name,
+          imgUrl: artist.imgUrl,
+          inactive: true, // 관심 아티스트 제거
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      // 요청 성공 시 로컬 상태에서도 제거
+      setLikedArtists((prev) => prev.filter((a) => a.id !== artist.id));
+      log('관심 아티스트 제거 완료:', artist.name);
+      Alert.alert(
+        '완료',
+        `${artist.name}을(를) 관심 아티스트에서 제거했습니다.`,
+      );
+    } catch (e) {
+      console.error('[관심 아티스트 설정] 제거 중 오류:', e);
+      Alert.alert('제거 실패', '관심 아티스트 제거 중 문제가 발생했습니다.');
+    }
+  };
+
   const toggleSelectArtist = useCallback(
-    (artist: any) => {
-      setSelectedArtists((prev) => {
-        const norm = {
-          id:
-            artist?.id ??
-            artist?.artistId ??
-            artist?.spotifyId ??
-            String(artist?.id ?? ''),
-          name: artist?.name ?? artist?.displayName ?? artist?.title ?? '',
-          imgUrl:
-            artist?.imgUrl ?? artist?.imageUrl ?? artist?.profileUrl ?? '',
-        };
-        const exists = prev.some((a) => a.id === norm.id && norm.id);
-        let next = prev;
-        if (exists) {
-          next = prev.filter((a) => a.id !== norm.id);
-          log('제거:', norm.id, norm.name, '→ 총', next.length);
-        } else {
-          if (prev.length >= 6) {
-            log('최대 6명 제한, 추가 무시');
-            return prev;
+    async (artist: any) => {
+      const norm = {
+        id:
+          artist?.id ??
+          artist?.artistId ??
+          artist?.spotifyId ??
+          String(artist?.id ?? ''),
+        name: artist?.name ?? artist?.displayName ?? artist?.title ?? '',
+        imgUrl: artist?.imgUrl ?? artist?.imageUrl ?? artist?.profileUrl ?? '',
+      };
+
+      // 이미 관심 아티스트에 있는지 확인
+      const isAlreadyLiked = likedArtists.some((a) => a.id === norm.id);
+
+      if (isAlreadyLiked) {
+        // 이미 관심 아티스트면 제거
+        await removeLikedArtist(norm);
+      } else {
+        // 관심 아티스트가 아니면 추가
+        try {
+          const token = await SecureStore.getItemAsync('JWTToken');
+          if (!token) {
+            Alert.alert(
+              '로그인이 필요해요',
+              '토큰이 없어 관심 아티스트를 저장할 수 없어요.',
+            );
+            return;
           }
-          next = [...prev, norm];
-          log('추가:', norm.id, norm.name, '→ 총', next.length);
+
+          // 즉시 API 호출로 관심 아티스트 추가
+          await api.post(
+            '/api/v1/artists/liked',
+            {
+              id: norm.id,
+              name: norm.name,
+              imgUrl: norm.imgUrl,
+              inactive: false, // 관심 아티스트 등록
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          );
+
+          // 로컬 상태에도 추가
+          setLikedArtists((prev) => [...prev, norm]);
+
+          log('관심 아티스트 추가 완료:', norm.name);
+        } catch (e) {
+          console.error('[관심 아티스트 설정] 추가 중 오류:', e);
+          Alert.alert(
+            '추가 실패',
+            '관심 아티스트 추가 중 문제가 발생했습니다.',
+          );
         }
-        return next;
-      });
+      }
     },
-    [setSelectedArtists],
+    [likedArtists, removeLikedArtist],
   );
 
   const fetchMoreArtists = async (
@@ -187,14 +294,14 @@ export default function InterestedArtists() {
         params.size = 20;
         if (loadMore && nextCursor) params.cursor = nextCursor;
       }
-      
+
       const response = await api.get('/api/v1/artists/recommended', {
         params,
         headers: {
           Authorization: token ? `Bearer ${token}` : undefined,
         },
       });
-      
+
       if (response.data.success) {
         const newData =
           currentSort === 'popularity'
@@ -252,10 +359,7 @@ export default function InterestedArtists() {
     <View style={{ paddingHorizontal: 20, alignItems: 'flex-start' }}>
       {/* Top Nav Bar */}
       <View style={styles.topNavBar}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backBtn}
-        >
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <BackArrow width={9} height={16} />
         </TouchableOpacity>
         <Text style={styles.title}>관심 아티스트 설정</Text>
@@ -274,11 +378,15 @@ export default function InterestedArtists() {
           <Text style={styles.text3}>
             관심 아티스트{'  '}
             <Text style={{ color: Colors.palette.Gray400 }}>
-              {selectedArtists.length}/6
+              {likedArtists.length}/6명
             </Text>
           </Text>
           <View style={styles.selectedWrap}>
-            <InterestedArtistList selectedArtists={selectedArtists} />
+            <InterestedArtistList
+              selectedArtists={likedArtists}
+              showRemoveButton={false}
+              onRemoveArtist={removeLikedArtist}
+            />
           </View>
         </View>
       </View>
@@ -345,18 +453,12 @@ export default function InterestedArtists() {
                 }
                 sortType={sortType}
                 setError={setError}
-                selected={selectedArtists}
+                selected={likedArtists}
               />
             </View>
           )}
         </ScrollView>
-        <BottomNextButton
-          text="저장"
-          onPress={async () => {
-            if (saving) return;
-            await saveLikedArtists();
-          }}
-        />
+
         <LinearGradient
           colors={['transparent', Colors.palette.Gray900]}
           style={styles.fadeOverlay}
