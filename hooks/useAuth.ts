@@ -76,7 +76,9 @@ export function useAuth() {
     });
 
     if ('success' in result && result.success) {
+      console.log('[useAuth] Login API response:', result.data);
       const { user, token, refreshToken } = result.data;
+      console.log('[useAuth] Extracted tokens - access:', !!token, 'refresh:', !!refreshToken);
 
       // Use AuthSession to handle token storage and state update
       await signIn(token, refreshToken ?? undefined);
@@ -84,7 +86,7 @@ export function useAuth() {
       // 유저 정보 저장
       if (user) {
         await SecureStore.setItemAsync('user', JSON.stringify(user));
-        
+
         // userStore에도 유저 정보 저장
         if (user.nickname) setNickname(user.nickname);
         if (user.ownId) setOwnId(user.ownId);

@@ -17,9 +17,10 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
-import axiosInstance from '@/hooks/useAxios';
+import api from '@/store/api';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import StatusBarHeader from '@/components/common/StatusBarHeader';
+import * as SecureStore from 'expo-secure-store';
 
 // API 응답 타입(필요 속성만 정의)
 interface ArtistDetail {
@@ -75,13 +76,19 @@ export default function ArtistPage() {
     setError(null);
     try {
       console.log('[ArtistPage] start load, artistId:', normalizedId);
+      
+      // JWT 토큰 가져오기 (인증이 필요한 경우를 위해)
+      const token = await SecureStore.getItemAsync('JWTToken');
+      
       // GET /api/v1/artists/{artistId}
-      const res = await axiosInstance.get<{
+      const res = await api.get<{
         success: boolean;
         data: any;
         error: any;
         name?: string;
-      }>(`/api/v1/artists/${encodeURIComponent(normalizedId)}`);
+      }>(`/api/v1/artists/${encodeURIComponent(normalizedId)}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       console.log('[ArtistPage] API raw response:', res.data);
       // API success=false 처리 (예: A1300)
       if ((res.data as any)?.success === false && (res.data as any)?.error?.code) {
@@ -149,10 +156,62 @@ export default function ArtistPage() {
   const onBack = () => router.back();
 
   const onToggleInterest = async () => {
-    // TODO: 관심 아티스트 추가/해제 API 연결 (요청 스펙 확정 시 교체)
-    setArtist((prev) =>
-      prev ? { ...prev, isInterested: !prev.isInterested } : prev,
-    );
+    if (!artist) return;
+
+    try {
+      const token = await SecureStore.getItemAsync('JWTToken');
+      if (!token) {
+        Alert.alert('로그인이 필요해요', '관심 아티스트 기능을 사용하려면 로그인이 필요합니다.');
+        return;
+      }
+
+      // POST API로 관심 아티스트 추가/제거 toggle (백엔드에서 동일한 요청 바디로 처리)
+      const response = await api.post(
+        '/api/v1/artists/liked',
+        {
+          id: artist.id,
+          name: artist.name,
+          imgUrl: artist.profileUrl,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      // 응답의 inactiveStatus로 추가/해제 판단
+      const isNowInactive = response.data?.data?.inactiveStatus === true;
+
+      if (artist.isInterested) {
+        // 기존에 관심 아티스트였다면 제거되어야 함
+        if (isNowInactive) {
+          console.log('[ArtistPage] 관심 아티스트 제거 완료:', artist.name);
+          // 로컬 상태 업데이트
+          setArtist((prev) =>
+            prev ? { ...prev, isInterested: false } : prev,
+          );
+        } else {
+          console.log('[ArtistPage] 관심 아티스트 제거 실패 - 여전히 활성 상태');
+          Alert.alert('실패', '관심 아티스트 제거에 실패했습니다.');
+          return;
+        }
+      } else {
+        // 기존에 관심 아티스트가 아니었다면 추가되어야 함
+        if (!isNowInactive) {
+          console.log('[ArtistPage] 관심 아티스트 추가 완료:', artist.name);
+          // 로컬 상태 업데이트
+          setArtist((prev) =>
+            prev ? { ...prev, isInterested: true } : prev,
+          );
+        } else {
+          console.log('[ArtistPage] 관심 아티스트 추가 실패 - 비활성 상태');
+          Alert.alert('실패', '관심 아티스트 추가에 실패했습니다.');
+          return;
+        }
+      }
+    } catch (e: any) {
+      console.error('[ArtistPage] 관심 아티스트 토글 실패:', e);
+      Alert.alert('실패', '관심 아티스트 설정 중 문제가 발생했습니다.');
+    }
   };
 
   if (loading) {
@@ -177,7 +236,7 @@ export default function ArtistPage() {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <StatusBarHeader backgroundColor="transparent" />
+      <StatusBarHeader />
       <View style={{ position: 'relative' }}>
         <ImageBackground
           source={artist.bannerUrl ? { uri: artist.bannerUrl } : undefined}
