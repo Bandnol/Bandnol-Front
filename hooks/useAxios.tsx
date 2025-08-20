@@ -105,13 +105,14 @@ const createAxiosInstance = () => {
             await signOutCallback();
           }
         }
-      } else {
+      } /*else {
         // 401 and not a retry, and no refresh token was found or refresh failed
         // This case might happen if the initial token was invalid and no refresh token was present
         if (signOutCallback) {
           await signOutCallback();
         }
       }
+        */
 
       return Promise.reject(error);
     },

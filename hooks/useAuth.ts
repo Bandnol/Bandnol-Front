@@ -84,7 +84,7 @@ export function useAuth() {
       // 유저 정보 저장
       if (user) {
         await SecureStore.setItemAsync('user', JSON.stringify(user));
-        
+
         // userStore에도 유저 정보 저장
         if (user.nickname) setNickname(user.nickname);
         if (user.ownId) setOwnId(user.ownId);
