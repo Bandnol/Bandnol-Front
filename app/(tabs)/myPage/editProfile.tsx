@@ -24,6 +24,8 @@ import ProfileImage from '@/assets/images/profile.png';
 import { Typography } from '@/constants/typography';
 
 import * as ImagePicker from 'expo-image-picker';
+import type { ImagePickerOptions } from 'expo-image-picker';
+
 import { useEditProfile } from '@/hooks/useEditProfile';
 
 export default function EditProfile() {
@@ -34,10 +36,12 @@ export default function EditProfile() {
   const [backgroundUri, setBackgroundUri] = useState<string | null>(null);
 
   // 변경 여부 비교를 위한 초기 값
-  const [initialProfileUri, setInitialProfileUri] = useState<string | null>(null);
-  const [initialBackgroundUri, setInitialBackgroundUri] = useState<string | null>(
+  const [initialProfileUri, setInitialProfileUri] = useState<string | null>(
     null,
   );
+  const [initialBackgroundUri, setInitialBackgroundUri] = useState<
+    string | null
+  >(null);
 
   const [focusedField, setFocusedField] = useState<'nickname' | 'intro' | null>(
     null,
@@ -93,16 +97,19 @@ export default function EditProfile() {
     }
   };
 
-  const pickImage = async (options?: ImagePicker.ImageLibraryOptions) => {
+  const pickImage = async (options?: Partial<ImagePickerOptions>) => {
     const ok = await ensureMediaPermission();
     if (!ok) return null;
+
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images, // 경고가 있으나, 기능 동작을 위해 유지
-        quality: 0.9,
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
-        aspect: options?.aspect ?? undefined,
+        quality: 0.9,
+        // 호출측에서 넘긴 옵션을 덮어쓰기
+        ...(options ?? {}),
       });
+
       if (result.canceled) {
         console.log('[EditProfile] picker canceled');
         return null;
@@ -133,7 +140,6 @@ export default function EditProfile() {
     if (uri) setBackgroundUri(uri);
   };
 
-
   const handleGoBack = () => {
     router.push('/(tabs)/myPage/myPage');
   };
@@ -150,9 +156,11 @@ export default function EditProfile() {
       };
 
       await updateProfile(payload);
-
     } catch (e: any) {
-      console.error('[EditProfile] An error occurred during the save process:', e);
+      console.error(
+        '[EditProfile] An error occurred during the save process:',
+        e,
+      );
       Alert.alert('저장 오류', '프로필을 저장하는 중 문제가 발생했습니다.');
     } finally {
       try {
@@ -169,7 +177,10 @@ export default function EditProfile() {
           }),
         );
       } catch (storeError) {
-        console.error('[EditProfile] Failed to save to SecureStore', storeError);
+        console.error(
+          '[EditProfile] Failed to save to SecureStore',
+          storeError,
+        );
       }
       router.push('/(tabs)/myPage/myPage');
     }

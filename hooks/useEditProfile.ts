@@ -1,27 +1,96 @@
 import { Alert } from 'react-native';
 import api from '@/store/api';
+import * as FileSystem from 'expo-file-system';
+import * as ImageManipulator from 'expo-image-manipulator';
 
-// 프로필 수정을 위한 데이터 타입 정의
 interface ProfileData {
-  nickname?: string;
-  bio?: string;
-  photo?: string | null;
-  backgroundImg?: string | null;
-  initialPhoto?: string | null;
-  initialBackgroundImg?: string | null;
+  nickname: string;
+  bio: string;
+  photo: string | null;
+  backgroundImg: string | null;
+  initialPhoto: string | null;
+  initialBackgroundImg: string | null;
 }
+
+const MAX_UPLOAD_BYTES = 950 * 1024; // 950KB (서버 1MB 제한 대비 안전 마진)
+
+async function getFileSize(uri: string): Promise<number> {
+  try {
+    const info = await FileSystem.getInfoAsync(uri);
+    if (info.exists && 'size' in info) {
+      return info.size ?? 0;
+    }
+    return 0;
+  } catch {
+    return 0;
+  }
+}
+
+async function compressUnderLimit(
+  uri: string,
+  limitBytes = MAX_UPLOAD_BYTES,
+): Promise<string> {
+  // 원본이 이미 작은 경우 바로 반환
+  const originalSize = await getFileSize(uri);
+  if (originalSize > 0 && originalSize <= limitBytes) return uri;
+
+  // 1) 해상도 축소(너비 기준) → 2) 품질 단계 하향
+  // 너비: 1600 → 1200 → 1000 → 800 → 700 → 600
+  const widthSteps = [1600, 1200, 1000, 800, 700, 600];
+  const qualitySteps = [0.85, 0.75, 0.65, 0.55, 0.45, 0.35];
+
+  let currentUri = uri;
+
+  for (const w of widthSteps) {
+    const resized = await ImageManipulator.manipulateAsync(
+      currentUri,
+      [{ resize: { width: w } }],
+      { compress: 0.9, format: ImageManipulator.SaveFormat.JPEG },
+    );
+    currentUri = resized.uri;
+
+    // 크기 체크
+    let size = await getFileSize(currentUri);
+    if (size > 0 && size <= limitBytes) return currentUri;
+
+    // 그래도 크면 quality 단계 하향
+    for (const q of qualitySteps) {
+      const qResult = await ImageManipulator.manipulateAsync(
+        currentUri,
+        [], // 추가 리사이즈 없이 품질만
+        { compress: q, format: ImageManipulator.SaveFormat.JPEG },
+      );
+      currentUri = qResult.uri;
+
+      size = await getFileSize(currentUri);
+      if (size > 0 && size <= limitBytes) return currentUri;
+    }
+  }
+
+  // 여기까지 와도 넘치면 마지막 결과를 반환(가장 작은 상태)
+  return currentUri;
+}
+
+const isLocalFile = (uri?: string | null) =>
+  !!uri && (uri.startsWith('file://') || uri.startsWith('content://'));
 
 export const useEditProfile = () => {
   const updateProfile = async (data: ProfileData) => {
-    const { nickname, bio, photo, backgroundImg, initialPhoto, initialBackgroundImg } = data;
+    const {
+      nickname,
+      bio,
+      photo,
+      backgroundImg,
+      initialPhoto,
+      initialBackgroundImg,
+    } = data;
 
-    // API 호출들을 저장할 배열
     const apiCalls: Promise<any>[] = [];
 
-    // 1. 프로필 정보 (닉네임, 바이오) 업데이트
+    // 1) 텍스트(닉네임/바이오)는 JSON PATCH
     const profilePayload: { [key: string]: any } = {};
-    if (nickname) profilePayload.nickname = nickname;
-    if (bio) profilePayload.bio = bio;
+    if (nickname !== undefined) profilePayload.nickname = nickname; // 빈문자 허용하려면 !== undefined 체크
+    if (bio !== undefined) profilePayload.bio = bio;
 
     if (Object.keys(profilePayload).length > 0) {
       console.log(
@@ -31,28 +100,60 @@ export const useEditProfile = () => {
       apiCalls.push(api.patch('/api/v1/users/me/profiles', profilePayload));
     }
 
-    // 2. 이미지 업데이트 (별도 API 호출)
-    const imagePayload: { [key: string]: any } = {};
-    
-    // 이미지 변경 여부 확인
+    // 2) 이미지 변경은 FormData PATCH
+    const fd = new FormData();
+
     const photoChanged = photo !== initialPhoto;
     const bgChanged = backgroundImg !== initialBackgroundImg;
-    
-    if (photoChanged || bgChanged) {
-      if (photoChanged) {
-        imagePayload.photo = photo;
-        imagePayload.rmPhoto = photo === null ? "true" : "false";
-      }
-      if (bgChanged) {
-        imagePayload.backgroundImg = backgroundImg;
-        imagePayload.rmBackImg = backgroundImg === null ? "true" : "false";
-      }
+    const hasImageChange = bgChanged || photoChanged;
 
+    if (photoChanged) {
+      if (photo === null) {
+        // 삭제
+        fd.append('rmPhoto', 'true');
+      } else {
+        // 교체
+        let uploadUri = photo;
+        if (isLocalFile(photo)) {
+          uploadUri = await compressUnderLimit(photo);
+        }
+        fd.append('photo', {
+          uri: uploadUri,
+          name: 'profile.jpg',
+          type: 'image/jpeg',
+        } as any);
+        fd.append('rmPhoto', 'false');
+      }
+    } else {
+      fd.append('rmPhoto', 'false');
+    }
+
+    if (bgChanged) {
+      if (backgroundImg === null) {
+        // 삭제
+        fd.append('rmBackgroundImg', 'true');
+      } else {
+        // 교체
+        let uploadUri = backgroundImg;
+        if (isLocalFile(backgroundImg)) {
+          uploadUri = await compressUnderLimit(backgroundImg);
+        }
+        fd.append('backgroundImg', {
+          uri: uploadUri,
+          name: 'background.jpg',
+          type: 'image/jpeg',
+        } as any);
+        fd.append('rmBackgroundImg', 'false');
+      }
+    } else {
+      fd.append('rmBackgroundImg', 'false');
+    }
+
+    if (hasImageChange) {
       console.log(
-        '[useEditProfile] Queuing PATCH /api/v1/users/me (images) with',
-        imagePayload,
+        '[useEditProfile] Queuing PATCH /api/v1/users/me with FormData',
       );
-      apiCalls.push(api.patch('/api/v1/users/me', imagePayload));
+      apiCalls.push(api.patch('/api/v1/users/me', fd));
     }
 
     if (apiCalls.length === 0) {
@@ -61,15 +162,11 @@ export const useEditProfile = () => {
     }
 
     try {
-      // 3. 준비된 모든 API 호출을 동시에 실행
       const results = await Promise.allSettled(apiCalls);
-
-      // 4. 결과 처리
       const failedCalls = results.filter((r) => r.status === 'rejected');
 
       if (failedCalls.length > 0) {
         console.error('[useEditProfile] Some updates failed:', failedCalls);
-        // 첫 번째 실패한 호출의 에러를 표시
         const firstError = (failedCalls[0] as PromiseRejectedResult).reason;
         const errorMessage =
           firstError?.response?.data?.error?.message ||

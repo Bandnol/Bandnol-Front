@@ -27,6 +27,8 @@ const createAxiosInstance = () => {
       'Content-Type': 'application/json',
     },
   });
+  const isFormData = (data: any) =>
+    typeof FormData !== 'undefined' && data instanceof FormData;
 
   // Request Interceptor
   instance.interceptors.request.use(
@@ -35,6 +37,17 @@ const createAxiosInstance = () => {
       console.log('[useAxios] Request interceptor - token exists:', !!accessToken);
       if (accessToken) {
         config.headers.Authorization = `Bearer ${accessToken}`;
+      }
+      if (isFormData(config.data)) {
+        const h = config.headers as any;
+        if (h) {
+          delete h['Content-Type'];
+          delete h['content-type'];
+        }
+      } else {
+        if (!(config.headers as any)['Content-Type']) {
+          (config.headers as any)['Content-Type'] = 'application/json';
+        }
       }
       return config;
     },
