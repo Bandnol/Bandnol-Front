@@ -75,7 +75,7 @@ const createAxiosInstance = () => {
             if (!response.data?.success) {
               throw new Error('Refresh token response indicates failure');
             }
-            
+
             const newAccessToken = response.data.data?.token;
             const newRefreshToken = response.data.data?.refreshToken; // 서버가 새 리프레시 토큰을 줄 수도 있음
 
@@ -84,11 +84,14 @@ const createAxiosInstance = () => {
               await SecureStore.setItemAsync('JWTToken', newAccessToken);
               useAuthStore.getState().setJWTToken(newAccessToken);
               if (newRefreshToken) {
-                await SecureStore.setItemAsync('JWTRefreshToken', newRefreshToken);
+                await SecureStore.setItemAsync(
+                  'JWTRefreshToken',
+                  newRefreshToken,
+                );
               }
 
               // 원래 요청의 헤더에 새로운 토큰을 설정하여 재요청
-              if(originalRequest.headers) {
+              if (originalRequest.headers) {
                 originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
               }
               return instance(originalRequest);
