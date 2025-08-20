@@ -1,91 +1,105 @@
+// hooks/useEditProfile.ts
 import { Alert } from 'react-native';
 import api from '@/store/api';
 
-// 프로필 수정을 위한 데이터 타입 정의
 interface ProfileData {
-  nickname?: string;
-  bio?: string;
-  photo?: string | null;
-  backgroundImg?: string | null;
-  initialPhoto?: string | null;
-  initialBackgroundImg?: string | null;
+  nickname: string;
+  bio: string;
+  photo: string | null; // file://… 또는 CDN URL 또는 null
+  backgroundImg: string | null; // file://… 또는 CDN URL 또는 null
+  initialPhoto: string | null;
+  initialBackgroundImg: string | null;
 }
+
+const isLocalFile = (uri?: string | null) =>
+  !!uri && (uri.startsWith('file://') || uri.startsWith('content://'));
+
+const guessMime = (uri: string) => {
+  const ext = uri.split('?')[0].split('.').pop()?.toLowerCase();
+  if (ext === 'png') return 'image/png';
+  if (ext === 'webp') return 'image/webp';
+  return 'image/jpeg';
+};
 
 export const useEditProfile = () => {
   const updateProfile = async (data: ProfileData) => {
-    const { nickname, bio, photo, backgroundImg, initialPhoto, initialBackgroundImg } = data;
+    const {
+      nickname,
+      bio,
+      photo,
+      backgroundImg,
+      initialPhoto,
+      initialBackgroundImg,
+    } = data;
 
-    // API 호출들을 저장할 배열
-    const apiCalls: Promise<any>[] = [];
+    // 1) 텍스트(닉네임/바이오)는 JSON PATCH
+    const profilePayload: Record<string, any> = {};
+    if (nickname !== undefined) profilePayload.nickname = nickname;
+    if (bio !== undefined) profilePayload.bio = bio;
 
-    // 1. 프로필 정보 (닉네임, 바이오) 업데이트
-    const profilePayload: { [key: string]: any } = {};
-    if (nickname) profilePayload.nickname = nickname;
-    if (bio) profilePayload.bio = bio;
+    // 2) 이미지 변경은 FormData PATCH
+    const fd = new FormData();
+    let hasImageChange = false;
 
-    if (Object.keys(profilePayload).length > 0) {
-      console.log(
-        '[useEditProfile] Queuing PATCH /api/v1/users/me/profiles with',
-        profilePayload,
-      );
-      apiCalls.push(api.patch('/api/v1/users/me/profiles', profilePayload));
+    if (photo !== initialPhoto) {
+      hasImageChange = true;
+      if (photo === null) {
+        fd.append('rmPhoto', 'true'); // 삭제
+      } else if (isLocalFile(photo)) {
+        fd.append('photo', {
+          uri: photo,
+          name: 'profile.' + (photo.split('.').pop() || 'jpg'),
+          type: guessMime(photo),
+        } as any); // 로컬 파일 업로드
+      } else {
+        // 서버가 URL 교체를 허용하면 사용. 불허하면 제거하거나 주석 처리
+        fd.append('photoUrl', photo);
+      }
     }
 
-    // 2. 이미지 업데이트 (별도 API 호출)
-    const imagePayload: { [key: string]: any } = {};
-    
-    // 이미지 변경 여부 확인
-    const photoChanged = photo !== initialPhoto;
-    const bgChanged = backgroundImg !== initialBackgroundImg;
-    
-    if (photoChanged || bgChanged) {
-      if (photoChanged) {
-        imagePayload.photo = photo;
-        imagePayload.rmPhoto = photo === null ? "true" : "false";
+    if (backgroundImg !== initialBackgroundImg) {
+      hasImageChange = true;
+      if (backgroundImg === null) {
+        fd.append('rmBackImg', 'true');
+      } else if (isLocalFile(backgroundImg)) {
+        fd.append('backgroundImg', {
+          uri: backgroundImg,
+          name: 'background.' + (backgroundImg.split('.').pop() || 'jpg'),
+          type: guessMime(backgroundImg),
+        } as any);
+      } else {
+        fd.append('backgroundImgUrl', backgroundImg);
       }
-      if (bgChanged) {
-        imagePayload.backgroundImg = backgroundImg;
-        imagePayload.rmBackImg = backgroundImg === null ? "true" : "false";
-      }
-
-      console.log(
-        '[useEditProfile] Queuing PATCH /api/v1/users/me (images) with',
-        imagePayload,
-      );
-      apiCalls.push(api.patch('/api/v1/users/me', imagePayload));
-    }
-
-    if (apiCalls.length === 0) {
-      console.log('[useEditProfile] No changes to update.');
-      return { success: true, results: [] };
     }
 
     try {
-      // 3. 준비된 모든 API 호출을 동시에 실행
-      const results = await Promise.allSettled(apiCalls);
-
-      // 4. 결과 처리
-      const failedCalls = results.filter((r) => r.status === 'rejected');
-
-      if (failedCalls.length > 0) {
-        console.error('[useEditProfile] Some updates failed:', failedCalls);
-        // 첫 번째 실패한 호출의 에러를 표시
-        const firstError = (failedCalls[0] as PromiseRejectedResult).reason;
-        const errorMessage =
-          firstError?.response?.data?.error?.message ||
-          firstError?.response?.data?.message ||
-          '프로필 저장 중 일부 항목에 문제가 발생했습니다.';
-        Alert.alert('저장 실패', errorMessage);
-        return { success: false, results };
+      // 텍스트 먼저(있으면)
+      if (Object.keys(profilePayload).length > 0) {
+        await api.patch('/api/v1/users/me/profiles', profilePayload);
       }
 
-      console.log('[useEditProfile] All updates successful');
+      // 이미지(FormData) 전송(있으면)
+      if (hasImageChange) {
+        await api.patch('/api/v1/users/me', fd, {
+          headers: { 'Content-Type': 'multipart/form-data' }, // 중요
+        });
+      }
+
       Alert.alert('성공', '프로필이 성공적으로 저장되었습니다.');
-      return { success: true, results };
-    } catch (error) {
-      console.error('[useEditProfile] An unexpected error occurred:', error);
-      Alert.alert('오류', '알 수 없는 오류가 발생했습니다.');
-      return { success: false, error };
+      return { success: true };
+    } catch (err: any) {
+      const status = err?.response?.status;
+      const code = err?.response?.data?.error?.code;
+      if (status === 404 && code === 'E1300') {
+        Alert.alert('안내', '변경된 내용이 없습니다.');
+      } else {
+        const msg =
+          err?.response?.data?.error?.message ||
+          err?.response?.data?.message ||
+          '프로필 저장 중 오류가 발생했습니다.';
+        Alert.alert('저장 실패', msg);
+      }
+      return { success: false, error: err };
     }
   };
 

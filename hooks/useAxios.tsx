@@ -24,6 +24,8 @@ const createAxiosInstance = () => {
       'Content-Type': 'application/json',
     },
   });
+  const isFormData = (data: any) =>
+    typeof FormData !== 'undefined' && data instanceof FormData;
 
   // Request Interceptor
   instance.interceptors.request.use(
@@ -31,6 +33,17 @@ const createAxiosInstance = () => {
       const accessToken = await SecureStore.getItemAsync('JWTToken');
       if (accessToken) {
         config.headers.Authorization = `Bearer ${accessToken}`;
+      }
+      if (isFormData(config.data)) {
+        const h = config.headers as any;
+        if (h) {
+          delete h['Content-Type'];
+          delete h['content-type'];
+        }
+      } else {
+        if (!(config.headers as any)['Content-Type']) {
+          (config.headers as any)['Content-Type'] = 'application/json';
+        }
       }
       return config;
     },
@@ -69,7 +82,7 @@ const createAxiosInstance = () => {
             if (!response.data?.success) {
               throw new Error('Refresh token response indicates failure');
             }
-            
+
             const newAccessToken = response.data.data?.token;
             const newRefreshToken = response.data.data?.refreshToken; // 서버가 새 리프레시 토큰을 줄 수도 있음
 
@@ -78,11 +91,14 @@ const createAxiosInstance = () => {
               await SecureStore.setItemAsync('JWTToken', newAccessToken);
               useAuthStore.getState().setJWTToken(newAccessToken);
               if (newRefreshToken) {
-                await SecureStore.setItemAsync('JWTRefreshToken', newRefreshToken);
+                await SecureStore.setItemAsync(
+                  'JWTRefreshToken',
+                  newRefreshToken,
+                );
               }
 
               // 원래 요청의 헤더에 새로운 토큰을 설정하여 재요청
-              if(originalRequest.headers) {
+              if (originalRequest.headers) {
                 originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
               }
               return instance(originalRequest);
@@ -105,9 +121,9 @@ const createAxiosInstance = () => {
       } else {
         // 401 and not a retry, and no refresh token was found or refresh failed
         // This case might happen if the initial token was invalid and no refresh token was present
-        if (signOutCallback) {
+        /*if (signOutCallback) {
           await signOutCallback();
-        }
+        }*/
       }
 
       return Promise.reject(error);
