@@ -141,6 +141,7 @@ export default function InterestedArtists() {
               id: artist.id,
               name: artist.name,
               imgUrl: artist.imgUrl,
+              inactive: false, // 관심 아티스트 등록
             },
             {
               headers: {
@@ -188,13 +189,14 @@ export default function InterestedArtists() {
         return;
       }
 
-      // POST API로 관심 아티스트 제거 (백엔드에서 동일한 요청 바디로 toggle 처리)
-      const response = await api.post(
+      // POST API로 관심 아티스트 제거 (inactive: true로 설정)
+      await api.post(
         '/api/v1/artists/liked',
         {
           id: artist.id,
           name: artist.name,
           imgUrl: artist.imgUrl,
+          inactive: true, // 관심 아티스트 제거
         },
         {
           headers: {
@@ -203,21 +205,13 @@ export default function InterestedArtists() {
         },
       );
 
-      // 응답의 inactiveStatus로 추가/해제 판단
-      const isNowInactive = response.data?.data?.inactiveStatus === true;
-
-      if (isNowInactive) {
-        // 로컬 상태에서도 제거
-        setLikedArtists((prev) => prev.filter((a) => a.id !== artist.id));
-        log('관심 아티스트 제거 완료:', artist.name);
-        Alert.alert(
-          '완료',
-          `${artist.name}을(를) 관심 아티스트에서 제거했습니다.`,
-        );
-      } else {
-        log('관심 아티스트 제거 실패 - 여전히 활성 상태:', artist.name);
-        Alert.alert('제거 실패', '관심 아티스트 제거에 실패했습니다.');
-      }
+      // 요청 성공 시 로컬 상태에서도 제거
+      setLikedArtists((prev) => prev.filter((a) => a.id !== artist.id));
+      log('관심 아티스트 제거 완료:', artist.name);
+      Alert.alert(
+        '완료',
+        `${artist.name}을(를) 관심 아티스트에서 제거했습니다.`,
+      );
     } catch (e) {
       console.error('[관심 아티스트 설정] 제거 중 오류:', e);
       Alert.alert('제거 실패', '관심 아티스트 제거 중 문제가 발생했습니다.');
@@ -261,6 +255,7 @@ export default function InterestedArtists() {
               id: norm.id,
               name: norm.name,
               imgUrl: norm.imgUrl,
+              inactive: false, // 관심 아티스트 등록
             },
             {
               headers: {
