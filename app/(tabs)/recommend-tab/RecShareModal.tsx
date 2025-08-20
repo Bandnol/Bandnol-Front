@@ -19,7 +19,7 @@ import {
 } from 'react-native';
 import Modal from 'react-native-modal';
 
-// import Share, { Social } from 'react-native-share';
+import Share, { Social } from 'react-native-share';
 
 import Svg, { Circle } from 'react-native-svg';
 import ViewShot from 'react-native-view-shot';
@@ -193,8 +193,8 @@ export default function RecShareModal({
                 {!isTabRecommending && (
                   <Text
                     style={styles.toText}
-                    numberOfLines={1} // NEW: 말줄임
-                    ellipsizeMode="tail" // NEW
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
                   >
                     To. <Text style={{ color: '#F4F4F4' }}>me</Text>
                   </Text>
@@ -203,8 +203,8 @@ export default function RecShareModal({
                 {/* 제목 — 1줄 고정, ... */}
                 <Text
                   style={styles.titleText}
-                  numberOfLines={1} // NEW
-                  ellipsizeMode="tail" // NEW
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
                 >
                   {recData.title}
                 </Text>
@@ -212,8 +212,8 @@ export default function RecShareModal({
                 {/* 아티스트 — 1줄 고정, ... */}
                 <Text
                   style={styles.artistText}
-                  numberOfLines={1} // NEW
-                  ellipsizeMode="tail" // NEW
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
                 >
                   {recData.artistName}
                 </Text>
@@ -222,8 +222,8 @@ export default function RecShareModal({
                 <View style={styles.commentBox}>
                   <Text
                     style={styles.commentText}
-                    numberOfLines={3} // NEW: 3줄 제한
-                    ellipsizeMode="tail" // NEW
+                    numberOfLines={3}
+                    ellipsizeMode="tail"
                   >
                     {recData.comment}
                   </Text>
@@ -232,8 +232,8 @@ export default function RecShareModal({
                 {/* From. XXX — 1줄, ... (닉네임 길이 대비) */}
                 <Text
                   style={styles.fromText}
-                  numberOfLines={1} // NEW
-                  ellipsizeMode="tail" // NEW
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
                 >
                   From.{' '}
                   <Text style={{ color: '#F4F4F4' }}>
@@ -260,7 +260,7 @@ export default function RecShareModal({
           <View style={styles.buttonGroup}>
             <Pressable
               style={styles.shareItem}
-              //              onPress={handleShareToInstagramStory}
+              onPress={handleShareToInstagramStory}
             >
               <View style={styles.shareButton}>
                 <Insta />
@@ -364,8 +364,8 @@ export default function RecShareModal({
                 {!isTabRecommending && (
                   <Text
                     style={styles.XtoText}
-                    numberOfLines={1} // NEW
-                    ellipsizeMode="tail" // NEW
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
                   >
                     To. <Text style={{ color: '#F4F4F4' }}>me</Text>
                   </Text>
@@ -374,8 +374,8 @@ export default function RecShareModal({
                 {/* 제목 — 1줄, ... */}
                 <Text
                   style={styles.XtitleText}
-                  numberOfLines={1} // NEW
-                  ellipsizeMode="tail" // NEW
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
                 >
                   {recData.title}
                 </Text>
@@ -383,8 +383,8 @@ export default function RecShareModal({
                 {/* 아티스트 — 1줄, ... */}
                 <Text
                   style={styles.XartistText}
-                  numberOfLines={1} // NEW
-                  ellipsizeMode="tail" // NEW
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
                 >
                   {recData.artistName}
                 </Text>
@@ -393,8 +393,8 @@ export default function RecShareModal({
                 <View style={styles.XcommentBox}>
                   <Text
                     style={styles.XcommentText}
-                    numberOfLines={2} // NEW: 가로형은 2줄이 균형 좋음
-                    ellipsizeMode="tail" // NEW
+                    numberOfLines={2}
+                    ellipsizeMode="tail"
                   >
                     {recData.comment}
                   </Text>
@@ -403,8 +403,8 @@ export default function RecShareModal({
                 {/* From. XXX — 1줄, ... */}
                 <Text
                   style={styles.XfromText}
-                  numberOfLines={1} // NEW
-                  ellipsizeMode="tail" // NEW
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
                 >
                   From.{' '}
                   <Text style={{ color: '#F4F4F4' }}>
@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
   fromText: {
     ...Typography.subtitle4,
     color: '#D9D9D9',
-    marginTop: 'auto', // 남는 공간을 위로 밀어 아래 배치
+    marginTop: 'auto',
   },
   buttonGroup: {
     marginTop: 20,
@@ -573,19 +573,19 @@ const styles = StyleSheet.create({
     color: '#D9D9D9',
     marginBottom: 13,
     fontWeight: '600',
-    height: 17, // 제목 높이 고정
+    height: 17,
   },
   XtitleText: {
     ...Typography.subtitle1B,
     color: '#F4F4F4',
     fontWeight: '600',
-    height: 24, // 제목 높이 고정
+    height: 24,
     marginBottom: 4,
-    flexShrink: 0, // 제목이 길어도 줄바꿈
+    flexShrink: 0,
   },
   XartistText: {
     ...Typography.body2,
-    height: 20, // 아티스트 높이 고정
+    height: 20,
     color: '#B3B3B3',
     marginBottom: 11,
   },
@@ -597,7 +597,7 @@ const styles = StyleSheet.create({
   },
   XcommentText: {
     ...Typography.caption2,
-    height: 28, // 댓글 높이 고정 (2줄 가정)
+    height: 28,
     color: '#EAEAEA',
     textAlign: 'left',
   },
@@ -612,7 +612,7 @@ const styles = StyleSheet.create({
     height: 17,
     width: 22,
     flexShrink: 0,
-    borderTopRightRadius: 10, // RN은 각 코너별로 radius 지정
+    borderTopRightRadius: 10,
     borderBottomLeftRadius: 10,
     borderBottomWidth: 1,
     borderLeftWidth: 1,
