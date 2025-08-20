@@ -590,13 +590,14 @@ export default function ReceiveRecommend({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
-  backgroundImage: { flex: 1 },
+  backgroundImage: { flex: 1, ...StyleSheet.absoluteFillObject },
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     paddingHorizontal: 24,
-    paddingTop: 80,
+    paddingTop: 120,
     alignItems: 'center',
+    paddingBottom: 72,
   },
   header: {
     position: 'absolute',
@@ -627,7 +628,6 @@ const styles = StyleSheet.create({
   dateText: {
     ...Typography.subtitle2,
     color: '#EAEAEA',
-    marginTop: 70,
     marginBottom: 50,
   },
   songTitle: {
@@ -653,7 +653,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 28,
   },
   albumImage: {
     width: 224,
@@ -668,7 +668,12 @@ const styles = StyleSheet.create({
   unlikeRow: { flexDirection: 'row', alignItems: 'center' },
   unlike: { marginRight: 4 },
   unlikeLabel: { ...Typography.body2, color: '#7C7C7C' },
-  buttonRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginTop: 5,
+  },
   confirmComment: {
     width: 160,
     height: 50,
