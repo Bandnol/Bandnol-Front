@@ -20,6 +20,8 @@ export const AuthSessionProvider = ({ children }: { children: ReactNode }) => {
     const loadTokens = async () => {
       try {
         const token = await SecureStore.getItemAsync('JWTToken');
+        const refreshToken = await SecureStore.getItemAsync('JWTRefreshToken');
+        console.log('[AuthSession] Loading tokens - access:', !!token, 'refresh:', !!refreshToken);
         if (token) {
           setZustandToken(token);
           setIsAuthenticated(true);
@@ -35,12 +37,14 @@ export const AuthSessionProvider = ({ children }: { children: ReactNode }) => {
   }, [setZustandToken]);
 
   const signIn = async (token: string, refreshToken?: string) => {
+    console.log('[AuthSession] Signing in with token:', !!token, 'refresh token:', !!refreshToken);
     await SecureStore.setItemAsync('JWTToken', token);
     setZustandToken(token);
     if (refreshToken) {
       await SecureStore.setItemAsync('JWTRefreshToken', refreshToken);
     }
     setIsAuthenticated(true);
+    console.log('[AuthSession] Sign in completed');
   };
 
   const signOut = async () => {
