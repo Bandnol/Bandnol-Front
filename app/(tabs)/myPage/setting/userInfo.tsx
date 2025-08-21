@@ -192,15 +192,21 @@ export default function UserInfo() {
             </Text>
           </View>
 
-          
-
           {/* 아이디 */}
           <View style={styles.marginBlock}>
             <Text style={styles.label}>아이디</Text>
             <View style={styles.frameGroupFlexBox}>
               <View style={[{ flex: 1 }, styles.frameShadowBox]}>
                 <TextInput
-                  style={[styles.inputText, { flex: 1, paddingVertical: 0 }]}
+                  style={[
+                    styles.inputText,
+                    {
+                      flex: 1,
+                      paddingVertical: 0,
+                      // lineHeight: undefined,
+                      // includeFontPadding: true,
+                    },
+                  ]}
                   value={id}
                   onChangeText={(text) => {
                     setIdDirty(true);

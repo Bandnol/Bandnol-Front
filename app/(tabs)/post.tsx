@@ -263,6 +263,8 @@ const styles = StyleSheet.create({
     ...Typography.body1,
     color: '#F4F4F4',
     textAlignVertical: 'center',
+    lineHeight: undefined,
+    includeFontPadding: true,
   },
   rowWrapper: { flexDirection: 'row', justifyContent: 'space-between' },
   itemWrapper: { flex: 1, aspectRatio: 1 },

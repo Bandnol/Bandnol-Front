@@ -108,6 +108,7 @@ export default function RecShareModal({
       }
     }
   };
+
   const handleShareToX = () => {
     if (!recData) return;
     const shareUrl = `https://bandnol.app/recoms/${recData.id}`;
