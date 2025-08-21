@@ -19,6 +19,7 @@ import api from '@/store/api';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import StatusBarHeader from '@/components/common/StatusBarHeader';
 import * as SecureStore from 'expo-secure-store';
+import ConfirmModal from '@/components/common/ConfirmModal';
 
 // API 응답 타입(필요 속성만 정의)
 interface ArtistDetail {
@@ -64,6 +65,7 @@ export default function ArtistPage() {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [refreshing, setRefreshing] = React.useState(false);
+  const [isConfirmVisible, setIsConfirmVisible] = React.useState(false);
 
   const load = React.useCallback(async () => {
     if (!normalizedId) {
@@ -171,6 +173,7 @@ export default function ArtistPage() {
 
       // POST API로 관심 아티스트 추가/제거 (inactive 필드로 제어)
       const inactiveValue = artist.isInterested; // 현재 관심 아티스트면 inactive: true (해제)
+
       console.log('[ArtistPage] 토글 전 상태:', {
         artistName: artist.name,
         isInterested: artist.isInterested,
@@ -291,7 +294,13 @@ export default function ArtistPage() {
 
           {/* 관심 버튼 */}
           <Pressable
-            onPress={onToggleInterest}
+            onPress={() => {
+              if (artist.isInterested) {
+                setIsConfirmVisible(true);
+              } else {
+                onToggleInterest();
+              }
+            }}
             style={[
               styles.interestBtn,
               artist.isInterested
@@ -334,6 +343,29 @@ export default function ArtistPage() {
           </View>
         </View>
       </ScrollView>
+
+      {isConfirmVisible && (
+        <View style={styles.modalOverlay}>
+          <ConfirmModal
+            visible={isConfirmVisible}
+            variant="logout"
+            headerText={'관심아티스트에서 삭제할까요?'}
+            onConfirm={async () => {
+              try {
+                await onToggleInterest();
+              } catch (e: any) {
+                console.warn(
+                  '[관심아티스트 삭제] 과정에서 문제가 발생했습니다.',
+                  e?.message || String(e),
+                );
+              } finally {
+                setIsConfirmVisible(false);
+              }
+            }}
+            onCancel={() => setIsConfirmVisible(false)}
+          />
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -474,5 +506,12 @@ const styles = StyleSheet.create({
   divider: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: Colors.palette.Gray700,
+  },
+  modalOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 999,
   },
 });
