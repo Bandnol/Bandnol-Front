@@ -203,8 +203,8 @@ export default function UserInfo() {
                     {
                       flex: 1,
                       paddingVertical: 0,
-                      // lineHeight: undefined,
-                      // includeFontPadding: true,
+                      lineHeight: undefined,
+                      includeFontPadding: true,
                     },
                   ]}
                   value={id}

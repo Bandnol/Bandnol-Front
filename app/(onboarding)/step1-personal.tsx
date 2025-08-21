@@ -570,7 +570,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignSelf: 'stretch',
     alignItems: 'center',
-    // justifyContent: 'space-between', //또는 center
+    justifyContent: 'center',
   },
   textfield: {
     gap: 8,
@@ -600,7 +600,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   wrapperShadowBox: {
-    width: 163,
+    flex: 1,
     justifyContent: 'center',
     backgroundColor: Colors.palette.Gray700,
     padding: 16,
