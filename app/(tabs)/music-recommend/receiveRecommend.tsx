@@ -18,6 +18,7 @@ import {
   Text,
   View,
 } from 'react-native';
+
 import BottomToast from '@/components/common/BottomToast';
 import AlertIcon from '@/assets/icons/alert.svg';
 import PlayIcon from '@/assets/icons/play-solid.svg';
@@ -620,6 +621,7 @@ export default function ReceiveRecommend({
           </View>
         </LinearGradient>
       </ImageBackground>
+
       {/* 하단 토스트 사용 */}
       <BottomToast
         visible={toastVisible}

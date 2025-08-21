@@ -15,7 +15,7 @@ export default {
       icon: './assets/images/Bandnol-logo-2.png',
     },
     android: {
-      package: 'com.bandnol.Bandnol',
+      package: 'com.bandnol.bandnolapp',
       versionCode: 5,
       adaptiveIcon: {
         foregroundImage: './assets/images/Bandnol-logo-2.png',

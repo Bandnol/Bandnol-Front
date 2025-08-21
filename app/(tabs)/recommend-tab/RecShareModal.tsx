@@ -54,7 +54,7 @@ export default function RecShareModal({
     await Clipboard.setStringAsync(shareUrl);
     Alert.alert('링크가 복사되었습니다.');
   };
-  const handleShareToInstagramStory = async () => {
+    const handleShareToInstagramStory = async () => {
     if (Platform.OS === 'ios') {
       try {
         if (!recData) return;
@@ -108,6 +108,7 @@ export default function RecShareModal({
       }
     }
   };
+
   const handleShareToX = () => {
     if (!recData) return;
     const shareUrl = `https://bandnol.app/recoms/${recData.id}`;

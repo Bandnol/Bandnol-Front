@@ -20,7 +20,7 @@ import api from '@/store/api';
 
 export default function ReceiveTime() {
   const router = useRouter();
-  const [user, setUser] = useState<any>({});
+  const [user, setUser] = useState({});
 
   // 표시용 시간 (모달에서 저장 시 갱신)
   const [displayAmpm, setDisplayAmpm] = useState<'오전' | '오후'>('오전');
@@ -43,8 +43,10 @@ export default function ReceiveTime() {
         setUser(parsed?.user ?? parsed ?? {});
         const initial = parsed?.recomsTime || parsed?.user?.recomsTime;
         if (initial) {
-          console.log('[수신 시간] 초기 recomsTime:', initial);
-          applyFromHHmm(initial);
+          console.log('[수신 시간] 초기 recomsTime:', initial, typeof initial);
+          // 숫자든 문자열이든 문자열로 변환
+          const initialStr = String(initial);
+          applyFromHHmm(initialStr);
         }
       } catch (e) {
         console.log('[수신 시간] 초기화 실패', e);
@@ -60,9 +62,19 @@ export default function ReceiveTime() {
   );
 
   const openModal = () => {
+    console.log(
+      '[DEBUG] openModal - displayHour:',
+      displayHour,
+      typeof displayHour,
+    );
+    console.log(
+      '[DEBUG] openModal - displayMinute:',
+      displayMinute,
+      typeof displayMinute,
+    );
     setAmpm(displayAmpm);
-    setHour(displayHour);
-    setMinute(displayMinute);
+    setHour(String(displayHour));
+    setMinute(String(displayMinute));
     setVisible(true);
   };
 
@@ -74,11 +86,11 @@ export default function ReceiveTime() {
       setDisplayHour(hour);
       setDisplayMinute(minute);
 
-      // 12h -> 24h + 콜론 HH:MM
+      // 12h -> 24h + HHmm 포맷 (콜론 없이)
       let h24 = parseInt(hour, 10);
       if (ampm === '오후' && h24 !== 12) h24 += 12;
       if (ampm === '오전' && h24 === 12) h24 = 0;
-      const recomsTime = `${h24.toString().padStart(2, '0')}:${minute}`;
+      const recomsTime = `${h24.toString().padStart(2, '0')}${minute}`;
       console.log('[수신 시간] PATCH recomsTime:', recomsTime);
 
       // 토큰 헤더
@@ -136,7 +148,7 @@ export default function ReceiveTime() {
           let h24 = parseInt(hour, 10);
           if (ampm === '오후' && h24 !== 12) h24 += 12;
           if (ampm === '오전' && h24 === 12) h24 = 0;
-          const recomsTime = `${h24.toString().padStart(2, '0')}:${minute}`;
+          const recomsTime = `${h24.toString().padStart(2, '0')}${minute}`;
 
           const saved = await SecureStore.getItemAsync('user');
           if (saved) {
@@ -167,19 +179,20 @@ export default function ReceiveTime() {
     }
   };
 
-  // HH:MM 또는 HHmm 포맷에서 표시 상태로 적용
-  const applyFromHHmm = (hhmm?: string) => {
+  //HHmm 포맷에서 표시 상태로 적용
+  const applyFromHHmm = (hhmm?: string | number) => {
     if (!hhmm) return;
-    const normalized = hhmm.includes(':')
-      ? hhmm
-      : `${hhmm.slice(0, 2)}:${hhmm.slice(2, 4)}`;
+    const hhmm_str = String(hhmm);
+    const normalized = hhmm_str.includes(':')
+      ? hhmm_str
+      : `${hhmm_str.slice(0, 2)}:${hhmm_str.slice(2, 4)}`;
     const [hStr, mStr] = normalized.split(':');
     const h = Math.max(0, Math.min(23, parseInt(hStr || '0', 10)));
     const isPM = h >= 12;
     const twelveHour = h % 12 === 0 ? 12 : h % 12;
     setDisplayAmpm(isPM ? '오후' : '오전');
-    setDisplayHour(twelveHour.toString().padStart(2, '0'));
-    setDisplayMinute((mStr || '00').padStart(2, '0'));
+    setDisplayHour(String(twelveHour).padStart(2, '0'));
+    setDisplayMinute(String(mStr || '00').padStart(2, '0'));
   };
 
   return (
@@ -374,8 +387,7 @@ const styles = StyleSheet.create({
   },
   pickerItem: {
     fontSize: 18,
-    fontFamily: 'Pretendard',
-    fontWeight: 600,
+    fontFamily: 'Pretendard-SemiBold',
     letterSpacing: -0.45,
     lineHeight: 18 * 1.4,
   },

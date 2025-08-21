@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 
 interface ModalPopupProps {
   visible: boolean;
@@ -30,7 +30,14 @@ export default function ModalPopup({
   return (
     <View style={styles.modalBackground}>
       <View style={styles.modalContainer}>
-        <Text style={styles.emoji}>{emoji}</Text>
+        <Text
+          style={[
+            styles.emoji,
+            Platform.OS === 'android' && styles.emojiAndroid, // 👈 안드에서만 덮어쓰기
+          ]}
+        >
+          {emoji}
+        </Text>
         <Text style={styles.commentText}>{text}</Text>
       </View>
     </View>
@@ -70,6 +77,13 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     letterSpacing: -2.28,
     marginBottom: 10,
+  },
+  emojiAndroid: {
+    includeFontPadding: false,
+    textAlignVertical: 'center',
+    fontFamily: undefined as any,
+    lineHeight: 88,
+    paddingBottom: 4,
   },
   commentText: {
     width: 292,
