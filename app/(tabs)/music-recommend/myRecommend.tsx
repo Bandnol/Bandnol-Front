@@ -107,10 +107,10 @@ export default function MyRecommendSwiper() {
           <ImageBackground
             source={albumSource}
             style={styles.backgroundImage}
-            imageStyle={{ opacity: 0.8 }}
+            imageStyle={{ opacity: 0.9 }}
           >
             <LinearGradient
-              colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.2)']}
+              colors={['rgba(0,0,0,0.4)', 'rgba(0,0,0,0.2)']}
               start={{ x: 0, y: 0 }}
               end={{ x: 0, y: 1 }}
               style={{ flex: 1 }}
