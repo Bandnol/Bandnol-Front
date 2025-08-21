@@ -4,10 +4,13 @@ import { useCallback, useState } from 'react';
 import {
   FlatList,
   Image,
+  Keyboard,
+  KeyboardAvoidingView,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
+  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 
@@ -62,69 +65,73 @@ export default function SearchMusicPage() {
   };
 
   return (
-    <View style={styles.container}>
-      {/* 헤더 */}
-      <View style={styles.topSection}>
-        {/* 날짜 */}
-        <View style={styles.dateWrap}>
-          <Text style={styles.date}>
-            <DateHeader />
-          </Text>
-          <Pressable
-            onPress={() =>
-              router.navigate('/(tabs)/music-recommend/alarmCenter')
-            }
-            style={styles.alertIcon}
-          >
-            <AlertIcon width={24} height={24} style={styles.alertIcon} />
-          </Pressable>
-        </View>
-
-        <Text style={styles.title}>
-          오늘 날씨에{'\n'}어울리는 곡을 추천해볼까요?
-        </Text>
-        {/* 검색창 */}
-        <View style={styles.searchRow}>
-          <TextInput
-            value={query}
-            onChangeText={handleChangeText}
-            style={styles.input}
-            placeholder="노래 제목 또는 가수명 검색"
-            placeholderTextColor="#888"
-          />
-          <Pressable
-            onPress={() => debouncedSearch(query)}
-            style={styles.iconBox}
-          >
-            <Image
-              source={require('@/assets/images/search.png')}
-              style={{ width: 17, height: 17 }}
-            />
-          </Pressable>
-        </View>
-      </View>
-
-      <FlatList
-        data={results}
-        keyExtractor={(item, idx) => `${item.title}-${idx}`}
-        contentContainerStyle={styles.listContent}
-        renderItem={({ item }) => (
-          <Pressable
-            onPress={() => handleSelect(item)}
-            style={({ pressed }) => [
-              styles.item,
-              pressed && styles.itemPressed,
-            ]}
-          >
-            <Image source={{ uri: item.albumImg }} style={styles.album} />
-            <View style={styles.textBox}>
-              <Text style={styles.titleText}>{item.title}</Text>
-              <Text style={styles.artistText}>{item.artist}</Text>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <View style={styles.container}>
+          {/* 헤더 */}
+          <View style={styles.topSection}>
+            {/* 날짜 */}
+            <View style={styles.dateWrap}>
+              <Text style={styles.date}>
+                <DateHeader />
+              </Text>
+              <Pressable
+                onPress={() =>
+                  router.navigate('/(tabs)/music-recommend/alarmCenter')
+                }
+                style={styles.alertIcon}
+              >
+                <AlertIcon width={24} height={24} style={styles.alertIcon} />
+              </Pressable>
             </View>
-          </Pressable>
-        )}
-      />
-    </View>
+
+            <Text style={styles.title}>
+              오늘 날씨에{'\n'}어울리는 곡을 추천해볼까요?
+            </Text>
+            {/* 검색창 */}
+            <View style={styles.searchRow}>
+              <TextInput
+                value={query}
+                onChangeText={handleChangeText}
+                style={styles.input}
+                placeholder="노래 제목 또는 가수명 검색"
+                placeholderTextColor="#888"
+              />
+              <Pressable
+                onPress={() => debouncedSearch(query)}
+                style={styles.iconBox}
+              >
+                <Image
+                  source={require('@/assets/images/search.png')}
+                  style={{ width: 17, height: 17 }}
+                />
+              </Pressable>
+            </View>
+          </View>
+
+          <FlatList
+            data={results}
+            keyExtractor={(item, idx) => `${item.title}-${idx}`}
+            contentContainerStyle={styles.listContent}
+            renderItem={({ item }) => (
+              <Pressable
+                onPress={() => handleSelect(item)}
+                style={({ pressed }) => [
+                  styles.item,
+                  pressed && styles.itemPressed,
+                ]}
+              >
+                <Image source={{ uri: item.albumImg }} style={styles.album} />
+                <View style={styles.textBox}>
+                  <Text style={styles.titleText}>{item.title}</Text>
+                  <Text style={styles.artistText}>{item.artist}</Text>
+                </View>
+              </Pressable>
+            )}
+          />
+        </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 
