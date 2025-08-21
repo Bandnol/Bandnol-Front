@@ -169,6 +169,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Pretendard-SemiBold',
     letterSpacing: -0.45,
     lineHeight: 18 * 1.4,
+    color: Colors.palette.Gray100,
   },
 });
 

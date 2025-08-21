@@ -13,6 +13,7 @@ import {
   Platform,
   Alert,
   Linking,
+  useWindowDimensions,
 } from 'react-native';
 
 import * as SecureStore from 'expo-secure-store';
@@ -22,6 +23,7 @@ import BackArrowIcon from '@/assets/icons/back-arrow.svg';
 import EditIcon from '@/assets/icons/edit.svg';
 import ProfileImage from '@/assets/images/profile.png';
 import { Typography } from '@/constants/typography';
+import { Colors } from '@/constants/Colors';
 
 import * as ImagePicker from 'expo-image-picker';
 import type { ImagePickerOptions } from 'expo-image-picker';
@@ -29,6 +31,8 @@ import type { ImagePickerOptions } from 'expo-image-picker';
 import { useEditProfile } from '@/hooks/useEditProfile';
 
 export default function EditProfile() {
+  const { width: screenWidth } = useWindowDimensions();
+  
   // 수정될 현재 값
   const [nickname, setNickname] = useState('');
   const [intro, setIntro] = useState('');
@@ -199,18 +203,23 @@ export default function EditProfile() {
             <Text style={styles.saveText}>저장</Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.bgWrapper}>
-          <Image
-            source={
-              backgroundUri
-                ? { uri: backgroundUri }
-                : require('@/assets/images/profile-background.jpg')
-            }
-            style={styles.backgroundImage}
-            resizeMode="cover"
-          />
+        <View style={[styles.bgWrapper, { width: screenWidth }]}>
+          {backgroundUri ? (
+            <Image
+              source={{ uri: backgroundUri }}
+              style={[styles.backgroundImage, { width: screenWidth }]}
+              resizeMode="cover"
+            />
+          ) : (
+            <View
+              style={[
+                styles.backgroundImage,
+                { backgroundColor: Colors.palette.Gray900, width: screenWidth },
+              ]}
+            />
+          )}
           <TouchableOpacity
-            style={styles.editIcon}
+            style={[styles.editIcon, { right: 23 }]}
             onPress={onPickBackground}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
@@ -236,6 +245,7 @@ export default function EditProfile() {
             <TextInput
               style={[
                 styles.input,
+                { color: Colors.palette.Gray100 },
                 focusedField === 'nickname'
                   ? styles.inputFocused
                   : styles.inputBlurred,
@@ -243,7 +253,7 @@ export default function EditProfile() {
               value={nickname}
               onChangeText={setNickname}
               placeholder="텍스트"
-              placeholderTextColor="#F4F4F4"
+              placeholderTextColor={Colors.palette.Gray500}
               onFocus={() => setFocusedField('nickname')}
               onBlur={() => setFocusedField(null)}
             />
@@ -253,6 +263,9 @@ export default function EditProfile() {
             <TextInput
               style={[
                 styles.input,
+                { 
+                  color: intro.trim() ? Colors.palette.Gray100 : Colors.palette.Gray500 
+                },
                 focusedField === 'intro'
                   ? styles.inputFocused
                   : styles.inputBlurred,
@@ -260,7 +273,7 @@ export default function EditProfile() {
               value={intro}
               onChangeText={setIntro}
               placeholder="텍스트"
-              placeholderTextColor="#F4F4F4"
+              placeholderTextColor={Colors.palette.Gray500}
               onFocus={() => setFocusedField('intro')}
               onBlur={() => setFocusedField(null)}
             />
@@ -279,7 +292,7 @@ const styles = StyleSheet.create({
   container: {
     display: 'flex',
     flexDirection: 'row',
-    width: 375,
+    width: '100%',
     height: 64,
     paddingVertical: 10,
     paddingHorizontal: 20,
@@ -299,18 +312,15 @@ const styles = StyleSheet.create({
   },
   bgWrapper: {
     position: 'relative',
-    width: 375,
     height: 146,
   },
   backgroundImage: {
-    width: '100%',
     height: '100%',
     borderRadius: 0,
   },
   editIcon: {
     position: 'absolute',
     bottom: 10,
-    right: 20,
     zIndex: 10,
   },
   editIconCircle: {
@@ -351,7 +361,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 12,
-    color: '#7C7C7C',
     ...Typography.body2,
   },
   inputFocused: {
