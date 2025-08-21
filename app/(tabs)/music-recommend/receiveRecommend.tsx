@@ -18,12 +18,12 @@ import {
   Text,
   View,
 } from 'react-native';
+
+import BottomToast from '@/components/common/BottomToast';
 import AlertIcon from '@/assets/icons/alert.svg';
 import PlayIcon from '@/assets/icons/play-solid.svg';
 
-/* 추천 ID만 추출 
-   스웨거 응답상 top-level id가 recomsId 이므로 최우선으로 사용.
-   곡 id(recomsSong.id)와 값이 같으면 제외 */
+/* 추천 ID만 추출 */
 function extractRecomsId(d: any): string | null {
   if (!d) return null;
   const candidates = [d?.id, d?.recomsId, d?.recoms?.id].filter(
@@ -51,7 +51,7 @@ async function postRecommendReply(recomsId: string, content: string) {
   return res.data;
 }
 
-async function patchLike(recomsId: string, isLiked: boolean) {
+async function patchLike(recomsId: string, isLiked: boolean | null) {
   const res = await api.patch(`/api/v1/recoms/${recomsId}/likes`, { isLiked });
   return res.data;
 }
@@ -127,6 +127,17 @@ export default function ReceiveRecommend({
   });
 
   const senderNickname = recommend?.sender?.nickname ?? '';
+  const actorNickname = senderNickname || '상대방';
+
+  // 토스트 상태, 아이콘 전달
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastMsg, setToastMsg] = useState('');
+  const [toastIcon, setToastIcon] = useState<React.ReactNode | null>(null);
+  const showToast = (msg: string, icon?: React.ReactNode) => {
+    setToastMsg(msg);
+    setToastIcon(icon ?? null);
+    setToastVisible(true);
+  };
 
   // 내 답장 상태 동기화
   const hydrateMyReply = async (rid: string) => {
@@ -205,18 +216,45 @@ export default function ReceiveRecommend({
   }, []);
 
   // 좋아요/별로예요 핸들러
-  const sendLike = async (value: boolean) => {
-    if (!recomsId || likeUpdating) return;
+  const sendLike = async (pressedLike: boolean) => {
+    if (!recomsId || likeUpdating) {
+      if (!recomsId) showToast('추천 ID가 없어 처리할 수 없어요.');
+      return;
+    }
+
+    const prev = isLiked;
+    let next: boolean | null;
+    let msg = '';
+    let icon: React.ReactNode | undefined;
+
+    if (pressedLike) {
+      if (isLiked === true) {
+        next = null;
+        msg = '좋아요를 취소했어요.';
+      } else {
+        next = true;
+        msg = `${actorNickname} 님의 추천곡을 좋아합니다.`;
+        icon = <LikeIcon width={16} height={16} />;
+      }
+    } else {
+      if (isLiked === false) {
+        next = null;
+        msg = '별로예요를 취소했어요.';
+      } else {
+        next = false;
+        msg = `${actorNickname} 님의 추천곡이 별로예요.`;
+        icon = <UnlikeIcon width={16} height={16} />;
+      }
+    }
+
     try {
       setLikeUpdating(true);
-      const prev = isLiked;
-      setIsLiked(value);
+      setIsLiked(next);
+      showToast(msg, icon);
 
-      const res = await patchLike(recomsId, value);
-      console.log('👍 좋아요 API 응답:', res);
-
+      const res = await patchLike(recomsId, next);
       if (!res?.success) {
-        setIsLiked(prev ?? null);
+        setIsLiked(prev ?? null); // 실패 시 롤백
         Alert.alert('에러', res?.error ?? '처리 중 문제가 발생했어요.');
       }
     } catch (e: any) {
@@ -430,7 +468,6 @@ export default function ReceiveRecommend({
     );
   }
 
-  // 좋아요 색/투명도
   const likedActive = isLiked === true;
   const dislikedActive = isLiked === false;
 
@@ -500,7 +537,10 @@ export default function ReceiveRecommend({
                   <Text
                     style={[
                       styles.likeLabel,
-                      { opacity: isLiked === true ? 1 : 0.6 },
+                      {
+                        opacity: isLiked === true ? 1 : 0.6,
+                        color: isLiked === true ? '#F5F5F5' : '#7C7C7C',
+                      },
                     ]}
                   >
                     좋아요
@@ -524,7 +564,10 @@ export default function ReceiveRecommend({
                   <Text
                     style={[
                       styles.unlikeLabel,
-                      { opacity: isLiked === false ? 1 : 0.6 },
+                      {
+                        opacity: isLiked === false ? 1 : 0.6,
+                        color: isLiked === false ? '#F5F5F5' : '#7C7C7C',
+                      },
                     ]}
                   >
                     별로예요
@@ -584,6 +627,16 @@ export default function ReceiveRecommend({
           </View>
         </LinearGradient>
       </ImageBackground>
+
+      {/* 하단 토스트 사용 */}
+      <BottomToast
+        visible={toastVisible}
+        message={toastMsg}
+        duration={1500}
+        onRequestClose={() => setToastVisible(false)}
+        onHidden={() => {}}
+        leftIcon={toastIcon}
+      />
     </View>
   );
 }

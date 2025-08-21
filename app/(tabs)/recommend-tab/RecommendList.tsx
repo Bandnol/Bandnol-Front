@@ -1,6 +1,7 @@
 import 'dayjs/locale/ko';
 
 import dayjs from 'dayjs';
+import { useRouter } from 'expo-router';
 import {
   forwardRef,
   useEffect,
@@ -9,7 +10,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { Typography } from '@/constants/typography';
 
@@ -18,6 +19,7 @@ dayjs.locale('ko');
 type Song = {
   title: string;
   artistName: string;
+  artistIds: string[];
   imageUrl: string;
   comment: string;
 };
@@ -41,6 +43,7 @@ type RecommendListProps = {
 
 const RecommendList = forwardRef<RecommendListRef, RecommendListProps>(
   ({ selectedMonth, selectedDate, setSelectedDate, data }, ref) => {
+    const router = useRouter();
     const today = dayjs().format('YYYY-MM-DD');
     const scrollViewRef = useRef<ScrollView>(null);
     const [sectionLayouts, setSectionLayouts] = useState<
@@ -149,7 +152,21 @@ const RecommendList = forwardRef<RecommendListRef, RecommendListProps>(
                       ? '나의 추천곡'
                       : '추천 받은 곡'}
                   </Text>
-                  <View style={styles.myrecInfo}>
+                  <TouchableOpacity 
+                    style={styles.myrecInfo}
+                    onPress={() => {
+                      const firstArtistId = sub.song.artistIds?.[0];
+                      console.log('[RecommendList] artist pressed:', {
+                        artistIds: sub.song.artistIds,
+                        firstArtistId,
+                        artistName: sub.song.artistName
+                      });
+                      if (firstArtistId) {
+                        router.push(`/artist/${firstArtistId}`);
+                      }
+                    }}
+                    activeOpacity={0.7}
+                  >
                     <Image
                       source={{ uri: sub.song.imageUrl }}
                       style={{
@@ -158,6 +175,7 @@ const RecommendList = forwardRef<RecommendListRef, RecommendListProps>(
                         padding: 4,
                         borderRadius: 2,
                         marginRight: 4,
+                        alignSelf: 'center',
                       }}
                     />
                     <View style={styles.myrecSong}>
@@ -169,13 +187,13 @@ const RecommendList = forwardRef<RecommendListRef, RecommendListProps>(
                     <View
                       style={{
                         width: 2,
-                        height: 27,
+                        minHeight: 27.37,
                         backgroundColor: '#FB4932',
                         marginHorizontal: 6,
                       }}
                     />
                     <Text style={styles.myrecComment}>{sub.song.comment}</Text>
-                  </View>
+                  </TouchableOpacity>
                 </View>
               ))}
             </View>
@@ -232,13 +250,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     width: '100%',
     paddingVertical: 0,
-    alignItems: 'center',
+    alignItems: 'stretch',
+
     gap: 6.843,
   },
   myrecSong: {
     flexDirection: 'column',
     width: '35%',
     gap: 2,
+    alignSelf: 'center',
   },
   myrecTitle: {
     ...Typography.subtitle4,
@@ -254,7 +274,7 @@ const styles = StyleSheet.create({
     ...Typography.caption2,
     color: '#fff',
     fontWeight: '400',
-
+    alignSelf: 'center',
     flexShrink: 1,
     flexWrap: 'wrap',
   },

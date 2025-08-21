@@ -77,6 +77,7 @@ export default function RecBottomModal({
                   padding: 4,
                   borderRadius: 2,
                   marginRight: 4,
+                  alignSelf: 'center',
                 }}
               />
 
@@ -100,7 +101,7 @@ export default function RecBottomModal({
               <View
                 style={{
                   width: 1.955,
-                  height: 27.37,
+                  minHeight: 27.37,
                   backgroundColor: '#FB4932',
                 }}
               ></View>
@@ -136,7 +137,7 @@ const styles = StyleSheet.create({
     display: 'flex',
     width: '100%',
     paddingVertical: 20,
-    paddingHorizontal: 16,
+    //paddingHorizontal: 16,
     flexDirection: 'column',
     alignItems: 'flex-start',
     borderTopLeftRadius: 10,
@@ -158,7 +159,7 @@ const styles = StyleSheet.create({
   },
   modalRecInfo: {
     flexDirection: 'column',
-    paddingVertical: 10,
+    paddingVertical: 13,
     paddingHorizontal: 20,
     alignItems: 'flex-start',
     gap: 6,
@@ -176,13 +177,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     width: '100%',
     paddingVertical: 0,
-    alignItems: 'center',
+    alignItems: 'stretch',
     gap: 6.843,
   },
   myrecSong: {
     flexDirection: 'column',
     width: 100,
     gap: 2,
+    alignSelf: 'center',
   },
   myrecTitle: {
     ...Typography.subtitle4,
@@ -200,6 +202,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     flexShrink: 1,
     flexWrap: 'wrap',
+    alignSelf: 'center',
   },
   todayText: {
     color: '#D9D9D9',

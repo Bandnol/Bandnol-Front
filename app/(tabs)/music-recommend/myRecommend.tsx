@@ -18,6 +18,7 @@ import ErrorIcon from '@/assets/icons/error.svg';
 import PlayIcon from '@/assets/icons/play-solid.svg';
 import CommentModal from '@/components/common/CommentModal';
 import DateHeader from '@/components/common/DateHeader';
+import TimePickerModal from '@/components/common/TimePickerModal';
 import { Typography } from '@/constants/typography';
 import { fetchReplyComment } from '@/api/replies';
 import ReceiveRecommend from './receiveRecommend';
@@ -32,6 +33,7 @@ export default function MyRecommendSwiper() {
   const [timeLeft, setTimeLeft] = useState(10);
   const [isMyCommentVisible, setIsMyCommentVisible] = useState(false);
   const [isReplyCommentVisible, setIsReplyCommentVisible] = useState(false);
+  const [isTimePickerVisible, setIsTimePickerVisible] = useState(false);
   const [replyComment, setReplyComment] = useState<string | null>(null);
   const [replySender, setReplySender] = useState<string | null>(null); // 보낸 사람 이름
   const [hasReplied, setHasReplied] = useState(false); // 답장을 보냈는지 상태
@@ -107,10 +109,12 @@ export default function MyRecommendSwiper() {
           <ImageBackground
             source={albumSource}
             style={styles.backgroundImage}
-            imageStyle={{ opacity: 0.8 }}
+            imageStyle={{ opacity: 0.9 }}
           >
             <LinearGradient
-              colors={['rgba(0,0,0,0.9)', 'rgba(0,0,0,0.2)']}
+              colors={['rgba(0,0,0,0.4)', 'rgba(0,0,0,0.2)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
               style={{ flex: 1 }}
             >
               <View style={styles.overlay}>
@@ -208,10 +212,13 @@ export default function MyRecommendSwiper() {
               </View>
 
               {/* 하단 설정 버튼 */}
-              <View style={styles.settingRow}>
+              <Pressable 
+                style={styles.settingRow}
+                onPress={() => setIsTimePickerVisible(true)}
+              >
                 <ErrorIcon width={16} height={16} />
                 <Text style={styles.setting}>추천곡 수신시간 설정</Text>
-              </View>
+              </Pressable>
             </View>
           </View>
         )}
@@ -234,12 +241,20 @@ export default function MyRecommendSwiper() {
         closeColor="#1F1F1F"
         closeText="닫기"
       />
+
+      <TimePickerModal
+        visible={isTimePickerVisible}
+        onClose={() => setIsTimePickerVisible(false)}
+        onSave={() => {
+          console.log('[MyRecommend] 수신 시간 변경 완료');
+        }}
+      />
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+  container: { flex: 1 },
   backgroundImage: {
     ...StyleSheet.absoluteFillObject,
     flex: 1,

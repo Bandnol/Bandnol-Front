@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     borderTopLeftRadius: 10,
     borderTopRightRadius: 10,
-    backgroundColor: '#333',
+    backgroundColor: '#1F1F1F',
   },
   modalHeader: {
     flexDirection: 'row',

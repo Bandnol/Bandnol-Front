@@ -135,13 +135,12 @@ export default function PostWrite() {
           <TextInput
             value={content}
             onChangeText={setContent}
-            style={[
-              styles.input,
-              { color: content.length > 0 ? '#F4F4F4' : '#7C7C7C' },
-            ]}
+            style={[styles.input]}
             placeholder="오늘의 밴놀을 기록해보세요!"
+            placeholderTextColor="#7C7C7C"
             multiline
           />
+
           {images.length > 0 && (
             <ScrollView
               horizontal
@@ -203,7 +202,7 @@ export default function PostWrite() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#121212',
     paddingTop: 60,
   },
   header: {
@@ -271,7 +270,7 @@ const styles = StyleSheet.create({
   },
   input: {
     ...Typography.body1,
-    color: '#7C7C7C',
+    color: '#B3B3B3',
     marginTop: 2,
     marginBottom: 12,
     fontSize: 18,

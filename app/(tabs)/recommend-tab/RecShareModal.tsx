@@ -19,7 +19,7 @@ import {
 } from 'react-native';
 import Modal from 'react-native-modal';
 
-import Share, { Social } from 'react-native-share';
+//import Share, { Social } from 'react-native-share';
 
 import Svg, { Circle } from 'react-native-svg';
 import ViewShot from 'react-native-view-shot';
@@ -108,6 +108,7 @@ export default function RecShareModal({
       }
     }
   };
+
   const handleShareToX = () => {
     if (!recData) return;
     const shareUrl = `https://bandnol.app/recoms/${recData.id}`;
@@ -222,7 +223,7 @@ export default function RecShareModal({
                 <View style={styles.commentBox}>
                   <Text
                     style={styles.commentText}
-                    numberOfLines={3}
+                    numberOfLines={6}
                     ellipsizeMode="tail"
                   >
                     {recData.comment}
@@ -473,7 +474,7 @@ const styles = StyleSheet.create({
   },
   commentBox: {
     width: '100%',
-    height: 60,
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
@@ -481,6 +482,7 @@ const styles = StyleSheet.create({
   commentText: {
     ...Typography.caption1,
     color: '#EAEAEA',
+    textAlign: 'center',
   },
   fromText: {
     ...Typography.subtitle4,
@@ -522,9 +524,17 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     borderTopLeftRadius: 10,
     borderBottomRightRadius: 10,
+
     borderTopWidth: 1,
     borderLeftWidth: 1,
-    borderColor: '#7C7C7C',
+    borderTopColor: '#7C7C7C',
+    borderLeftColor: '#7C7C7C',
+
+    borderBottomWidth: -3,
+    borderRightWidth: -3,
+    borderBottomColor: '#333',
+    borderRightColor: '#333',
+
     backgroundColor: '#333',
     alignSelf: 'flex-end',
     justifyContent: 'center',
@@ -612,12 +622,15 @@ const styles = StyleSheet.create({
     height: 17,
     width: 22,
     flexShrink: 0,
+
     borderTopRightRadius: 10,
     borderBottomLeftRadius: 10,
+
     borderBottomWidth: 1,
     borderLeftWidth: 1,
     borderColor: '#7C7C7C',
-    backgroundColor: '#333',
+    backgroundColor: '#333', //추후에 보더 추가 필요
+
     alignSelf: 'flex-end',
     justifyContent: 'center',
     alignItems: 'center',

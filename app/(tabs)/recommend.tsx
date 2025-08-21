@@ -5,7 +5,7 @@ import RecommendList, {
 } from '@/app/(tabs)/recommend-tab/RecommendList';
 import Dropdown from '@/assets/icons/size_m/dropdown.svg';
 import { Typography } from '@/constants/typography';
-import { API_TOKEN, API_URL } from '@/constants/env';
+import { API_URL } from '@/constants/env';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import { useRouter } from 'expo-router';
@@ -17,41 +17,59 @@ type RecommendItem = {
   date: string;
   recommending?: {
     title: string;
-    artistId: string;
+    artistIds: string[];
     artistName: string;
     imageUrl: string;
     comment: string;
   };
   recommended?: {
     title: string;
-    artistId: string;
+    artistIds: string[];
     artistName: string;
     imageUrl: string;
     comment: string;
   };
 };
 const fetchRecommendList = async (): Promise<RecommendItem[]> => {
-
   const token = await SecureStore.getItemAsync('JWTToken');
   if (!token) throw new Error('JWT 토큰 없음');
 
+  console.log('[fetchRecommendList] Requesting:', `${API_URL}/api/v1/recoms/lists`);
+  
   const response = await axios.get(`${API_URL}/api/v1/recoms/lists`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
+  
+  console.log('[fetchRecommendList] Full response:', JSON.stringify(response.data, null, 2));
+  console.log('[fetchRecommendList] Response data array:', JSON.stringify(response.data.data, null, 2));
+  
+  // 각 아이템의 artistId 확인
+  if (Array.isArray(response.data.data)) {
+    response.data.data.forEach((item: any, index: number) => {
+      console.log(`[fetchRecommendList] Item ${index}:`, {
+        date: item.date,
+        recommending: item.recommending ? {
+          title: item.recommending.title,
+          artistName: item.recommending.artistName,
+          artistIds: item.recommending.artistIds,
+          firstArtistId: item.recommending.artistIds?.[0]
+        } : null,
+        recommended: item.recommended ? {
+          title: item.recommended.title,
+          artistName: item.recommended.artistName,
+          artistIds: item.recommended.artistIds,
+          firstArtistId: item.recommended.artistIds?.[0]
+        } : null
+      });
+    });
+  }
+  
   return response.data.data;
- 
 };
 
 export default function RecommendScreen() {
-  useEffect(() => {
-    const storeDummyToken = async () => {
-      await SecureStore.setItemAsync('JWTToken', API_TOKEN);
-    };
-
-    storeDummyToken();
-  }, []);
   useEffect(() => {
     const debugToken = async () => {
       const token = await SecureStore.getItemAsync('JWTToken');
@@ -71,6 +89,8 @@ export default function RecommendScreen() {
   const [data, setData] = useState<RecommendItem[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
   const handleTodayPress = () => {
     setSelectedMonth(dayjs());
     setSelectedDate(dayjs().format('YYYY-MM-DD'));
@@ -83,6 +103,10 @@ export default function RecommendScreen() {
     const load = async () => {
       try {
         const result = await fetchRecommendList();
+        console.log(
+          '[recommend.tsx] API response data:',
+          JSON.stringify(result, null, 2),
+        );
         setData(result);
       } catch (e) {
         console.error('API 호출 실패1:', e);
@@ -107,17 +131,68 @@ export default function RecommendScreen() {
             />
           </View>
         </View>
+        <View style={styles.dropdownSection}>
+          {isModeCalendar ? (
+            !isDropdownOpen ? (
+              <View style={styles.dropdownClosed}>
+                <Text style={styles.myrecText}>
+                  {isTabRecommending ? '나의 추천곡' : '추천 받은 곡'}
+                </Text>
+                <Pressable onPress={() => setIsDropdownOpen(!isDropdownOpen)}>
+                  <Dropdown />
+                </Pressable>
+              </View>
+            ) : (
+              <View style={styles.dropdownOpened}>
+                <Pressable
+                  onPress={() => setIsDropdownOpen(false)}
+                  style={styles.dropdownItem}
+                >
+                  <Text style={styles.myrecText}>
+                    {isTabRecommending ? '나의 추천곡' : '추천 받은 곡'}
+                  </Text>
+                  <View style={{ transform: [{ rotate: '180deg' }] }}>
+                    <Dropdown />
+                  </View>
+                </Pressable>
 
-        {isModeCalendar ? (
-          <View style={styles.myrecSection}>
-            <Text style={styles.myrecText}>
-              {isTabRecommending ? '나의 추천곡' : '추천 받은 곡'}
-            </Text>
-            <Pressable onPress={() => setIsTabRecommending(!isTabRecommending)}>
-              <Dropdown />
-            </Pressable>
-          </View>
-        ) : null}
+                <Pressable
+                  onPress={() => [
+                    setIsTabRecommending(true),
+                    setIsDropdownOpen(false),
+                  ]}
+                  style={styles.dropdownItem}
+                >
+                  <Text
+                    style={[
+                      styles.myrecText,
+                      !isTabRecommending ? { color: '#7C7C7C' } : {},
+                    ]}
+                  >
+                    나의 추천곡
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  onPress={() => [
+                    setIsTabRecommending(false),
+                    setIsDropdownOpen(false),
+                  ]}
+                  style={styles.dropdownItem}
+                >
+                  <Text
+                    style={[
+                      styles.myrecText,
+                      isTabRecommending ? { color: '#7C7C7C' } : {},
+                    ]}
+                  >
+                    추천 받은 곡
+                  </Text>
+                </Pressable>
+              </View>
+            )
+          ) : null}
+        </View>
 
         <View style={styles.calListSection}>
           {isModeCalendar ? (
@@ -151,11 +226,17 @@ export default function RecommendScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#121212',
     paddingTop: 60,
   },
   topSection: {},
-  myrecSection: {
+  dropdownSection: {
+    height: 64,
+    zIndex: 1,
+  },
+  dropdownClosed: {
+    width: 120,
+    height: 44,
     flexDirection: 'row',
     padding: 10,
     alignItems: 'center',
@@ -167,6 +248,44 @@ const styles = StyleSheet.create({
     marginTop: 3,
     marginBottom: 17,
   },
+  dropdownItem: {
+    width: 120,
+    height: 44,
+    flexDirection: 'row',
+    padding: 10,
+    alignItems: 'center',
+    gap: 8,
+    alignSelf: 'flex-end',
+    backgroundColor: 'transparent',
+  },
+  dropdownOpened: {
+    width: 120,
+    height: 44 * 3,
+    flexDirection: 'column',
+    padding: 0,
+    alignItems: 'center',
+    gap: 0,
+    borderRadius: 10,
+    backgroundColor: '#1F1F1F',
+    alignSelf: 'flex-end',
+    marginRight: 20,
+    marginTop: 3,
+    //marginBottom: 17,
+    overflow: 'hidden',
+  },
+  dropdownTopText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontFamily: 'Pretendard',
+  },
+  dropdownItemPressed: { backgroundColor: '#2A2A2A' },
+  dropdownItemText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontFamily: 'Pretendard',
+  },
+  dropdownItemTextDisabled: { color: '#7A7A7A' },
+
   myrecText: {
     color: '#FFF',
     fontFamily: 'Pretendard',
@@ -175,6 +294,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     lineHeight: 19.6,
     letterSpacing: -0.35,
+    paddingLeft: 4,
   },
   calListSection: {
     flex: 1,

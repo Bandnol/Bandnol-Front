@@ -17,7 +17,6 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as SecureStore from 'expo-secure-store';
 
 import BookmarkIcon from '@/assets/icons/bookmark.svg';
 import BookmarkFillIcon from '@/assets/icons/bookmark-fill.svg';
@@ -34,6 +33,7 @@ import ProfileImage from '@/assets/images/profile.png';
 import { Typography } from '@/constants/typography';
 import { useUserOwnId } from '@/store/userStore';
 import { getUserProfile } from '@/api/user';
+import { Colors } from '@/constants/Colors';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -75,7 +75,6 @@ export default function MyPage() {
   const ownId = useUserOwnId();
   const [userProfile, setUserProfile] = useState<AppUserProfile | null>(null);
   const { width: windowWidth } = useWindowDimensions();
-
 
   const fetchUserProfile = useCallback(async () => {
     if (ownId) {
@@ -138,19 +137,24 @@ export default function MyPage() {
           barStyle="dark-content"
         />
         {/* 배경 이미지 */}
-        <ImageBackground
-          source={
-            userProfile.backgroundImg
-              ? { uri: userProfile.backgroundImg }
-              : require('@/assets/images/profile-background.jpg')
-          }
+        <View
           style={[
             styles.topImage,
-            { width: windowWidth, height: Math.max(160, windowWidth * 0.45) },
+            {
+              width: windowWidth,
+              height: Math.max(160, windowWidth * 0.45),
+              backgroundColor: Colors.palette.Gray900,
+            },
           ]}
-          resizeMode="cover"
-          imageStyle={styles.imageInner}
         >
+          {userProfile.backgroundImg && (
+            <ImageBackground
+              source={{ uri: userProfile.backgroundImg }}
+              style={StyleSheet.absoluteFill}
+              resizeMode="cover"
+              imageStyle={styles.imageInner}
+            />
+          )}
           <LinearGradient
             colors={['rgba(18,18,18,0)', '#121212']}
             style={styles.gradient}
@@ -171,7 +175,7 @@ export default function MyPage() {
               <SettingIcon2 width={24} height={24} />
             </TouchableOpacity>
           </View>
-        </ImageBackground>
+        </View>
         {/* 프로필 섹션 */}
         <View style={styles.profileRow}>
           {/* 프로필 이미지 */}
