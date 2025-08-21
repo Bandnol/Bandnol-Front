@@ -479,7 +479,9 @@ export default function ReceiveRecommend({
         imageStyle={{ opacity: 0.8 }}
       >
         <LinearGradient
-          colors={['rgba(0,0,0,0.9)', 'rgba(0,0,0,0.2)']}
+          colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.2)']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
           style={{ flex: 1 }}
         >
           <View style={styles.overlay}>
@@ -642,7 +644,7 @@ export default function ReceiveRecommend({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+  container: { flex: 1, backgroundColor: '#121212' },
   backgroundImage: { flex: 1, ...StyleSheet.absoluteFillObject },
   overlay: {
     flex: 1,
