@@ -84,10 +84,15 @@ export default function Step1Personal() {
         },
       });
 
-      if (response.data.success) {
+      console.log('[중복확인] 전체 응답:', JSON.stringify(response.data, null, 2));
+      console.log('[중복확인] isPossibleOwnId 값:', response.data.data?.isPossibleOwnId);
+
+      if (response.data.success && response.data.data?.isPossibleOwnId === true) {
+        console.log('[중복확인] 사용 가능한 아이디');
         setIsDuplicate(false); // 사용 가능
       } else {
-        setIsDuplicate(true); // 중복
+        console.log('[중복확인] 중복된 아이디 또는 사용 불가');
+        setIsDuplicate(true); // 중복 또는 사용 불가
       }
       setHasCheckedId(true);
     } catch (error) {
