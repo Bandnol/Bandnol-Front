@@ -21,6 +21,10 @@ import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
 import { useAuth } from '@/hooks/useAuth';
 
+export const options = {
+  headerShown: false,
+};
+
 export default function LoginScreen() {
   const router = useRouter();
   const { login } = useAuth();
