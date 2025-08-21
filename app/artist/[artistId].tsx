@@ -375,7 +375,13 @@ export default function ArtistPage() {
 
             {/* 관심 버튼 */}
             <Pressable
-              onPress={onToggleInterest}
+              onPress={() => {
+                if (artist.isInterested) {
+                  setIsConfirmVisible(true);
+                } else {
+                  onToggleInterest();
+                }
+              }}
               style={[
                 styles.interestBtn,
                 artist.isInterested
@@ -417,8 +423,8 @@ export default function ArtistPage() {
               </View>
             </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </View>
 
       {isConfirmVisible && (
         <View style={styles.modalOverlay}>

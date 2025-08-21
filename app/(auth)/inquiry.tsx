@@ -16,7 +16,7 @@ import BackIcon from '@/assets/auth/inquiry/Vector.svg';
 import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
 import api from '@/store/api'; // axios 인스턴스
-import CheckCircle from '@/assets/icons/checkCircle.svg';
+//import CheckCircle from '@/assets/icons/checkCircle.svg';
 
 export const options = {
   headerShown: false,
