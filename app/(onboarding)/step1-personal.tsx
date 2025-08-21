@@ -586,7 +586,7 @@ const styles = StyleSheet.create({
     color: Colors.palette.white,
   },
   frameView: {
-    width: 80,
+    flex: 1,
     justifyContent: 'center',
     backgroundColor: Colors.palette.Gray700,
     padding: 16,
