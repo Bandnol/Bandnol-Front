@@ -1,4 +1,4 @@
-import { Picker } from '@react-native-picker/picker';
+import { Picker } from '@react-native-picker/picker'; //온보딩 타임피커랑 통일
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import React, { useEffect, useState } from 'react';
