@@ -65,7 +65,7 @@ export default function CommentModal({
         style={styles.backdrop}
       >
         {/* 빈 공간 터치 시 키보드 내려감 */}
-        <Pressable style={StyleSheet.absoluteFill} onPress={Keyboard.dismiss} />
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
 
         <View style={styles.card}>
           {/* 상단 영역 */}
