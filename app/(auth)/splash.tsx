@@ -4,10 +4,10 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import LoginIcon from '@/assets/auth/splash/loginIcon.svg';
 import Logo from '@/assets/auth/splash/logo.svg';
-import GuestIcon from '@/assets/auth/splash/nonlogin.svg';
+import GuestIcon from '@/assets/auth/splash/GuestIcon.svg';
+import SignupIcon from '@/assets/auth/splash/signupIcon.svg';
 import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
-import { useAuth } from '@/hooks/useAuth';
 
 export const options = {
   headerShown: false,
@@ -50,14 +50,17 @@ export default function SplashScreen() {
         <LoginIcon />
       </TouchableOpacity>
 
+      {/* 회원가입*/}
+      <TouchableOpacity onPress={handleSignup} style={styles.Button}>
+        <SignupIcon />
+      </TouchableOpacity>
+      <View style={{ height: 20 }} />
       {/* 로그인 없이 둘러보기 */}
       <TouchableOpacity onPress={handleGuest} style={styles.Button}>
         <GuestIcon />
       </TouchableOpacity>
-      <TouchableOpacity onPress={handleSignup}>
-        <Text style={[styles.inquiry, { marginTop: 20 }]}>회원가입</Text>
-      </TouchableOpacity>
 
+      <View style={{ height: 95 }} />
       <TouchableOpacity onPress={handleInquiry}>
         <Text style={[styles.inquiry, { marginTop: 20 }]}>문의하기</Text>
       </TouchableOpacity>

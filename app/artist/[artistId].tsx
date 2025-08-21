@@ -17,9 +17,9 @@ import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
 import api from '@/store/api';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import StatusBarHeader from '@/components/common/StatusBarHeader';
 import * as SecureStore from 'expo-secure-store';
 import ConfirmModal from '@/components/common/ConfirmModal';
+import BackIcon from '@/assets/auth/inquiry/Vector.svg';
 
 // API 응답 타입(필요 속성만 정의)
 interface ArtistDetail {
@@ -50,10 +50,10 @@ export default function ArtistPage() {
   }, [artistId]);
   const [apiData, setApiData] = React.useState<ArtistDetail | null>(null);
   const displayName =
+    apiData?.name ||
     (Array.isArray(name) ? name[0] : name) ||
     (Array.isArray(artistName) ? artistName[0] : artistName) ||
-    apiData?.name ||
-    normalizedId;
+    'Unknown Artist';
   console.log(
     '[ArtistPage] mounted with artistId:',
     artistId,
@@ -110,12 +110,8 @@ export default function ArtistPage() {
       console.log('[ArtistPage] mapped source object:', payload);
       const mapped: ArtistDetail = {
         id: String(normalizedId),
-        name:
-          payload?.name ??
-          payload?.artistName ??
-          (Array.isArray(name) ? name[0] : name) ??
-          String(normalizedId),
-        bannerUrl: payload?.bannerUrl ?? null,
+        name: payload?.artistName ?? payload?.name ?? 'Unknown Artist',
+        bannerUrl: payload?.bannerUrl ?? payload?.imgUrl ?? null,
         profileUrl: payload?.profileUrl ?? payload?.imgUrl ?? null,
         fanCount: payload?.likedCount ?? payload?.fanCount ?? 0,
         isInterested: payload?.isLiked ?? payload?.isInterested ?? false,
@@ -128,6 +124,16 @@ export default function ArtistPage() {
             0,
         },
       };
+
+      console.log('[ArtistPage] Image URLs:', {
+        bannerUrl: mapped.bannerUrl,
+        profileUrl: mapped.profileUrl,
+        rawPayload: {
+          bannerUrl: payload?.bannerUrl,
+          profileUrl: payload?.profileUrl,
+          imgUrl: payload?.imgUrl,
+        },
+      });
       setArtist(mapped);
       setApiData(mapped);
     } catch (e: any) {
@@ -156,7 +162,13 @@ export default function ArtistPage() {
     load();
   }, [load]);
 
-  const onBack = () => router.back();
+  const onBack = () => {
+    if (typeof router.canGoBack === 'function' && router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/');
+    }
+  };
 
   const onToggleInterest = async () => {
     if (!artist) return;
@@ -243,48 +255,57 @@ export default function ArtistPage() {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <StatusBarHeader />
-      <View style={{ position: 'relative' }}>
-        <ImageBackground
-          source={artist.bannerUrl ? { uri: artist.bannerUrl } : undefined}
-          style={styles.headerBg}
-          imageStyle={{ resizeMode: 'cover' }}
-        >
-          <LinearGradient
-            colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.7)']}
-            style={StyleSheet.absoluteFill}
-          />
-        </ImageBackground>
-        {artist.profileUrl && (
-          <View style={styles.avatarWrap}>
-            <Image source={{ uri: artist.profileUrl }} style={styles.avatar} />
-          </View>
-        )}
-      </View>
-
-      <ScrollView
-        refreshControl={
-          // Pull-to-Refresh
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={() => {
-              setRefreshing(true);
-              load();
-            }}
-            tintColor={Colors.palette.Gray100}
-          />
-        }
-        contentContainerStyle={{ paddingBottom: 40 }}
-      >
-        {/* 프로필 라인 */}
-        <View style={styles.profileRow}>
-          {!artist.profileUrl && (
-            <View
-              style={[
-                styles.avatar,
-                { backgroundColor: Colors.palette.Gray700 },
-              ]}
+      <View style={styles.content}>
+        <View style={{ position: 'relative' }}>
+          <ImageBackground
+            source={artist.bannerUrl ? { uri: artist.bannerUrl } : undefined}
+            style={styles.headerBg}
+            imageStyle={{ resizeMode: 'cover' }}
+            onLoad={() =>
+              console.log(
+                '[ArtistPage] Banner image loaded successfully:',
+                artist.bannerUrl,
+              )
+            }
+            onError={(error) =>
+              console.log(
+                '[ArtistPage] Banner image failed to load:',
+                error.nativeEvent.error,
+                'URL:',
+                artist.bannerUrl,
+              )
+            }
+          >
+            <Pressable onPress={onBack} style={styles.backBtn}>
+              <BackIcon width={24} height={24} />
+            </Pressable>
+            <LinearGradient
+              pointerEvents="none"
+              colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.9)']}
+              style={StyleSheet.absoluteFill}
             />
+          </ImageBackground>
+          {artist.profileUrl && (
+            <View style={styles.avatarWrap}>
+              <Image
+                source={{ uri: artist.profileUrl }}
+                style={styles.avatar}
+                onLoad={() =>
+                  console.log(
+                    '[ArtistPage] Profile image loaded successfully:',
+                    artist.profileUrl,
+                  )
+                }
+                onError={(error) =>
+                  console.log(
+                    '[ArtistPage] Profile image failed to load:',
+                    error.nativeEvent.error,
+                    'URL:',
+                    artist.profileUrl,
+                  )
+                }
+              />
+            </View>
           )}
           <Text style={styles.artistName}>{displayName}</Text>
           <View style={styles.fanRow}>
@@ -322,23 +343,78 @@ export default function ArtistPage() {
           </Pressable>
         </View>
 
-        {/* 추천기록 카드 */}
-        <View style={styles.sectionWrap}>
-          <Text style={styles.sectionTitle}>추천기록</Text>
-
-          <View style={styles.card}>
-            <View style={styles.cardRow}>
-              <Text style={styles.cardLabel}>추천한 횟수</Text>
-              <Text style={styles.cardValue}>
-                {artist.stats?.sentCount ?? 0}회
-              </Text>
+        <ScrollView
+          refreshControl={
+            // Pull-to-Refresh
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => {
+                setRefreshing(true);
+                load();
+              }}
+              tintColor={Colors.palette.Gray100}
+            />
+          }
+          contentContainerStyle={{ paddingBottom: 40 }}
+        >
+          {/* 프로필 라인 */}
+          <View style={styles.profileRow}>
+            {!artist.profileUrl && (
+              <View
+                style={[
+                  styles.avatar,
+                  { backgroundColor: Colors.palette.Gray700 },
+                ]}
+              />
+            )}
+            <Text style={styles.artistName}>{displayName}</Text>
+            <View style={styles.fanRow}>
+              <Text style={styles.fanText}>{fansLabel}</Text>
+              <Text style={styles.redStar}>★</Text>
             </View>
-            <View style={styles.divider} />
-            <View style={styles.cardRow}>
-              <Text style={styles.cardLabel}>추천받은 횟수</Text>
-              <Text style={styles.cardValue}>
-                {artist.stats?.receivedCount ?? 0}회
+
+            {/* 관심 버튼 */}
+            <Pressable
+              onPress={onToggleInterest}
+              style={[
+                styles.interestBtn,
+                artist.isInterested
+                  ? styles.interestBtnOutline
+                  : styles.interestBtnFill,
+              ]}
+            >
+              <Text
+                style={
+                  artist.isInterested
+                    ? styles.interestTextOutline
+                    : styles.interestTextOutline
+                }
+              >
+                {artist.isInterested
+                  ? '나의 관심 아티스트'
+                  : '관심 아티스트에 추가'}
               </Text>
+            </Pressable>
+          </View>
+          <View style={{ height: 30 }} />
+
+          {/* 추천기록 카드 */}
+          <View style={styles.sectionWrap}>
+            <Text style={styles.sectionTitle}>추천기록</Text>
+            <View style={styles.card}>
+              <View style={styles.cardRow}>
+                <Text style={styles.cardLabel}>추천한 횟수</Text>
+                <Text style={styles.cardValue}>
+                  {artist.stats?.sentCount ?? 0}회
+                </Text>
+              </View>
+              <View style={styles.divider} />
+              <View style={styles.cardRow}>
+                <Text style={styles.cardLabel}>추천받은 횟수</Text>
+                <Text style={styles.cardValue}>
+                  {artist.stats?.receivedCount ?? 0}회
+                </Text>
+              </View>
             </View>
           </View>
         </View>
@@ -378,6 +454,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.palette.Gray900,
   },
+  statusBarArea: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
+    backgroundColor: 'transparent',
+  },
+  content: {
+    flex: 1,
+  },
   centerWrap: {
     flex: 1,
     justifyContent: 'center',
@@ -398,7 +485,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.35)',
   },
   backIcon: {
     color: '#fff',
@@ -432,7 +518,7 @@ const styles = StyleSheet.create({
     borderRadius: AVATAR_SIZE / 2,
   },
   artistName: {
-    ...Typography.h3,
+    ...Typography.h1,
     color: Colors.palette.Gray100,
     marginTop: 12,
   },
@@ -443,7 +529,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   fanText: {
-    ...Typography.body2,
+    ...Typography.sub2,
     color: Colors.palette.Gray200,
   },
   redStar: {
@@ -479,15 +565,16 @@ const styles = StyleSheet.create({
     marginTop: 18,
   },
   sectionTitle: {
-    ...Typography.caption,
-    color: Colors.palette.Gray300,
+    ...Typography.sub3,
+    paddingHorizontal: 10,
+    color: Colors.palette.Gray100,
     marginBottom: 10,
   },
   card: {
     backgroundColor: Colors.palette.Gray800,
     borderRadius: 10,
     paddingVertical: 10,
-    paddingHorizontal: 12,
+    paddingHorizontal: 20,
   },
   cardRow: {
     flexDirection: 'row',
@@ -497,11 +584,11 @@ const styles = StyleSheet.create({
   },
   cardLabel: {
     ...Typography.body2,
-    color: Colors.palette.Gray200,
+    color: Colors.palette.Gray400,
   },
   cardValue: {
-    ...Typography.body2,
-    color: Colors.palette.Gray100,
+    ...Typography.sub,
+    color: Colors.palette.Gray400,
   },
   divider: {
     height: StyleSheet.hairlineWidth,

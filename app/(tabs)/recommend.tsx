@@ -5,7 +5,7 @@ import RecommendList, {
 } from '@/app/(tabs)/recommend-tab/RecommendList';
 import Dropdown from '@/assets/icons/size_m/dropdown.svg';
 import { Typography } from '@/constants/typography';
-import { API_TOKEN, API_URL } from '@/constants/env';
+import { API_URL } from '@/constants/env';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import { useRouter } from 'expo-router';
@@ -17,14 +17,14 @@ type RecommendItem = {
   date: string;
   recommending?: {
     title: string;
-    artistId: string;
+    artistIds: string[];
     artistName: string;
     imageUrl: string;
     comment: string;
   };
   recommended?: {
     title: string;
-    artistId: string;
+    artistIds: string[];
     artistName: string;
     imageUrl: string;
     comment: string;
@@ -34,22 +34,42 @@ const fetchRecommendList = async (): Promise<RecommendItem[]> => {
   const token = await SecureStore.getItemAsync('JWTToken');
   if (!token) throw new Error('JWT 토큰 없음');
 
+  console.log('[fetchRecommendList] Requesting:', `${API_URL}/api/v1/recoms/lists`);
+  
   const response = await axios.get(`${API_URL}/api/v1/recoms/lists`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
+  
+  console.log('[fetchRecommendList] Full response:', JSON.stringify(response.data, null, 2));
+  console.log('[fetchRecommendList] Response data array:', JSON.stringify(response.data.data, null, 2));
+  
+  // 각 아이템의 artistId 확인
+  if (Array.isArray(response.data.data)) {
+    response.data.data.forEach((item: any, index: number) => {
+      console.log(`[fetchRecommendList] Item ${index}:`, {
+        date: item.date,
+        recommending: item.recommending ? {
+          title: item.recommending.title,
+          artistName: item.recommending.artistName,
+          artistIds: item.recommending.artistIds,
+          firstArtistId: item.recommending.artistIds?.[0]
+        } : null,
+        recommended: item.recommended ? {
+          title: item.recommended.title,
+          artistName: item.recommended.artistName,
+          artistIds: item.recommended.artistIds,
+          firstArtistId: item.recommended.artistIds?.[0]
+        } : null
+      });
+    });
+  }
+  
   return response.data.data;
 };
 
 export default function RecommendScreen() {
-  useEffect(() => {
-    const storeDummyToken = async () => {
-      await SecureStore.setItemAsync('JWTToken', API_TOKEN);
-    };
-
-    storeDummyToken();
-  }, []);
   useEffect(() => {
     const debugToken = async () => {
       const token = await SecureStore.getItemAsync('JWTToken');
@@ -83,6 +103,10 @@ export default function RecommendScreen() {
     const load = async () => {
       try {
         const result = await fetchRecommendList();
+        console.log(
+          '[recommend.tsx] API response data:',
+          JSON.stringify(result, null, 2),
+        );
         setData(result);
       } catch (e) {
         console.error('API 호출 실패1:', e);

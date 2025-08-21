@@ -20,9 +20,10 @@ interface Props {
   onArtistPress?: (artist: Artist) => void;
   showRemoveButton?: boolean;
   onRemoveArtist?: (artist: Artist) => void;
+  disableNavigation?: boolean;
 }
 
-const InterestedArtistList = ({ selectedArtists, onArtistPress, showRemoveButton = false, onRemoveArtist }: Props) => {
+const InterestedArtistList = ({ selectedArtists, onArtistPress, showRemoveButton = false, onRemoveArtist, disableNavigation = false }: Props) => {
   const router = useRouter();
 
   const [persisted, setPersisted] = React.useState<Artist[]>([]);
@@ -97,6 +98,10 @@ const InterestedArtistList = ({ selectedArtists, onArtistPress, showRemoveButton
               key={item.id}
               style={cellStyle}
               onPress={() => {
+                if (disableNavigation) {
+                  // 온보딩에서는 네비게이션 비활성화
+                  return;
+                }
                 if (onArtistPress) {
                   onArtistPress(item);
                 } else {
@@ -105,13 +110,10 @@ const InterestedArtistList = ({ selectedArtists, onArtistPress, showRemoveButton
                     item.id,
                     item.name,
                   );
-                  router.push({
-                    pathname: `/artist/${item.id}`,
-                    params: { name: item.name },
-                  });
+                  router.push(`/artist/${item.id}` as any);
                 }
               }}
-              activeOpacity={0.7}
+              activeOpacity={disableNavigation ? 1 : 0.7}
               hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
             >
               <View style={styles.artistImageWrapper}>
