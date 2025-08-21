@@ -139,7 +139,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.palette.point ?? '#4F46E5',
     marginTop: 6,
   },
   primaryBtnText: {
