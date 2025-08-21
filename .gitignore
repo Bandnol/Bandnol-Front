@@ -16,7 +16,6 @@ expo-env.d.ts
 /dist/
 /build/
 /android/
-/ios/
 
 # Native
 .kotlin/
@@ -51,4 +50,3 @@ app-example
 # IDE
 .vscode/
 .idea/
-ios/
