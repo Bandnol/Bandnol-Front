@@ -175,6 +175,7 @@ const RecommendList = forwardRef<RecommendListRef, RecommendListProps>(
                         padding: 4,
                         borderRadius: 2,
                         marginRight: 4,
+                        alignSelf: 'center',
                       }}
                     />
                     <View style={styles.myrecSong}>
@@ -186,7 +187,7 @@ const RecommendList = forwardRef<RecommendListRef, RecommendListProps>(
                     <View
                       style={{
                         width: 2,
-                        height: 27,
+                        minHeight: 27.37,
                         backgroundColor: '#FB4932',
                         marginHorizontal: 6,
                       }}
@@ -249,13 +250,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     width: '100%',
     paddingVertical: 0,
-    alignItems: 'center',
+    alignItems: 'stretch',
+
     gap: 6.843,
   },
   myrecSong: {
     flexDirection: 'column',
     width: '35%',
     gap: 2,
+    alignSelf: 'center',
   },
   myrecTitle: {
     ...Typography.subtitle4,
@@ -271,7 +274,7 @@ const styles = StyleSheet.create({
     ...Typography.caption2,
     color: '#fff',
     fontWeight: '400',
-
+    alignSelf: 'center',
     flexShrink: 1,
     flexWrap: 'wrap',
   },
