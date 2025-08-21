@@ -31,7 +31,6 @@ type RecommendItem = {
   };
 };
 const fetchRecommendList = async (): Promise<RecommendItem[]> => {
-
   const token = await SecureStore.getItemAsync('JWTToken');
   if (!token) throw new Error('JWT 토큰 없음');
 
@@ -41,7 +40,6 @@ const fetchRecommendList = async (): Promise<RecommendItem[]> => {
     },
   });
   return response.data.data;
- 
 };
 
 export default function RecommendScreen() {
@@ -151,7 +149,7 @@ export default function RecommendScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#121212',
     paddingTop: 60,
   },
   topSection: {},
