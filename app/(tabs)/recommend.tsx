@@ -69,6 +69,8 @@ export default function RecommendScreen() {
   const [data, setData] = useState<RecommendItem[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
   const handleTodayPress = () => {
     setSelectedMonth(dayjs());
     setSelectedDate(dayjs().format('YYYY-MM-DD'));
@@ -105,17 +107,68 @@ export default function RecommendScreen() {
             />
           </View>
         </View>
+        <View style={styles.dropdownSection}>
+          {isModeCalendar ? (
+            !isDropdownOpen ? (
+              <View style={styles.dropdownClosed}>
+                <Text style={styles.myrecText}>
+                  {isTabRecommending ? '나의 추천곡' : '추천 받은 곡'}
+                </Text>
+                <Pressable onPress={() => setIsDropdownOpen(!isDropdownOpen)}>
+                  <Dropdown />
+                </Pressable>
+              </View>
+            ) : (
+              <View style={styles.dropdownOpened}>
+                <Pressable
+                  onPress={() => setIsDropdownOpen(false)}
+                  style={styles.dropdownItem}
+                >
+                  <Text style={styles.myrecText}>
+                    {isTabRecommending ? '나의 추천곡' : '추천 받은 곡'}
+                  </Text>
+                  <View style={{ transform: [{ rotate: '180deg' }] }}>
+                    <Dropdown />
+                  </View>
+                </Pressable>
 
-        {isModeCalendar ? (
-          <View style={styles.myrecSection}>
-            <Text style={styles.myrecText}>
-              {isTabRecommending ? '나의 추천곡' : '추천 받은 곡'}
-            </Text>
-            <Pressable onPress={() => setIsTabRecommending(!isTabRecommending)}>
-              <Dropdown />
-            </Pressable>
-          </View>
-        ) : null}
+                <Pressable
+                  onPress={() => [
+                    setIsTabRecommending(true),
+                    setIsDropdownOpen(false),
+                  ]}
+                  style={styles.dropdownItem}
+                >
+                  <Text
+                    style={[
+                      styles.myrecText,
+                      !isTabRecommending ? { color: '#7C7C7C' } : {},
+                    ]}
+                  >
+                    나의 추천곡
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  onPress={() => [
+                    setIsTabRecommending(false),
+                    setIsDropdownOpen(false),
+                  ]}
+                  style={styles.dropdownItem}
+                >
+                  <Text
+                    style={[
+                      styles.myrecText,
+                      isTabRecommending ? { color: '#7C7C7C' } : {},
+                    ]}
+                  >
+                    추천 받은 곡
+                  </Text>
+                </Pressable>
+              </View>
+            )
+          ) : null}
+        </View>
 
         <View style={styles.calListSection}>
           {isModeCalendar ? (
@@ -153,7 +206,13 @@ const styles = StyleSheet.create({
     paddingTop: 60,
   },
   topSection: {},
-  myrecSection: {
+  dropdownSection: {
+    height: 64,
+    zIndex: 1,
+  },
+  dropdownClosed: {
+    width: 120,
+    height: 44,
     flexDirection: 'row',
     padding: 10,
     alignItems: 'center',
@@ -165,6 +224,44 @@ const styles = StyleSheet.create({
     marginTop: 3,
     marginBottom: 17,
   },
+  dropdownItem: {
+    width: 120,
+    height: 44,
+    flexDirection: 'row',
+    padding: 10,
+    alignItems: 'center',
+    gap: 8,
+    alignSelf: 'flex-end',
+    backgroundColor: 'transparent',
+  },
+  dropdownOpened: {
+    width: 120,
+    height: 44 * 3,
+    flexDirection: 'column',
+    padding: 0,
+    alignItems: 'center',
+    gap: 0,
+    borderRadius: 10,
+    backgroundColor: '#1F1F1F',
+    alignSelf: 'flex-end',
+    marginRight: 20,
+    marginTop: 3,
+    //marginBottom: 17,
+    overflow: 'hidden',
+  },
+  dropdownTopText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontFamily: 'Pretendard',
+  },
+  dropdownItemPressed: { backgroundColor: '#2A2A2A' },
+  dropdownItemText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontFamily: 'Pretendard',
+  },
+  dropdownItemTextDisabled: { color: '#7A7A7A' },
+
   myrecText: {
     color: '#FFF',
     fontFamily: 'Pretendard',
@@ -173,6 +270,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     lineHeight: 19.6,
     letterSpacing: -0.35,
+    paddingLeft: 4,
   },
   calListSection: {
     flex: 1,

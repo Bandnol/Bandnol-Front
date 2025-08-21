@@ -176,6 +176,7 @@ export default function RecommendCal({
             <Pressable
               key={idx}
               onPress={() => setSelectedDate(item.fullDate)}
+              disabled={!item.isCurrentMonth}
               style={[
                 styles.cell,
                 selectedDate === item.fullDate && styles.selectedCell,
@@ -220,7 +221,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    paddingVertical: 6,
+    paddingTop: 3,
+    paddingBottom: 10,
   },
   weekdayText: {
     ...Typography.caption1,
@@ -241,11 +243,12 @@ const styles = StyleSheet.create({
     height: `16.66%`,
     justifyContent: 'flex-start',
     alignItems: 'center',
-    backgroundColor: 'Gray900',
+    backgroundColor: '#121212',
     position: 'relative',
   },
   selectedCell: {
     backgroundColor: '#333',
+    zIndex: 2,
   },
 
   cellBorderOverlay: {
