@@ -6,6 +6,12 @@ import { AuthSessionProvider, useAuthSession } from '@/hooks/useAuthSession';
 import { AuthProvider } from '@/hooks/useAuthContext';
 import { setAxiosSignOutCallback } from '@/hooks/useAxios';
 
+
+export const unstable_settings = {
+  devtools: false,
+  initialRouteName: 'splash', // 선택사항 (첫 화면 지정)
+};
+
 SplashScreen.preventAutoHideAsync();
 
 function LayoutContent() {
@@ -47,6 +53,7 @@ function LayoutContent() {
         <Stack.Screen name="+not-found" />
         <Stack.Screen name="(onboarding)" />
         <Stack.Screen name="artist/[artistId]" />
+
       </Stack>
     </View>
   );
