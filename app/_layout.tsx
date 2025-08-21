@@ -6,6 +6,11 @@ import { AuthSessionProvider, useAuthSession } from '@/hooks/useAuthSession';
 import { AuthProvider } from '@/hooks/useAuthContext';
 import { setAxiosSignOutCallback } from '@/hooks/useAxios';
 
+export const unstable_settings = {
+  devtools: false,
+  initialRouteName: 'splash', // 선택사항 (첫 화면 지정)
+};
+
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
@@ -35,14 +40,18 @@ function LayoutContent() {
 
   return (
     <View style={{ flex: 1 }}>
-      <Stack>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+        }}
+      >
         {isAuthenticated ? (
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" />
         ) : (
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)" />
         )}
         <Stack.Screen name="+not-found" />
-        <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
+        <Stack.Screen name="(onboarding)" />
       </Stack>
     </View>
   );
