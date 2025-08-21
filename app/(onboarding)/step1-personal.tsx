@@ -638,7 +638,7 @@ const styles = StyleSheet.create({
   }, // 모달 css
   modalBackground: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
   },
