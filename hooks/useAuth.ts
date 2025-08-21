@@ -78,7 +78,12 @@ export function useAuth() {
     if ('success' in result && result.success) {
       console.log('[useAuth] Login API response:', result.data);
       const { user, token, refreshToken } = result.data;
-      console.log('[useAuth] Extracted tokens - access:', !!token, 'refresh:', !!refreshToken);
+      console.log(
+        '[useAuth] Extracted tokens - access:',
+        !!token,
+        'refresh:',
+        !!refreshToken,
+      );
 
       // Use AuthSession to handle token storage and state update
       await signIn(token, refreshToken ?? undefined);
@@ -127,14 +132,17 @@ export function useAuth() {
   const logout = async () => {
     const accessToken = await SecureStore.getItemAsync('JWTToken');
     await jsonFetch<ApiSuccess<{ message: string }> | ApiError>(
-      `${API_URL}/api/v1/oauth2/logout`,
+      `${API_URL}/api/v2/oauth2/logout`,
       {
         method: 'POST',
         body: JSON.stringify({ accessToken }),
       },
     );
-    useAuthStore.getState().clearJWTToken();
+    await SecureStore.deleteItemAsync('JWTToken');
+    await SecureStore.deleteItemAsync('refreshToken');
+    await SecureStore.deleteItemAsync('user');
 
+    useAuthStore.getState().clearJWTToken();
     await signOut(); // Use AuthSession to clear tokens and state
     clearUser(); // Clear user store as well
   };
@@ -149,10 +157,14 @@ export function useAuth() {
     const result = await jsonFetch<
       | ApiSuccess<{ id: string; inactiveAt: string; inactiveStatus: boolean }>
       | ApiError
-    >(`${API_URL}/api/v1/oauth2/withdraw`, {
+    >(`${API_URL}/api/v2/oauth2/withdraw`, {
       method: 'POST',
       body: JSON.stringify({ accessToken }),
     });
+    await SecureStore.deleteItemAsync('JWTToken');
+    await SecureStore.deleteItemAsync('refreshToken');
+    await SecureStore.deleteItemAsync('user');
+
     useAuthStore.getState().clearJWTToken();
 
     await signOut(); // Use AuthSession to clear tokens and state

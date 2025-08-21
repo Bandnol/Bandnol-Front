@@ -6,12 +6,12 @@ import { AuthSessionProvider, useAuthSession } from '@/hooks/useAuthSession';
 import { AuthProvider } from '@/hooks/useAuthContext';
 import { setAxiosSignOutCallback } from '@/hooks/useAxios';
 
+
 export const unstable_settings = {
   devtools: false,
   initialRouteName: 'splash', // 선택사항 (첫 화면 지정)
 };
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 function LayoutContent() {
@@ -35,7 +35,7 @@ function LayoutContent() {
   }, [signOut]);
 
   if (!loaded || isAuthenticated === null) {
-    return null; // Still loading fonts or checking auth session
+    return null;
   }
 
   return (
@@ -52,6 +52,8 @@ function LayoutContent() {
         )}
         <Stack.Screen name="+not-found" />
         <Stack.Screen name="(onboarding)" />
+        <Stack.Screen name="artist/[artistId]" />
+
       </Stack>
     </View>
   );
