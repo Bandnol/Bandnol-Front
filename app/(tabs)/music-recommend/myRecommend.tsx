@@ -18,6 +18,7 @@ import ErrorIcon from '@/assets/icons/error.svg';
 import PlayIcon from '@/assets/icons/play-solid.svg';
 import CommentModal from '@/components/common/CommentModal';
 import DateHeader from '@/components/common/DateHeader';
+import TimePickerModal from '@/components/common/TimePickerModal';
 import { Typography } from '@/constants/typography';
 import { fetchReplyComment } from '@/api/replies';
 import ReceiveRecommend from './receiveRecommend';
@@ -32,6 +33,7 @@ export default function MyRecommendSwiper() {
   const [timeLeft, setTimeLeft] = useState(10);
   const [isMyCommentVisible, setIsMyCommentVisible] = useState(false);
   const [isReplyCommentVisible, setIsReplyCommentVisible] = useState(false);
+  const [isTimePickerVisible, setIsTimePickerVisible] = useState(false);
   const [replyComment, setReplyComment] = useState<string | null>(null);
   const [replySender, setReplySender] = useState<string | null>(null); // 보낸 사람 이름
   const [hasReplied, setHasReplied] = useState(false); // 답장을 보냈는지 상태
@@ -210,10 +212,13 @@ export default function MyRecommendSwiper() {
               </View>
 
               {/* 하단 설정 버튼 */}
-              <View style={styles.settingRow}>
+              <Pressable 
+                style={styles.settingRow}
+                onPress={() => setIsTimePickerVisible(true)}
+              >
                 <ErrorIcon width={16} height={16} />
                 <Text style={styles.setting}>추천곡 수신시간 설정</Text>
-              </View>
+              </Pressable>
             </View>
           </View>
         )}
@@ -235,6 +240,14 @@ export default function MyRecommendSwiper() {
         description={replyComment || ''} // content 적용
         closeColor="#1F1F1F"
         closeText="닫기"
+      />
+
+      <TimePickerModal
+        visible={isTimePickerVisible}
+        onClose={() => setIsTimePickerVisible(false)}
+        onSave={() => {
+          console.log('[MyRecommend] 수신 시간 변경 완료');
+        }}
       />
     </>
   );
