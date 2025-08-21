@@ -271,7 +271,10 @@ const Component = () => {
             </Text>
           </Text>
           <View style={styles.selectedWrap}>
-            <InterestedArtistList selectedArtists={selectedArtists} />
+            <InterestedArtistList 
+              selectedArtists={selectedArtists} 
+              disableNavigation={true} 
+            />
           </View>
         </View>
       </View>
