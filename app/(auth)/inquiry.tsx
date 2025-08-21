@@ -83,7 +83,13 @@ const Component = () => {
             <View style={styles.textfieldParent}>
               <View style={[styles.textfield, styles.textfieldFlexBox]}>
                 <Text style={[styles.text1, styles.textTypo]}>이름</Text>
-                <View style={[styles.wrapper, styles.btnSpaceBlock]}>
+                <View
+                  style={[
+                    styles.wrapper,
+                    styles.btnSpaceBlock,
+                    { paddingVertical: 0 },
+                  ]}
+                >
                   <TextInput
                     placeholder="이름을 입력하세요."
                     placeholderTextColor="#7c7c7c"
@@ -99,7 +105,13 @@ const Component = () => {
               </View>
               <View style={[styles.textfield, styles.textfieldFlexBox]}>
                 <Text style={[styles.text1, styles.textTypo]}>이메일</Text>
-                <View style={[styles.container, styles.btnSpaceBlock]}>
+                <View
+                  style={[
+                    styles.container,
+                    styles.btnSpaceBlock,
+                    { paddingVertical: 0 },
+                  ]}
+                >
                   <TextInput
                     placeholder="이메일을 입력하세요."
                     placeholderTextColor="#7c7c7c"
@@ -205,7 +217,8 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     backgroundColor: Colors.palette.Gray900,
     flex: 1,
-    alignItems: 'center',
+    //alignItems: 'center',
+    justifyContent: 'center',
   },
   textfield: {
     height: 78,
@@ -227,8 +240,9 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     backgroundColor: Colors.palette.Gray900,
     flex: 1,
-    alignItems: 'center',
+    justifyContent: 'center',
   },
+
   textfieldParent: {
     gap: 16,
     alignSelf: 'stretch',
