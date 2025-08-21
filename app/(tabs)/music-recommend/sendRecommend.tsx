@@ -85,7 +85,7 @@ export default function SendRecommendPage() {
           });
         }, 2000);
       } else if (res.error?.response?.status === 409) {
-        alert('이미 이 추천에 답장한 적이 있어요!');
+        alert('오늘 이미 추천을 보냈어요');
         setIsSendModalVisible(false);
       } else {
         alert('답장 전송에 실패했어요. 다시 시도해주세요.');
