@@ -19,7 +19,7 @@ import {
 } from 'react-native';
 import Modal from 'react-native-modal';
 
-//import Share, { Social } from 'react-native-share';
+import Share, { Social } from 'react-native-share';
 
 import Svg, { Circle } from 'react-native-svg';
 import ViewShot from 'react-native-view-shot';
@@ -54,7 +54,7 @@ export default function RecShareModal({
     await Clipboard.setStringAsync(shareUrl);
     Alert.alert('링크가 복사되었습니다.');
   };
-  /*  const handleShareToInstagramStory = async () => {
+    const handleShareToInstagramStory = async () => {
     if (Platform.OS === 'ios') {
       try {
         if (!recData) return;
@@ -108,7 +108,7 @@ export default function RecShareModal({
       }
     }
   };
-*/
+
   const handleShareToX = () => {
     if (!recData) return;
     const shareUrl = `https://bandnol.app/recoms/${recData.id}`;
@@ -261,7 +261,7 @@ export default function RecShareModal({
           <View style={styles.buttonGroup}>
             <Pressable
               style={styles.shareItem}
-              //onPress={handleShareToInstagramStory}
+              onPress={handleShareToInstagramStory}
             >
               <View style={styles.shareButton}>
                 <Insta />
