@@ -172,7 +172,10 @@ export default function SendRecommendPage() {
                 익명으로 보내기
               </Text>
             </TouchableOpacity>
-            <Pressable onPress={handleGenerateComment}>
+            <Pressable
+              onPress={handleGenerateComment}
+              style={{ marginLeft: 12 }}
+            >
               <View style={styles.aiCommentRow}>
                 <Text style={styles.aiComment}>
                   <Image
@@ -221,7 +224,7 @@ export default function SendRecommendPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#121212',
     paddingHorizontal: 24,
     paddingTop: 60,
   },
@@ -306,8 +309,9 @@ const styles = StyleSheet.create({
   },
   commentOptions: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
+    gap: 35,
   },
   checkboxRow: {
     flexDirection: 'row',
