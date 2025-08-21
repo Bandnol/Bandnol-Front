@@ -55,46 +55,49 @@ export default function FollowPage() {
         {/* TopBar */}
         <View style={styles.topBar}>
           <TouchableOpacity onPress={handleBack}>
-            <BackArrowIcon width={24} height={24} />
+            <BackArrowIcon width={22} height={18} />
           </TouchableOpacity>
           {/* 팔로잉 팔로워 버튼 */}
-          <View style={styles.tabButtonGroup}>
-            <TouchableOpacity
-              style={[
-                styles.tabButton,
-                styles.tabButtonLeft,
-                activeTab === 'followers' && styles.tabButtonActive,
-              ]}
-              onPress={() => setActiveTab('followers')}
-            >
-              <Text
+          <View style={styles.tabWrapper}>
+            <View style={styles.tabButtonGroup}>
+              <TouchableOpacity
                 style={[
-                  styles.tabText,
-                  activeTab === 'followers' && styles.tabTextActive,
+                  styles.tabButton,
+                  styles.tabButtonLeft,
+                  activeTab === 'followers' && styles.tabButtonActive,
                 ]}
+                onPress={() => setActiveTab('followers')}
               >
-                팔로워
-              </Text>
-            </TouchableOpacity>
+                <Text
+                  style={[
+                    styles.tabText,
+                    activeTab === 'followers' && styles.tabTextActive,
+                  ]}
+                >
+                  팔로워
+                </Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[
-                styles.tabButton,
-                styles.tabButtonRight,
-                activeTab === 'following' && styles.tabButtonActive,
-              ]}
-              onPress={() => setActiveTab('following')}
-            >
-              <Text
+              <TouchableOpacity
                 style={[
-                  styles.tabText,
-                  activeTab === 'following' && styles.tabTextActive,
+                  styles.tabButton,
+                  styles.tabButtonRight,
+                  activeTab === 'following' && styles.tabButtonActive,
                 ]}
+                onPress={() => setActiveTab('following')}
               >
-                팔로잉
-              </Text>
-            </TouchableOpacity>
+                <Text
+                  style={[
+                    styles.tabText,
+                    activeTab === 'following' && styles.tabTextActive,
+                  ]}
+                >
+                  팔로잉
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
+          <View style={{ width: 22 }} />
         </View>
 
         {/* List */}
@@ -161,24 +164,33 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 20,
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
   }, //버튼 css
+  tabWrapper: {
+    flex: 1,
+    alignItems: 'center', // 중앙 정렬 핵심!
+  },
   tabButtonGroup: {
+    alignItems: 'flex-start',
     flexDirection: 'row',
-    marginLeft: 70,
-    borderRadius: 70,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
     backgroundColor: '#1F1F1F',
-    overflow: 'hidden',
+    borderRadius: 70,
   },
   tabButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    backgroundColor: '#1F1F1F',
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    gap: 10,
+    borderRadius: 20,
+    backgroundColor: 'transparent',
   },
   tabButtonActive: {
-    backgroundColor: '#FFF',
+    backgroundColor: '#F4F4F4',
   },
   tabButtonLeft: {
     borderTopLeftRadius: 20,
@@ -195,7 +207,7 @@ const styles = StyleSheet.create({
   tabTextActive: {
     color: '#121212',
     ...Typography.subtitle3,
-  }, // 유저 목록
+  },
   listWrapper: {
     paddingTop: 10,
   },
