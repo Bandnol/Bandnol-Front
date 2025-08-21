@@ -8,6 +8,10 @@
       "developmentClient": true,
       "distribution": "store",
       "node": "20.19.0",
+      "prebuildCommand": "ls -la && cd ios && ls -la",
+      "ios": {
+        "buildConfiguration": "Debug"
+      },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://bandnol.app"
       }
