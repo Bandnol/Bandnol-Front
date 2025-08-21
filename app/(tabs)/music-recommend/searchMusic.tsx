@@ -131,7 +131,7 @@ export default function SearchMusicPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#121212',
     paddingHorizontal: 20,
     paddingTop: 80,
   },

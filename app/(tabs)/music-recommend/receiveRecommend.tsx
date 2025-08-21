@@ -537,7 +537,10 @@ export default function ReceiveRecommend({
                   <Text
                     style={[
                       styles.likeLabel,
-                      { opacity: isLiked === true ? 1 : 0.6 },
+                      {
+                        opacity: isLiked === true ? 1 : 0.6,
+                        color: isLiked === true ? '#F5F5F5' : '#7C7C7C',
+                      },
                     ]}
                   >
                     좋아요
@@ -561,7 +564,10 @@ export default function ReceiveRecommend({
                   <Text
                     style={[
                       styles.unlikeLabel,
-                      { opacity: isLiked === false ? 1 : 0.6 },
+                      {
+                        opacity: isLiked === false ? 1 : 0.6,
+                        color: isLiked === false ? '#F5F5F5' : '#7C7C7C',
+                      },
                     ]}
                   >
                     별로예요
