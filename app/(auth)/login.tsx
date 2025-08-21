@@ -21,6 +21,10 @@ import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
 import { useAuth } from '@/hooks/useAuth';
 
+export const options = {
+  headerShown: false,
+};
+
 export default function LoginScreen() {
   const router = useRouter();
   const { login } = useAuth();
@@ -139,7 +143,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.palette.point ?? '#4F46E5',
     marginTop: 6,
   },
   primaryBtnText: {
