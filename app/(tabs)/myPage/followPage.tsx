@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
 
@@ -213,7 +214,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   userBox: {
-    width: '100%',
+    width: '103%',
     height: 50,
     backgroundColor: '#121212',
     flexDirection: 'row',
