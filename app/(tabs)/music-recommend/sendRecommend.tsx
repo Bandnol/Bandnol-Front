@@ -142,7 +142,7 @@ export default function SendRecommendPage() {
             keyboardShouldPersistTaps="handled"
           >
             <TextInput
-              placeholder="COMMENT를 작성하세요!!..."
+              placeholder="COMMENT를 작성하세요..."
               placeholderTextColor="#7C7C7C"
               value={comment}
               onChangeText={setComment}
