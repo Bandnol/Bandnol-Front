@@ -210,9 +210,10 @@ const styles = StyleSheet.create({
   },
   listWrapper: {
     paddingTop: 10,
+    alignItems: 'center',
   },
   userBox: {
-    width: 340,
+    width: '100%',
     height: 50,
     backgroundColor: '#121212',
     flexDirection: 'row',
