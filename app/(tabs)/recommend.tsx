@@ -34,38 +34,51 @@ const fetchRecommendList = async (): Promise<RecommendItem[]> => {
   const token = await SecureStore.getItemAsync('JWTToken');
   if (!token) throw new Error('JWT 토큰 없음');
 
-  console.log('[fetchRecommendList] Requesting:', `${API_URL}/api/v1/recoms/lists`);
-  
+  console.log(
+    '[fetchRecommendList] Requesting:',
+    `${API_URL}/api/v1/recoms/lists`,
+  );
+
   const response = await axios.get(`${API_URL}/api/v1/recoms/lists`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
-  
-  console.log('[fetchRecommendList] Full response:', JSON.stringify(response.data, null, 2));
-  console.log('[fetchRecommendList] Response data array:', JSON.stringify(response.data.data, null, 2));
-  
+
+  console.log(
+    '[fetchRecommendList] Full response:',
+    JSON.stringify(response.data, null, 2),
+  );
+  console.log(
+    '[fetchRecommendList] Response data array:',
+    JSON.stringify(response.data.data, null, 2),
+  );
+
   // 각 아이템의 artistId 확인
   if (Array.isArray(response.data.data)) {
     response.data.data.forEach((item: any, index: number) => {
       console.log(`[fetchRecommendList] Item ${index}:`, {
         date: item.date,
-        recommending: item.recommending ? {
-          title: item.recommending.title,
-          artistName: item.recommending.artistName,
-          artistIds: item.recommending.artistIds,
-          firstArtistId: item.recommending.artistIds?.[0]
-        } : null,
-        recommended: item.recommended ? {
-          title: item.recommended.title,
-          artistName: item.recommended.artistName,
-          artistIds: item.recommended.artistIds,
-          firstArtistId: item.recommended.artistIds?.[0]
-        } : null
+        recommending: item.recommending
+          ? {
+              title: item.recommending.title,
+              artistName: item.recommending.artistName,
+              artistIds: item.recommending.artistIds,
+              firstArtistId: item.recommending.artistIds?.[0],
+            }
+          : null,
+        recommended: item.recommended
+          ? {
+              title: item.recommended.title,
+              artistName: item.recommended.artistName,
+              artistIds: item.recommended.artistIds,
+              firstArtistId: item.recommended.artistIds?.[0],
+            }
+          : null,
       });
     });
   }
-  
+
   return response.data.data;
 };
 
@@ -121,8 +134,8 @@ export default function RecommendScreen() {
   // 화면에 포커스될 때마다 캘린더 새로고침
   useFocusEffect(
     useCallback(() => {
-      setCalendarRefreshKey(prev => prev + 1);
-    }, [])
+      setCalendarRefreshKey((prev) => prev + 1);
+    }, []),
   );
 
   return (
@@ -241,7 +254,7 @@ const styles = StyleSheet.create({
   topSection: {},
   dropdownSection: {
     height: 64,
-    zIndex: 1,
+    zIndex: 3,
   },
   dropdownClosed: {
     width: 120,
