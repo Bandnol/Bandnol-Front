@@ -111,7 +111,7 @@ export default function RecBottomModal({
                 numberOfLines={3}
                 ellipsizeMode="tail"
               >
-                {songData.comment}
+                {songData.comment?.trim()}
               </Text>
             </View>
           </View>
