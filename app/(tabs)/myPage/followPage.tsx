@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
 
@@ -210,9 +211,10 @@ const styles = StyleSheet.create({
   },
   listWrapper: {
     paddingTop: 10,
+    alignItems: 'center',
   },
   userBox: {
-    width: 340,
+    width: '103%',
     height: 50,
     backgroundColor: '#121212',
     flexDirection: 'row',
