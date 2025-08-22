@@ -15,11 +15,24 @@ import RecBottomModal from './RecBottomModal';
 
 dayjs.locale('ko');
 
+// 리스트 API에서 캘린더 데이터 가져오기 (임시 해결책)
+async function fetchRecommendListForCalendar(): Promise<any[]> {
+  const token = await SecureStore.getItemAsync('JWTToken');
+  if (!token) throw new Error('JWT 토큰 없음');
+
+  const response = await axios.get(`https://bandnol.app/api/v1/recoms/lists`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  return response.data.data || [];
+}
+
 type RecommendCalProps = {
   selectedMonth: dayjs.Dayjs;
   selectedDate: string | null;
   setSelectedDate: (date: string | null) => void;
   isTabRecommending?: boolean;
+  refreshKey?: number;
 };
 
 type CalendarDate = {
@@ -44,6 +57,7 @@ export default function RecommendCal({
   selectedDate,
   setSelectedDate,
   isTabRecommending,
+  refreshKey,
 }: RecommendCalProps) {
   const [songDataList, setSongDataList] = useState<CalendarItem[]>([]);
   const today = dayjs().format('YYYY-MM-DD');
@@ -51,51 +65,70 @@ export default function RecommendCal({
   useEffect(() => {
     const fetchCalendarData = async () => {
       try {
-        const token = await SecureStore.getItemAsync('JWTToken');
-        if (!token) throw new Error('JWT 토큰 없음');
-
         const year = selectedMonth.year();
         const month = selectedMonth.month() + 1;
-        const status = isTabRecommending ? 'recommending' : 'recommended';
 
-        const response = await axios.get(
-          `https://bandnol.app/api/v1/recoms/calendars?year=${year}&month=${month}&status=${status}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
+        // 리스트 API에서 데이터 가져오기 (캘린더 API 대신 사용)
+        const listData = await fetchRecommendListForCalendar();
+        console.log(
+          `[캘린더] 리스트 API 데이터 사용 중:`,
+          JSON.stringify(listData, null, 2),
         );
 
-        const { success, data, error } = response.data;
+        // 선택된 월의 데이터만 필터링하고 변환
+        const calendarData: CalendarItem[] = [];
 
-        if (!success) {
-          console.error('[api/v1/recoms/calendars] success=false:', error);
-          setSongDataList([]);
-          return;
-        }
-
-        if (Array.isArray(data) && data.length === 0) {
-          console.log(`[api/v1/recoms/calendars] ${year}-${month} 데이터 없음`);
-          setSongDataList([]);
-          return;
-        }
+        listData.forEach((item: any) => {
+          const itemDate = dayjs(item.date);
+          if (itemDate.year() === year && itemDate.month() + 1 === month) {
+            // 나의 추천곡 (recommending)
+            if (isTabRecommending && item.recommending) {
+              calendarData.push({
+                id: `recommending-${item.date}`,
+                date: item.date,
+                title: item.recommending.title,
+                artistName: item.recommending.artistName,
+                imageUrl: item.recommending.imageUrl,
+                comment: item.recommending.comment,
+                senderNickname: '나', // 내가 보낸 것이므로
+                recevierNickname: '상대방', // 임시값
+              });
+            }
+            // 추천받은 곡 (recommended)
+            else if (!isTabRecommending && item.recommended) {
+              calendarData.push({
+                id: `recommended-${item.date}`,
+                date: item.date,
+                title: item.recommended.title,
+                artistName: item.recommended.artistName,
+                imageUrl: item.recommended.imageUrl,
+                comment: item.recommended.comment,
+                senderNickname: '상대방', // 상대방이 보낸 것이므로
+                recevierNickname: '나', // 임시값
+              });
+            }
+          }
+        });
 
         console.log(
-          `[api/v1/recoms/calendars] ${year}-${month} 데이터:`,
-          data.length,
+          `[캘린더] ${year}-${month} 변환된 데이터:`,
+          calendarData.length,
           '개',
         );
-        setSongDataList(data);
-      } catch (e: any) {
-        console.error(
-          '❌ [api/v1/recoms/calendars] 요청 실패:',
-          e.message || e,
+        console.log(
+          `[캘린더] 변환된 데이터 상세:`,
+          JSON.stringify(calendarData, null, 2),
         );
+        console.log(`[캘린더] isTabRecommending: ${isTabRecommending}`);
+        setSongDataList(calendarData);
+      } catch (e: any) {
+        console.error('❌ [캘린더] 데이터 로딩 실패:', e.message || e);
         setSongDataList([]);
       }
     };
 
     fetchCalendarData();
-  }, [selectedMonth, isTabRecommending]);
+  }, [selectedMonth, isTabRecommending, refreshKey]);
 
   const dates: CalendarDate[] = useMemo(() => {
     const startOfMonth = selectedMonth.startOf('month');

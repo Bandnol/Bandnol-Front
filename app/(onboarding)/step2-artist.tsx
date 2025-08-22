@@ -158,10 +158,6 @@ const Component = () => {
           next = prev.filter((a) => a.id !== norm.id);
           log('제거:', norm.id, norm.name, '→ 총', next.length);
         } else {
-          if (prev.length >= 6) {
-            log('최대 6명 제한, 추가 무시');
-            return prev;
-          }
           next = [...prev, norm];
           log('추가:', norm.id, norm.name, '→ 총', next.length);
         }
@@ -267,7 +263,7 @@ const Component = () => {
           <Text style={styles.text3}>
             관심 아티스트{'  '}
             <Text style={{ color: Colors.palette.Gray400 }}>
-              {selectedArtists.length}/6
+              {selectedArtists.length}명 선택됨
             </Text>
           </Text>
           <View style={styles.selectedWrap}>

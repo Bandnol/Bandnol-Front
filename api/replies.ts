@@ -1,17 +1,12 @@
-import { API_TOKEN, API_URL } from '@/constants/env';
-import axios from 'axios';
-
-const API_BASE = `${API_URL}/api/v1`;
+import api from '@/hooks/useAxios';
 
 export const fetchReplyComment = async (
   recomsId: string,
   type: 'sent' | 'received',
 ) => {
   try {
-    const url = `${API_BASE}/recoms/${recomsId}/replies?type=${type}`;
-    const res = await axios.get(url, {
-      headers: { Authorization: `Bearer ${API_TOKEN}` },
-    });
+    const url = `/api/v1/recoms/${recomsId}/replies?type=${type}`;
+    const res = await api.get(url);
 
     const d = res.data?.data;
     if (!d) return null;
@@ -21,7 +16,7 @@ export const fetchReplyComment = async (
 
     return { content, nickname };
   } catch (err) {
-    console.error('❌ 답장 조회 실패:', err);
+    console.error('답장 조회 실패:', err);
     return null;
   }
 };

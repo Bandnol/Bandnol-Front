@@ -21,30 +21,73 @@ import DateHeader from '@/components/common/DateHeader';
 import TimePickerModal from '@/components/common/TimePickerModal';
 import { Typography } from '@/constants/typography';
 import { fetchReplyComment } from '@/api/replies';
+import api from '@/hooks/useAxios';
 import ReceiveRecommend from './receiveRecommend';
 
 const defaultAlbumImage = require('@/assets/images/album-cover.jpg'); // 임시 이미지..
 
-export default function MyRecommendSwiper() {
-  const { title, artist, image, recomsId, comment, content } =
-    useLocalSearchParams();
+interface MyRecommendSwiperProps {
+  title?: string;
+  artist?: string;
+  image?: string;
+  recomsId?: string;
+  comment?: string;
+}
+
+export default function MyRecommendSwiper(props?: MyRecommendSwiperProps) {
+  const params = useLocalSearchParams();
+
+  // props가 있으면 props 사용, 없으면 useLocalSearchParams 사용
+  const title = props?.title || params.title;
+  const artist = props?.artist || params.artist;
+  const image = props?.image || params.image;
+  const recomsId = props?.recomsId || params.recomsId;
+  const comment = props?.comment || params.comment;
   const router = useRouter();
   const swiperRef = useRef<any>(null);
-  const [timeLeft, setTimeLeft] = useState(10);
+  const [timeLeft, setTimeLeft] = useState(16); //16초로 변경
   const [isMyCommentVisible, setIsMyCommentVisible] = useState(false);
   const [isReplyCommentVisible, setIsReplyCommentVisible] = useState(false);
   const [isTimePickerVisible, setIsTimePickerVisible] = useState(false);
   const [replyComment, setReplyComment] = useState<string | null>(null);
   const [replySender, setReplySender] = useState<string | null>(null); // 보낸 사람 이름
   const [hasReplied, setHasReplied] = useState(false); // 답장을 보냈는지 상태
+  const [isCheckingReceived, setIsCheckingReceived] = useState(true); // 받은 추천곡 확인 중인지
 
   const albumSource =
     typeof image === 'string' && image.length > 0
       ? { uri: image }
       : defaultAlbumImage;
 
-  // 타이머 시작
+  // 받은 추천곡이 있는지 확인
   useEffect(() => {
+    const checkReceivedRecommend = async () => {
+      try {
+        const response = await api.get('/api/v1/recoms/received');
+        console.log('📦 received recoms response:', response.data);
+
+        if (
+          response.data?.success &&
+          response.data?.data &&
+          !Array.isArray(response.data.data)
+        ) {
+          // 받은 추천곡이 있으면 바로 receiveRecommend 페이지 표시
+          setHasReplied(true);
+        }
+      } catch (error) {
+        console.error('❌ received recoms 확인 오류:', error);
+      } finally {
+        setIsCheckingReceived(false);
+      }
+    };
+
+    checkReceivedRecommend();
+  }, []);
+
+  // 타이머 시작 (받은 추천곡이 없을 때만)
+  useEffect(() => {
+    if (hasReplied || isCheckingReceived) return; // 이미 받은 추천이 있거나 확인 중이면 타이머 시작 안함
+
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -53,10 +96,10 @@ export default function MyRecommendSwiper() {
         }
         return prev - 1;
       });
-    }, 1000); // 작업하기 위해 잠깐 바꿔 둠
+    }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [hasReplied, isCheckingReceived]);
 
   // 타이머 종료 시 두 번째 페이지를 추천받은 곡으로 변경
   useEffect(() => {
@@ -73,7 +116,10 @@ export default function MyRecommendSwiper() {
   useEffect(() => {
     const getReply = async () => {
       try {
-        const reply = await fetchReplyComment(recomsId, 'received');
+        const recomsIdString = Array.isArray(recomsId) ? recomsId[0] : recomsId;
+        if (!recomsIdString) return;
+
+        const reply = await fetchReplyComment(recomsIdString, 'received');
         console.log('📦 reply:', reply);
 
         if (reply) {
@@ -182,7 +228,9 @@ export default function MyRecommendSwiper() {
         {/* 두 번째 페이지: 답장 상태에 따라 동적 변경 */}
         {hasReplied ? (
           /* 답장을 보낸 후: 추천받은 곡 페이지 */
-          <ReceiveRecommend onReplyComplete={() => swiperRef.current?.scrollTo(0)} />
+          <ReceiveRecommend
+            onReplyComplete={() => swiperRef.current?.scrollTo(0)}
+          />
         ) : (
           /* 답장을 보내기 전: 추천 도착 타이머 */
           <View style={styles.container}>
@@ -207,12 +255,14 @@ export default function MyRecommendSwiper() {
                 <View style={styles.BandnolLogo}>
                   <BandnolIcon width={48} height={48} />
                 </View>
-                <Text style={styles.countdownLabel}>오늘의 추천곡 도착까지</Text>
+                <Text style={styles.countdownLabel}>
+                  오늘의 추천곡 도착까지
+                </Text>
                 <Text style={styles.countdown}>{formatTime(timeLeft)}</Text>
               </View>
 
               {/* 하단 설정 버튼 */}
-              <Pressable 
+              <Pressable
                 style={styles.settingRow}
                 onPress={() => setIsTimePickerVisible(true)}
               >
