@@ -8,6 +8,8 @@ import GuestIcon from '@/assets/auth/splash/GuestIcon.svg';
 import SignupIcon from '@/assets/auth/splash/signupIcon.svg';
 import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
+import * as SecureStore from 'expo-secure-store';
+import { useAuthStore } from '@/store/auth';
 
 export const options = {
   headerShown: false,
@@ -16,8 +18,24 @@ export const options = {
 export default function SplashScreen() {
   const router = useRouter();
 
-  const handleGuest = () => {
-    router.replace('/(tabs)/post'); // 로그인 없이 바로 홈으로
+  const handleGuest = async () => {
+    try {
+      await SecureStore.deleteItemAsync('accessToken');
+      await SecureStore.deleteItemAsync('refreshToken');
+      console.log('[GUEST] 저장된 토큰 삭제 완료');
+
+      const token = await SecureStore.getItemAsync('accessToken');
+      const refresh = await SecureStore.getItemAsync('refreshToken');
+      console.log('[GUEST] 삭제 후 accessToken:', token);
+      console.log('[GUEST] 삭제 후 refreshToken:', refresh);
+
+      useAuthStore.getState().clearJWTToken();
+      console.log('[GUEST] Zustand JWTToken 초기화 완료');
+
+      router.replace('/(tabs)/post');
+    } catch (error) {
+      console.error('[GUEST] 토큰 삭제 중 오류 발생:', error);
+    }
   };
 
   const handleLogin = () => {
