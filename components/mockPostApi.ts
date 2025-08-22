@@ -83,7 +83,7 @@ export const mockPostApi: MockData[] = [
   {
     id: '16',
     comment: '이 뮤직비디오는 정말 예술적이에요',
-    image: require('@/assets/images/posttabdummy/16.webp'),
+    image: require('@/assets/images/posttabdummy/08.webp'),
   },
   {
     id: '17',
