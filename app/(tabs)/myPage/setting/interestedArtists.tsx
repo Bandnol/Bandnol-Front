@@ -378,7 +378,7 @@ export default function InterestedArtists() {
           <Text style={styles.text3}>
             관심 아티스트{'  '}
             <Text style={{ color: Colors.palette.Gray400 }}>
-              {likedArtists.length}/6명
+              {likedArtists.length}명
             </Text>
           </Text>
           <View style={styles.selectedWrap}>

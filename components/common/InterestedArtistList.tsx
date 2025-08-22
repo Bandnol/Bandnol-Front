@@ -56,8 +56,7 @@ const InterestedArtistList = ({ selectedArtists, onArtistPress, showRemoveButton
 
   // Make a 3-column grid layout stable by adding placeholders when items < multiple of 3
   const buildGrid = (items: Artist[]) => {
-    const max = 6; // we already slice to 6 below
-    const sliced = (items ?? []).slice(0, max);
+    const sliced = (items ?? []);
     const remainder = sliced.length % 3;
     const needPlaceholders = remainder === 0 ? 0 : 3 - remainder; // 1->2, 2->1, 0->0
     const placeholders = Array.from({ length: needPlaceholders }, (_, i) => ({
@@ -72,10 +71,10 @@ const InterestedArtistList = ({ selectedArtists, onArtistPress, showRemoveButton
   // Use selectedArtists if provided and initialized, otherwise use persisted data
   const source = initialized && selectedArtists != null ? selectedArtists : persisted;
   const list = Array.isArray(source) ? source : [];
-  const raw = list.slice(0, 6);
+  const raw = list;
   const data = buildGrid(raw);
   console.log('[InterestedArtistList] selectedArtists:', selectedArtists);
-  console.log('[InterestedArtistList] data (first 6):', data);
+  console.log('[InterestedArtistList] data:', data);
 
   return (
     <View style={styles.container}>
@@ -87,7 +86,7 @@ const InterestedArtistList = ({ selectedArtists, onArtistPress, showRemoveButton
           const cellStyle = [
             styles.artistContainer,
             idx % 3 === 2 && styles.artistContainerThird,
-          ] as const;
+          ];
           return isPlaceholder ? (
             <View key={item.id} style={cellStyle}>
               <View style={styles.artistImageWrapper} />
