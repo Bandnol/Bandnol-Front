@@ -267,7 +267,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
   },
-
   textfieldParent: {
     gap: 16,
     alignSelf: 'stretch',
