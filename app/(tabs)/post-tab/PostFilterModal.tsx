@@ -152,23 +152,20 @@ const styles = StyleSheet.create({
   button: {
     paddingVertical: 8,
     paddingHorizontal: 14,
-    backgroundColor: '#fff',
+    backgroundColor: '#333',
     borderRadius: 20,
   },
   selectedButton: {
-    backgroundColor: '#222',
+    backgroundColor: '#F4F4F4',
   },
   buttonText: {
     ...Typography.subtitle4,
-    color: '#000',
-    fontSize: 12,
-    fontWeight: '600',
+    color: '#B3B3B3',
   },
   selectedButtonText: {
     ...Typography.subtitle4,
     fontSize: 12,
-
-    color: '#B3B3B3',
+    color: '#333',
     fontWeight: '600',
   },
 });
