@@ -6,6 +6,9 @@ import X from '@/assets/icons/size_m/x.svg';
 import { Typography } from '@/constants/typography';
 import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
+import Download from '@/assets/icons/download.svg';
+import * as MediaLibrary from 'expo-media-library';
+
 import { useRef } from 'react';
 import {
   Alert,
@@ -54,6 +57,28 @@ export default function RecShareModal({
     await Clipboard.setStringAsync(shareUrl);
     Alert.alert('링크가 복사되었습니다.');
   };
+
+  const handleSave = async () => {
+    try {
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('저장 권한이 필요합니다.');
+        return;
+      }
+
+      const uri = await viewShotRefInsta.current?.capture?.();
+      if (!uri) throw new Error('캡처 실패');
+
+      const asset = await MediaLibrary.createAssetAsync(uri);
+      await MediaLibrary.createAlbumAsync('Bandnol', asset, false);
+
+      Alert.alert('사진이 저장되었습니다!');
+    } catch (e) {
+      console.error(e);
+      Alert.alert('저장 실패', '이미지를 저장하는 도중 문제가 발생했습니다.');
+    }
+  };
+
   const handleShareToInstagramStory = async () => {
     if (Platform.OS === 'ios') {
       try {
@@ -268,7 +293,13 @@ export default function RecShareModal({
               </View>
               <Text style={styles.shareText}>인스타그램으로 {'\n'} 공유</Text>
             </Pressable>
-
+            <View style={styles.shareItem}>
+              <Pressable style={styles.shareButton} onPress={handleSave}>
+                <Download />
+              </Pressable>
+              <Text style={styles.shareText}>밴놀 카드 저장하기</Text>
+            </View>
+            {/*
             <View style={styles.shareItem}>
               <Pressable style={styles.shareButton} onPress={handleShareToX}>
                 <X />
@@ -282,6 +313,8 @@ export default function RecShareModal({
               </Pressable>
               <Text style={styles.shareText}>링크 복사</Text>
             </View>
+
+            */}
           </View>
         </Modal>
       </View>
@@ -493,7 +526,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 15,
+    gap: 45,
     width: '70%',
   },
   shareItem: {
