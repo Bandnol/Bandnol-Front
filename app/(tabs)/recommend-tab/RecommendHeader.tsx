@@ -45,7 +45,7 @@ export default function RecommendHeader({
           <Dropdown />
         </TouchableOpacity>
 
-        <TouchableOpacity>{isThisMonth ? <Report /> : null}</TouchableOpacity>
+        {/* <TouchableOpacity>{isThisMonth ? <Report /> : null}</TouchableOpacity> */}
       </View>
 
       <View style={styles.rightGroup}>
