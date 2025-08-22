@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Logo from '@/assets/auth/splash/logo.svg';
 import LoginIcon from '@/assets/auth/splash/loginIcon.svg';
 import StatusBarHeader from '@/components/common/StatusBarHeader';
+import ReactivationModal from '@/components/common/ReactivationModal';
 import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/typography';
 import { useAuth } from '@/hooks/useAuth';
@@ -31,7 +32,8 @@ export default function LoginScreen() {
   const [ownId, setOwnId] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isBackModalVisible, setIsBackModalVisible] = useState(false);
+  const [showReactivationModal, setShowReactivationModal] = useState(false);
+  const [userNickname, setUserNickname] = useState('');
 
   const onSubmit = async () => {
     console.log('[Login] submit', ownId);
@@ -41,9 +43,16 @@ export default function LoginScreen() {
     }
     try {
       setLoading(true);
-      await login({ ownId, password });
+      const result = await login({ ownId, password });
       console.log('[Login] success → /(tabs)/home');
-      router.replace('/(tabs)/home');
+      
+      // 재활성화 확인 (회원탈퇴한 유저가 로그인 시 isActive가 true)
+      if (result.isActive === true && result.user?.nickname) {
+        setUserNickname(result.user.nickname);
+        setShowReactivationModal(true);
+      } else {
+        router.replace('/(tabs)/home');
+      }
     } catch (e: any) {
       console.log('[Login] error', e?.message || e);
       Alert.alert(
@@ -53,6 +62,11 @@ export default function LoginScreen() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleReactivationConfirm = () => {
+    setShowReactivationModal(false);
+    router.replace('/(tabs)/home');
   };
 
   return (
@@ -95,6 +109,13 @@ export default function LoginScreen() {
           </View>
           <View style={{ marginVertical: 44 }}></View>
         </SafeAreaView>
+        
+        {/* 재활성화 모달 */}
+        <ReactivationModal
+          visible={showReactivationModal}
+          nickname={userNickname}
+          onConfirm={handleReactivationConfirm}
+        />
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   );
