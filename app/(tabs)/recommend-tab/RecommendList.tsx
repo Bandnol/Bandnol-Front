@@ -10,7 +10,14 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 import { Typography } from '@/constants/typography';
 
@@ -152,14 +159,14 @@ const RecommendList = forwardRef<RecommendListRef, RecommendListProps>(
                       ? '나의 추천곡'
                       : '추천 받은 곡'}
                   </Text>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.myrecInfo}
                     onPress={() => {
                       const firstArtistId = sub.song.artistIds?.[0];
                       console.log('[RecommendList] artist pressed:', {
                         artistIds: sub.song.artistIds,
                         firstArtistId,
-                        artistName: sub.song.artistName
+                        artistName: sub.song.artistName,
                       });
                       if (firstArtistId) {
                         router.push(`/artist/${firstArtistId}`);
@@ -192,7 +199,9 @@ const RecommendList = forwardRef<RecommendListRef, RecommendListProps>(
                         marginHorizontal: 6,
                       }}
                     />
-                    <Text style={styles.myrecComment}>{sub.song.comment}</Text>
+                    <Text style={styles.myrecComment}>
+                      {sub.song.comment?.trim()}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               ))}
