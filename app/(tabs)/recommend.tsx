@@ -8,9 +8,9 @@ import { Typography } from '@/constants/typography';
 import { API_URL } from '@/constants/env';
 import axios from 'axios';
 import dayjs from 'dayjs';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 type RecommendItem = {
@@ -88,6 +88,7 @@ export default function RecommendScreen() {
 
   const [data, setData] = useState<RecommendItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [calendarRefreshKey, setCalendarRefreshKey] = useState(0);
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -116,6 +117,13 @@ export default function RecommendScreen() {
     };
     load();
   }, []);
+
+  // 화면에 포커스될 때마다 캘린더 새로고침
+  useFocusEffect(
+    useCallback(() => {
+      setCalendarRefreshKey(prev => prev + 1);
+    }, [])
+  );
 
   return (
     <>
@@ -201,6 +209,7 @@ export default function RecommendScreen() {
               selectedDate={selectedDate}
               setSelectedDate={setSelectedDate}
               isTabRecommending={isTabRecommending}
+              refreshKey={calendarRefreshKey}
             />
           ) : data.length === 0 ? (
             <View style={styles.emptyBox}>
