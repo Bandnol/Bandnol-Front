@@ -15,23 +15,42 @@ import BackArrowIcon from '@/assets/icons/back-arrow.svg';
 import ProfileImage from '@/assets/images/profile.png';
 import { Typography } from '@/constants/typography';
 
+import P1 from '@/assets/images/followerdummy/profile1.jpg';
+import P2 from '@/assets/images/followerdummy/profile2.jpg';
+import P3 from '@/assets/images/followerdummy/profile3.jpg';
+import P4 from '@/assets/images/followerdummy/profile4.jpg';
+import P5 from '@/assets/images/followerdummy/profile5.jpg';
+import P6 from '@/assets/images/followerdummy/profile6.jpg';
+import P7 from '@/assets/images/followerdummy/profile7.jpg';
+import P8 from '@/assets/images/followerdummy/profile8.jpg';
+import P9 from '@/assets/images/followerdummy/profile9.jpg';
+
+const AVATARS = [P1, P2, P3, P4, P5, P6, P7, P8, P9];
+
+const pickAvatarById = (id: number, offset = 0) => {
+  const idx = (id + offset) % AVATARS.length;
+  return AVATARS[idx];
+};
+
 export default function FollowPage() {
   const [followerList, setFollowerList] = useState([
     { id: 1, name: '사요 sayo', username: '@sayoxx', isMutual: true },
-    { id: 2, name: '사요 sayo', username: '@sayoxx', isMutual: false },
-    { id: 3, name: '사요 sayo', username: '@sayoxx', isMutual: true },
-    { id: 4, name: '사요 sayo', username: '@sayoxx', isMutual: true },
-    { id: 5, name: '사요 sayo', username: '@sayoxx', isMutual: false },
-    { id: 6, name: '사요 sayo', username: '@sayoxx', isMutual: true },
-    { id: 7, name: '사요 sayo', username: '@sayoxx', isMutual: true },
+    { id: 2, name: '징니 jing', username: '@jingni', isMutual: false },
+    { id: 3, name: '이즈 izz', username: '@ddaiz', isMutual: true },
+    { id: 4, name: '낑깡 Kaang', username: '@KkingKang', isMutual: true },
+    { id: 5, name: '리예 leeyeah', username: '@leeyes', isMutual: false },
+    { id: 6, name: '오즈 Oooz', username: '@0ozO0z', isMutual: true },
+    { id: 7, name: '보현 bobo', username: '@hyunb', isMutual: true },
+    { id: 8, name: '무니 mooney', username: '@moonmoon', isMutual: true },
+    { id: 9, name: '깡다 kangda', username: '@kkak2ng', isMutual: true },
   ]);
 
   const followingList = [
     { id: 1, name: '사요 sayo', username: '@sayoxx', followsMe: true },
-    { id: 2, name: '사요 sayo', username: '@sayoxx', followsMe: true },
-    { id: 3, name: '사요 sayo', username: '@sayoxx', followsMe: false },
-    { id: 4, name: '사요 sayo', username: '@sayoxx', followsMe: false },
-    { id: 5, name: '사요 sayo', username: '@sayoxx', followsMe: true },
+    { id: 5, name: '리예 leeyeah', username: '@leeyes', followsMe: true },
+    { id: 7, name: '보현 bobo', username: '@hyunb', followsMe: false },
+    { id: 9, name: '깡다 kangda', username: '@kkak2ng', followsMe: false },
+    { id: 2, name: '징니 jing', username: '@jingni', followsMe: true },
   ];
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'followers' | 'following'>(
@@ -106,7 +125,10 @@ export default function FollowPage() {
           {activeTab === 'followers'
             ? followerList.map((user) => (
                 <View style={styles.userBox} key={user.id}>
-                  <Image source={ProfileImage} style={styles.avatar} />
+                  <Image
+                    source={pickAvatarById(user.id)}
+                    style={styles.avatar}
+                  />
                   <View style={styles.userInfo}>
                     <Text style={styles.name}>{user.name}</Text>
                     <Text style={styles.username}>{user.username}</Text>
@@ -131,7 +153,10 @@ export default function FollowPage() {
               ))
             : followingList.map((user) => (
                 <View style={styles.userBox} key={user.id}>
-                  <Image source={ProfileImage} style={styles.avatar} />
+                  <Image
+                    source={pickAvatarById(user.id)}
+                    style={styles.avatar}
+                  />
                   <View style={styles.userInfo}>
                     <Text style={styles.name}>{user.name}</Text>
                     <Text style={styles.username}>{user.username}</Text>
