@@ -23,6 +23,7 @@ import { Typography } from '@/constants/typography';
 import { fetchReplyComment } from '@/api/replies';
 import api from '@/hooks/useAxios';
 import ReceiveRecommend from './receiveRecommend';
+import { SentRecomsResponse, fetchSentRecoms } from '@/api/sentRecoms'; // 🚀추가: fetchSentRecoms 임포트
 
 const defaultAlbumImage = require('@/assets/images/album-cover.jpg'); // 임시 이미지..
 
@@ -45,7 +46,8 @@ export default function MyRecommendSwiper(props?: MyRecommendSwiperProps) {
   const comment = props?.comment || params.comment;
   const router = useRouter();
   const swiperRef = useRef<any>(null);
-  const [timeLeft, setTimeLeft] = useState(16); //16초로 변경
+  const [timeLeft, setTimeLeft] = useState(0); // 초기값 0으로 변경
+  //const [timeLeft, setTimeLeft] = useState(16); //16초로 변경
   const [isMyCommentVisible, setIsMyCommentVisible] = useState(false);
   const [isReplyCommentVisible, setIsReplyCommentVisible] = useState(false);
   const [isTimePickerVisible, setIsTimePickerVisible] = useState(false);
@@ -58,6 +60,45 @@ export default function MyRecommendSwiper(props?: MyRecommendSwiperProps) {
     typeof image === 'string' && image.length > 0
       ? { uri: image }
       : defaultAlbumImage;
+
+  // recomsTime을 가져와서 타이머 로직을 결정
+  useEffect(() => {
+    const fetchRecomsData = async () => {
+      try {
+        const response = await fetchSentRecoms();
+        const data = response.data;
+        if (data && !Array.isArray(data)) {
+          const recomsTime = data.sender.recomsTime;
+          const now = new Date();
+          const recomsHour = parseInt(recomsTime.substring(0, 2), 10);
+          const recomsMinute = parseInt(recomsTime.substring(2, 4), 10);
+          const recomsDate = new Date();
+          recomsDate.setHours(recomsHour, recomsMinute, 0, 0);
+
+          const timeDifferenceInSeconds =
+            (recomsDate.getTime() - now.getTime()) / 1000;
+
+          if (timeDifferenceInSeconds > 0) {
+            // 추천 시간이 아직 오지 않은 경우
+            setTimeLeft(Math.floor(timeDifferenceInSeconds));
+            setHasReplied(false);
+          } else {
+            // 추천 시간이 이미 지난 경우
+            setTimeLeft(16); // 16초 타이머 시작
+            setHasReplied(false);
+          }
+        }
+      } catch (error) {
+        console.error('❌ recomsTime 데이터 확인 오류:', error);
+        // 오류 발생 시 기본값 (예: 15초) 설정
+        setTimeLeft(15);
+      } finally {
+        setIsCheckingReceived(false);
+      }
+    };
+
+    fetchRecomsData();
+  }, []);
 
   // 받은 추천곡이 있는지 확인
   useEffect(() => {
@@ -84,9 +125,9 @@ export default function MyRecommendSwiper(props?: MyRecommendSwiperProps) {
     checkReceivedRecommend();
   }, []);
 
-  // 타이머 시작 (받은 추천곡이 없을 때만)
+  // 받은 추천곡 유무와 관계없이 타이머 시작
   useEffect(() => {
-    if (hasReplied || isCheckingReceived) return; // 이미 받은 추천이 있거나 확인 중이면 타이머 시작 안함
+    if (isCheckingReceived) return;
 
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
@@ -99,20 +140,21 @@ export default function MyRecommendSwiper(props?: MyRecommendSwiperProps) {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [hasReplied, isCheckingReceived]);
+  }, [isCheckingReceived]);
 
-  // 타이머 종료 시 두 번째 페이지를 추천받은 곡으로 변경
+  // 타이머 종료 시 hasReplied 상태 변경
   useEffect(() => {
-    if (timeLeft === 0) {
+    if (!isCheckingReceived && timeLeft === 0) {
       setHasReplied(true);
     }
-  }, [timeLeft]);
+  }, [timeLeft, isCheckingReceived]);
 
   const formatTime = (sec: number) => {
     const min = String(Math.floor(sec / 60)).padStart(2, '0');
     const secRemain = String(sec % 60).padStart(2, '0');
     return `00:${min}:${secRemain}`;
   };
+
   useEffect(() => {
     const getReply = async () => {
       try {
@@ -139,7 +181,7 @@ export default function MyRecommendSwiper(props?: MyRecommendSwiperProps) {
     if (recomsId) {
       getReply();
     }
-  }, [recomsId]); // 답장 조회하기 API
+  }, [recomsId]);
 
   return (
     <>
