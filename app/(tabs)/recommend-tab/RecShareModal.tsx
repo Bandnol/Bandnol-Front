@@ -22,7 +22,7 @@ import {
 } from 'react-native';
 import Modal from 'react-native-modal';
 
-//import Share, { Social } from 'react-native-share';
+import Share, { Social } from 'react-native-share';
 
 import Svg, { Circle } from 'react-native-svg';
 import ViewShot from 'react-native-view-shot';
