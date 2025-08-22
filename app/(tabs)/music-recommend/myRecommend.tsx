@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import {
   Image,
   ImageBackground,
@@ -23,7 +23,7 @@ import { Typography } from '@/constants/typography';
 import { fetchReplyComment } from '@/api/replies';
 import api from '@/hooks/useAxios';
 import ReceiveRecommend from './receiveRecommend';
-import { SentRecomsResponse, fetchSentRecoms } from '@/api/sentRecoms'; // 🚀추가: fetchSentRecoms 임포트
+import { SentRecomsResponse, fetchSentRecoms } from '@/api/sentRecoms';
 
 const defaultAlbumImage = require('@/assets/images/album-cover.jpg'); // 임시 이미지..
 
@@ -55,6 +55,10 @@ export default function MyRecommendSwiper(props?: MyRecommendSwiperProps) {
   const [replySender, setReplySender] = useState<string | null>(null); // 보낸 사람 이름
   const [hasReplied, setHasReplied] = useState(false); // 답장을 보냈는지 상태
   const [isCheckingReceived, setIsCheckingReceived] = useState(true); // 받은 추천곡 확인 중인지
+  // 나의 코멘트를 저장할 상태 추가
+  const [myComment, setMyComment] = useState<string | null>(null);
+  // 로딩 상태 관리
+  const [isCommentLoading, setIsCommentLoading] = useState(false);
 
   const albumSource =
     typeof image === 'string' && image.length > 0
@@ -125,6 +129,84 @@ export default function MyRecommendSwiper(props?: MyRecommendSwiperProps) {
     checkReceivedRecommend();
   }, []);
 
+  // 내가 보낸 코멘트 조회 로직 개선
+  const fetchMyComment = useCallback(async () => {
+    // recomsId 유효성 검사 강화
+    const recomsIdString = Array.isArray(recomsId) ? recomsId[0] : recomsId;
+
+    if (
+      !recomsIdString ||
+      typeof recomsIdString !== 'string' ||
+      recomsIdString.length === 0
+    ) {
+      console.log('🔥 유효한 recomsId가 없습니다. 코멘트 조회를 건너뜁니다.');
+      setMyComment(null);
+      return;
+    }
+
+    setIsCommentLoading(true);
+    try {
+      // 내가 보낸 코멘트를 조회하기 위해 type=sent로 변경
+      const response = await api.get(
+        `/api/v1/recoms/${recomsIdString}/comments?type=sent`,
+      );
+
+      console.log('🔥 내가 보낸 코멘트 API 응답:', response.data);
+
+      // 응답 구조에 맞게 데이터 추출
+      if (response.data?.success && response.data?.data) {
+        const commentData = response.data.data;
+        if (commentData.comment && typeof commentData.comment === 'string') {
+          setMyComment(commentData.comment);
+          console.log('🔥 내가 보낸 코멘트 설정 완료:', commentData.comment);
+        } else {
+          setMyComment(null);
+          console.log('🔥 코멘트 데이터가 없습니다.');
+        }
+      } else {
+        setMyComment(null);
+        console.log('🔥 API 응답에 문제가 있습니다.');
+      }
+    } catch (error) {
+      console.error('🔥 내가 보낸 코멘트 조회 오류:', error);
+      // 에러 상황에 따른 처리
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response: { status: number } };
+        if (axiosError.response?.status === 404) {
+          console.log('🔥 아직 보낸 코멘트가 없습니다.');
+          setMyComment(null);
+        } else {
+          console.error('🔥 코멘트 조회 중 예상치 못한 오류 발생');
+          setMyComment(null);
+        }
+      } else {
+        console.error('🔥 코멘트 조회 중 알 수 없는 오류 발생');
+        setMyComment(null);
+      }
+    } finally {
+      setIsCommentLoading(false);
+    }
+  }, [recomsId]);
+
+  // useFocusEffect를 사용하여 화면 포커스 시마다 코멘트 재조회
+  useFocusEffect(
+    useCallback(() => {
+      // recomsId가 있을 때만 API 호출
+      if (recomsId) {
+        console.log('🔥 화면 포커스 - 코멘트 조회 시작');
+        fetchMyComment();
+      }
+    }, [fetchMyComment, recomsId]),
+  );
+
+  // 추가: recomsId가 변경될 때마다 코멘트 다시 조회
+  useEffect(() => {
+    if (recomsId) {
+      console.log('🔥 recomsId 변경됨 - 코멘트 재조회');
+      fetchMyComment();
+    }
+  }, [recomsId, fetchMyComment]);
+
   // 받은 추천곡 유무와 관계없이 타이머 시작
   useEffect(() => {
     if (isCheckingReceived) return;
@@ -150,9 +232,10 @@ export default function MyRecommendSwiper(props?: MyRecommendSwiperProps) {
   }, [timeLeft, isCheckingReceived]);
 
   const formatTime = (sec: number) => {
-    const min = String(Math.floor(sec / 60)).padStart(2, '0');
+    const hour = String(Math.floor(sec / 3600)).padStart(2, '0');
+    const min = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
     const secRemain = String(sec % 60).padStart(2, '0');
-    return `00:${min}:${secRemain}`;
+    return `${hour}:${min}:${secRemain}`;
   };
 
   useEffect(() => {
@@ -320,7 +403,7 @@ export default function MyRecommendSwiper(props?: MyRecommendSwiperProps) {
         visible={isMyCommentVisible}
         onClose={() => setIsMyCommentVisible(false)}
         title="MY COMMENT"
-        description={comment as string}
+        description={myComment || ''} // myComment 상태 사용
         closeColor="#1F1F1F"
         closeText="닫기"
       />
