@@ -244,7 +244,7 @@ export default function MyRecommendSwiper(props?: MyRecommendSwiperProps) {
         const recomsIdString = Array.isArray(recomsId) ? recomsId[0] : recomsId;
         if (!recomsIdString) return;
 
-        const reply = await fetchReplyComment(recomsIdString, 'received');
+        const reply = await fetchReplyComment(recomsIdString, 'sent');
         console.log('📦 reply:', reply);
 
         if (reply) {
