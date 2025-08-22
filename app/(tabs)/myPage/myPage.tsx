@@ -23,13 +23,13 @@ import BookmarkFillIcon from '@/assets/icons/bookmark-fill.svg';
 import ClipIcon from '@/assets/icons/clip.svg';
 import CloseIcon from '@/assets/icons/close.svg';
 import LikeIcon from '@/assets/icons/heart.svg';
+import LikeFillIcon from '@/assets/icons/size_l/icon=heart.svg';
 import MoreIcon from '@/assets/icons/more.svg';
 import SearchIcon from '@/assets/icons/search.svg';
 import SettingIcon2 from '@/assets/icons/setting.svg';
 import ShareIcon from '@/assets/icons/share.svg';
 import WriteIcon from '@/assets/icons/write.svg';
 import DummyImage from '@/assets/images/dummy1.png';
-import ProfileImage from '@/assets/images/profile.png';
 import { Typography } from '@/constants/typography';
 import { useUserOwnId } from '@/store/userStore';
 import { getUserProfile } from '@/api/user';
@@ -37,30 +37,7 @@ import { Colors } from '@/constants/Colors';
 
 const screenWidth = Dimensions.get('window').width;
 
-const postData = [
-  {
-    id: 1,
-    username: 'sayoxx',
-    time: '2시간',
-    visibility: '전체공개',
-    text: '#오늘공연 오늘 잭킹콩 7주년 공연에 다녀왔다ㅜㅜ 너무 좋았다 투트럼펫 너무 짱이다~',
-    hasImage: true,
-    isBookmarked: false,
-    likeCount: 1423,
-    bookmarkCount: 114,
-  },
-  {
-    id: 2,
-    username: 'sayoxx',
-    time: '3시간',
-    visibility: '비공개',
-    text: '#오늘공연 오늘 공연 skrr 사커고 싶다~~',
-    hasImage: false,
-    isBookmarked: false,
-    likeCount: 300,
-    bookmarkCount: 12,
-  },
-];
+// postData는 실제 사용자 정보로 동적 생성될 예정
 
 interface AppUserProfile {
   nickname: string;
@@ -101,18 +78,67 @@ export default function MyPage() {
   const [activeTab, setActiveTab] = useState<'post' | 'media' | 'bookmark'>(
     'post',
   );
-  const [posts, setPosts] = useState(postData);
+  const [posts, setPosts] = useState<any[]>([]);
   const [isShareModalVisible, setIsShareModalVisible] = useState(false);
 
+  // 사용자 정보로 포스트 데이터 생성
+  useEffect(() => {
+    if (userProfile) {
+      const userPosts = [
+        {
+          id: 1,
+          username: userProfile.nickname,
+          profileImage: userProfile.photo,
+          time: '2시간',
+          visibility: '전체공개',
+          text: '#오늘공연 오늘 잭킹콩 7주년 공연에 다녀왔다ㅜㅜ 너무 좋았다 투트럼펫 너무 짱이다~',
+          hasImage: true,
+          isBookmarked: false,
+          isLiked: false,
+          likeCount: 1423,
+          bookmarkCount: 114,
+        },
+        {
+          id: 2,
+          username: userProfile.nickname,
+          profileImage: userProfile.photo,
+          time: '3시간',
+          visibility: '비공개',
+          text: '#오늘공연 오늘 공연 skrr 사커고 싶다~~',
+          hasImage: false,
+          isBookmarked: false,
+          isLiked: false,
+          likeCount: 300,
+          bookmarkCount: 12,
+        },
+      ];
+      setPosts(userPosts);
+    }
+  }, [userProfile]);
+
   const handleToggleBookmark = (id: number) => {
-    setPosts((prev) =>
-      prev.map((post) =>
+    setPosts((prev: any[]) =>
+      prev.map((post: any) =>
         post.id === id ? { ...post, isBookmarked: !post.isBookmarked } : post,
       ),
     );
   };
 
-  const filteredPosts = postData.filter((post) => {
+  const handleToggleLike = (id: number) => {
+    setPosts((prev: any[]) =>
+      prev.map((post: any) =>
+        post.id === id
+          ? {
+              ...post,
+              isLiked: !post.isLiked,
+              likeCount: post.isLiked ? post.likeCount - 1 : post.likeCount + 1,
+            }
+          : post,
+      ),
+    );
+  };
+
+  const filteredPosts = posts.filter((post: any) => {
     if (activeTab === 'post') return true;
     if (activeTab === 'media') return post.hasImage;
     if (activeTab === 'bookmark') return post.isBookmarked;
@@ -370,11 +396,18 @@ export default function MyPage() {
         </View>
 
         <View style={styles.scrollContainer}>
-          {posts.map((post, i) => (
+          {filteredPosts.map((post: any, i: number) => (
             <View key={post.id ?? i} style={styles.postContainer}>
               {/* 1. 유저 정보 + 더보기 */}
               <View style={styles.userRow}>
-                <Image source={ProfileImage} style={styles.userImage} />
+                <Image
+                  source={
+                    post.profileImage
+                      ? { uri: post.profileImage }
+                      : require('@/assets/images/profile.png')
+                  }
+                  style={styles.userImage}
+                />
                 <Text style={styles.username}>{post.username}</Text>
                 <Text style={styles.postTime}>{post.time}</Text>
                 <Text style={styles.showtext}>{post.visibility}</Text>
@@ -400,7 +433,13 @@ export default function MyPage() {
 
               {/* 4. 좋아요 / 북마크 */}
               <View style={styles.actionRow}>
-                <LikeIcon width={18} height={18} />
+                <TouchableOpacity onPress={() => handleToggleLike(post.id)}>
+                  {post.isLiked ? (
+                    <LikeFillIcon width={18} height={18} />
+                  ) : (
+                    <LikeIcon width={18} height={18} />
+                  )}
+                </TouchableOpacity>
                 <Text
                   style={[
                     styles.actionText,
