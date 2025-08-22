@@ -30,7 +30,7 @@ export default function MyRecommendSwiper() {
     useLocalSearchParams();
   const router = useRouter();
   const swiperRef = useRef<any>(null);
-  const [timeLeft, setTimeLeft] = useState(10);
+  const [timeLeft, setTimeLeft] = useState(16);
   const [isMyCommentVisible, setIsMyCommentVisible] = useState(false);
   const [isReplyCommentVisible, setIsReplyCommentVisible] = useState(false);
   const [isTimePickerVisible, setIsTimePickerVisible] = useState(false);
@@ -182,7 +182,9 @@ export default function MyRecommendSwiper() {
         {/* 두 번째 페이지: 답장 상태에 따라 동적 변경 */}
         {hasReplied ? (
           /* 답장을 보낸 후: 추천받은 곡 페이지 */
-          <ReceiveRecommend onReplyComplete={() => swiperRef.current?.scrollTo(0)} />
+          <ReceiveRecommend
+            onReplyComplete={() => swiperRef.current?.scrollTo(0)}
+          />
         ) : (
           /* 답장을 보내기 전: 추천 도착 타이머 */
           <View style={styles.container}>
@@ -207,12 +209,14 @@ export default function MyRecommendSwiper() {
                 <View style={styles.BandnolLogo}>
                   <BandnolIcon width={48} height={48} />
                 </View>
-                <Text style={styles.countdownLabel}>오늘의 추천곡 도착까지</Text>
+                <Text style={styles.countdownLabel}>
+                  오늘의 추천곡 도착까지
+                </Text>
                 <Text style={styles.countdown}>{formatTime(timeLeft)}</Text>
               </View>
 
               {/* 하단 설정 버튼 */}
-              <Pressable 
+              <Pressable
                 style={styles.settingRow}
                 onPress={() => setIsTimePickerVisible(true)}
               >

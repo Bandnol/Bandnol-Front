@@ -11,6 +11,7 @@ import {
   ScrollView,
   ActivityIndicator,
   RefreshControl,
+  StatusBar,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '@/constants/Colors';
@@ -20,6 +21,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as SecureStore from 'expo-secure-store';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import BackIcon from '@/assets/auth/inquiry/Vector.svg';
+
+// 디자인에 맞춘 상수값 정의
+const HEADER_H = 300;
+const CONTENT_H = 604;
+const AVATAR_SIZE = 100;
+const OVERLAY_START = 0.3;
 
 // API 응답 타입(필요 속성만 정의)
 interface ArtistDetail {
@@ -254,126 +261,68 @@ export default function ArtistPage() {
   const fansLabel = `${artist.fanCount?.toLocaleString?.() ?? 0} 명의 팬`;
 
   return (
-    <SafeAreaView style={styles.screen}>
-      <View style={styles.content}>
-        <View style={{ position: 'relative' }}>
+    <View style={styles.screen}>
+      <StatusBar
+        barStyle="light-content"
+        translucent={true}
+        backgroundColor="transparent"
+      />
+
+      <ScrollView
+        style={styles.scrollContainer}
+        //scrollEnabled={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              setRefreshing(true);
+              load();
+            }}
+            tintColor={Colors.palette.Gray100}
+          />
+        }
+      >
+        {/* 헤더 영역 - 배경 이미지와 그라디언트 */}
+        <View style={styles.headerContainer}>
           <ImageBackground
             source={artist.bannerUrl ? { uri: artist.bannerUrl } : undefined}
-            style={styles.headerBg}
-            imageStyle={{ resizeMode: 'cover' }}
-            onLoad={() =>
-              console.log(
-                '[ArtistPage] Banner image loaded successfully:',
-                artist.bannerUrl,
-              )
-            }
-            onError={(error) =>
-              console.log(
-                '[ArtistPage] Banner image failed to load:',
-                error.nativeEvent.error,
-                'URL:',
-                artist.bannerUrl,
-              )
-            }
+            style={styles.backgroundImage}
+            imageStyle={styles.backgroundImageStyle}
           >
-            <Pressable onPress={onBack} style={styles.backBtn}>
-              <BackIcon width={24} height={24} />
-            </Pressable>
             <LinearGradient
-              pointerEvents="none"
-              colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.9)']}
-              style={StyleSheet.absoluteFill}
+              colors={['rgba(18, 18, 18, 0)', '#121212']}
+              //locations={[0, 1]}
+              locations={[0.1, 0.9]}
+              style={styles.gradient}
             />
           </ImageBackground>
-          {artist.profileUrl && (
-            <View style={styles.avatarWrap}>
-              <Image
-                source={{ uri: artist.profileUrl }}
-                style={styles.avatar}
-                onLoad={() =>
-                  console.log(
-                    '[ArtistPage] Profile image loaded successfully:',
-                    artist.profileUrl,
-                  )
-                }
-                onError={(error) =>
-                  console.log(
-                    '[ArtistPage] Profile image failed to load:',
-                    error.nativeEvent.error,
-                    'URL:',
-                    artist.profileUrl,
-                  )
-                }
-              />
-            </View>
-          )}
-          <Text style={styles.artistName}>{displayName}</Text>
-          <View style={styles.fanRow}>
-            <Text style={styles.fanText}>{fansLabel}</Text>
-            <Text style={styles.redStar}>★</Text>
-          </View>
 
-          {/* 관심 버튼 */}
-          <Pressable
-            onPress={() => {
-              if (artist.isInterested) {
-                setIsConfirmVisible(true);
-              } else {
-                onToggleInterest();
-              }
-            }}
-            style={[
-              styles.interestBtn,
-              artist.isInterested
-                ? styles.interestBtnOutline
-                : styles.interestBtnFill,
-            ]}
-          >
-            <Text
-              style={
-                artist.isInterested
-                  ? styles.interestTextOutline
-                  : styles.interestTextOutline
-              }
-            >
-              {artist.isInterested
-                ? '나의 관심 아티스트'
-                : '관심 아티스트에 추가'}
-            </Text>
-          </Pressable>
+          {/* 프로필 정보 영역 */}
+          <View style={styles.profileSection}>
+            <View style={styles.avatarContainer}>
+              {artist.profileUrl ? (
+                <Image
+                  source={{ uri: artist.profileUrl }}
+                  style={styles.avatar}
+                />
+              ) : (
+                <View style={styles.avatarPlaceholder} />
+              )}
+            </View>
+
+            <Text style={styles.artistName}>{displayName}</Text>
+
+            <View style={styles.fanInfoContainer}>
+              <Text style={styles.fanText}>{fansLabel}</Text>
+              <Text style={styles.starIcon}>★</Text>
+            </View>
+          </View>
         </View>
 
-        <ScrollView
-          refreshControl={
-            // Pull-to-Refresh
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={() => {
-                setRefreshing(true);
-                load();
-              }}
-              tintColor={Colors.palette.Gray100}
-            />
-          }
-          contentContainerStyle={{ paddingBottom: 40 }}
-        >
-          {/* 프로필 라인 */}
-          <View style={styles.profileRow}>
-            {!artist.profileUrl && (
-              <View
-                style={[
-                  styles.avatar,
-                  { backgroundColor: Colors.palette.Gray700 },
-                ]}
-              />
-            )}
-            <Text style={styles.artistName}>{displayName}</Text>
-            <View style={styles.fanRow}>
-              <Text style={styles.fanText}>{fansLabel}</Text>
-              <Text style={styles.redStar}>★</Text>
-            </View>
-
-            {/* 관심 버튼 */}
+        {/* 콘텐츠 영역 - 고정 높이 604px */}
+        <View style={styles.contentArea}>
+          {/* 관심 아티스트 버튼 */}
+          <View style={styles.buttonContainer}>
             <Pressable
               onPress={() => {
                 if (artist.isInterested) {
@@ -383,17 +332,17 @@ export default function ArtistPage() {
                 }
               }}
               style={[
-                styles.interestBtn,
+                styles.interestButton,
                 artist.isInterested
-                  ? styles.interestBtnOutline
-                  : styles.interestBtnFill,
+                  ? styles.interestButtonActive
+                  : styles.interestButtonInactive,
               ]}
             >
               <Text
                 style={
                   artist.isInterested
-                    ? styles.interestTextOutline
-                    : styles.interestTextOutline
+                    ? styles.interestButtonTextActive
+                    : styles.interestButtonTextInactive
                 }
               >
                 {artist.isInterested
@@ -402,30 +351,39 @@ export default function ArtistPage() {
               </Text>
             </Pressable>
           </View>
-          <View style={{ height: 30 }} />
 
-          {/* 추천기록 카드 */}
-          <View style={styles.sectionWrap}>
+          {/* 추천 기록 섹션 */}
+          <View style={styles.statsSection}>
             <Text style={styles.sectionTitle}>추천기록</Text>
-            <View style={styles.card}>
-              <View style={styles.cardRow}>
-                <Text style={styles.cardLabel}>추천한 횟수</Text>
-                <Text style={styles.cardValue}>
+            <View style={styles.statsCard}>
+              <View style={styles.statsRow}>
+                <Text style={styles.statsLabel}>추천한 횟수</Text>
+                <Text style={styles.statsValue}>
                   {artist.stats?.sentCount ?? 0}회
                 </Text>
               </View>
-              <View style={styles.divider} />
-              <View style={styles.cardRow}>
-                <Text style={styles.cardLabel}>추천받은 횟수</Text>
-                <Text style={styles.cardValue}>
+              <View style={styles.statsDivider} />
+              <View style={styles.statsRow}>
+                <Text style={styles.statsLabel}>추천받은 횟수</Text>
+                <Text style={styles.statsValue}>
                   {artist.stats?.receivedCount ?? 0}회
                 </Text>
               </View>
             </View>
           </View>
-        </ScrollView>
-      </View>
+        </View>
 
+        <View style={styles.bottomSpacer} />
+      </ScrollView>
+
+      {/* 뒤로가기 버튼 */}
+      <SafeAreaView style={styles.backButtonWrapper}>
+        <Pressable onPress={onBack} style={styles.backButton}>
+          <BackIcon width={20} height={20} fill={'white'} />
+        </Pressable>
+      </SafeAreaView>
+
+      {/* 확인 모달 */}
       {isConfirmVisible && (
         <View style={styles.modalOverlay}>
           <ConfirmModal
@@ -448,28 +406,14 @@ export default function ArtistPage() {
           />
         </View>
       )}
-    </SafeAreaView>
+    </View>
   );
 }
-
-const HEADER_H = 220;
-const AVATAR_SIZE = 120;
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: Colors.palette.Gray900,
-  },
-  statusBarArea: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 100,
-    backgroundColor: 'transparent',
-  },
-  content: {
-    flex: 1,
   },
   centerWrap: {
     flex: 1,
@@ -477,128 +421,152 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Colors.palette.Gray900,
   },
-  headerBg: {
+  scrollContainer: {
+    flex: 1,
+  },
+  headerContainer: {
     height: HEADER_H,
-    width: '100%',
-    backgroundColor: Colors.palette.Gray800,
-  },
-  backBtn: {
-    position: 'absolute',
-    top: 16,
-    left: 16,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backIcon: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  profileRow: {
-    marginTop: 80,
-    paddingHorizontal: 20,
-    alignItems: 'center',
     position: 'relative',
-    zIndex: 10,
-    elevation: 4,
   },
-  avatarWrap: {
+  backgroundImage: {
     position: 'absolute',
-    bottom: -AVATAR_SIZE / 2,
-    left: '50%',
-    transform: [{ translateX: -AVATAR_SIZE / 2 }],
-    width: AVATAR_SIZE,
-    height: AVATAR_SIZE,
-    borderRadius: AVATAR_SIZE / 2,
-    overflow: 'hidden',
-    zIndex: 20,
-    elevation: 6,
-    backgroundColor: Colors.palette.Gray700,
+    top: 0,
+    left: 0,
+    right: 0,
+    height: HEADER_H,
+  },
+  backgroundImageStyle: {
+    resizeMode: 'cover',
+  },
+  gradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: HEADER_H,
+  },
+  profileSection: {
+    position: 'absolute',
+    bottom: -60, // 프로필을 배경 이미지 경계선에 배치
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 2,
+  },
+  avatarContainer: {
+    marginBottom: 16,
   },
   avatar: {
     width: AVATAR_SIZE,
     height: AVATAR_SIZE,
     borderRadius: AVATAR_SIZE / 2,
+    backgroundColor: Colors.palette.Gray700,
+  },
+  avatarPlaceholder: {
+    width: AVATAR_SIZE,
+    height: AVATAR_SIZE,
+    borderRadius: AVATAR_SIZE / 2,
+    backgroundColor: Colors.palette.Gray700,
   },
   artistName: {
     ...Typography.h1,
     color: Colors.palette.Gray100,
-    marginTop: 12,
+    marginBottom: 8,
+    textAlign: 'center',
   },
-  fanRow: {
+  fanInfoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginTop: 6,
+    justifyContent: 'center',
   },
   fanText: {
     ...Typography.sub2,
     color: Colors.palette.Gray200,
   },
-  redStar: {
-    marginLeft: 4,
+  starIcon: {
+    marginLeft: 6,
     color: '#FB4932',
-    fontSize: 14,
+    fontSize: 16,
   },
-  interestBtn: {
-    marginTop: 16,
-    height: 44,
-    borderRadius: 8,
-    alignSelf: 'stretch',
+  buttonContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 98, // 프로필이 위로 올라간만큼 더 많은 패딩 추가
+    paddingBottom: 24,
+  },
+  interestButton: {
+    height: 48,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  interestBtnFill: {
+  interestButtonInactive: {
     backgroundColor: '#FB4932',
   },
-  interestBtnOutline: {
+  interestButtonActive: {
+    backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: Colors.palette.Gray200,
+    borderColor: Colors.palette.Gray400,
   },
-  interestTextFill: {
-    ...Typography.button,
-    color: Colors.palette.Gray900,
-  },
-  interestTextOutline: {
+  interestButtonTextInactive: {
     ...Typography.button,
     color: Colors.palette.Gray100,
+    fontWeight: '600',
   },
-  sectionWrap: {
-    paddingHorizontal: 20,
-    marginTop: 18,
+  interestButtonTextActive: {
+    ...Typography.button,
+    color: Colors.palette.Gray100,
+    fontWeight: '400',
+  },
+  contentArea: {
+    height: CONTENT_H,
+    backgroundColor: Colors.palette.Gray900,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
   },
   sectionTitle: {
     ...Typography.sub3,
-    paddingHorizontal: 10,
     color: Colors.palette.Gray100,
-    marginBottom: 10,
+    marginBottom: 12,
+    paddingLeft: 4,
   },
-  card: {
+  statsCard: {
     backgroundColor: Colors.palette.Gray800,
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    borderRadius: 12,
+    paddingVertical: 4,
   },
-  cardRow: {
+  statsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
   },
-  cardLabel: {
+  statsLabel: {
     ...Typography.body2,
     color: Colors.palette.Gray400,
   },
-  cardValue: {
+  statsValue: {
     ...Typography.sub,
     color: Colors.palette.Gray400,
   },
-  divider: {
+  statsDivider: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: Colors.palette.Gray700,
+    marginHorizontal: 20,
+  },
+  backButtonWrapper: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    zIndex: 10,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+    marginLeft: 16,
   },
   modalOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -606,5 +574,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 999,
+  },
+  statsSection: {
+    paddingHorizontal: 20,
+    paddingTop: 49,
+    paddingBottom: 20,
+  },
+  bottomSpacer: {
+    height: 211,
   },
 });
