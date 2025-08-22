@@ -29,7 +29,6 @@ export default function SplashScreen() {
       console.log('[GUEST] 삭제 후 accessToken:', token);
       console.log('[GUEST] 삭제 후 refreshToken:', refresh);
 
-      // 여기 핵심!!
       useAuthStore.getState().clearJWTToken();
       console.log('[GUEST] Zustand JWTToken 초기화 완료');
 
