@@ -13,6 +13,8 @@ import {
   TouchableWithoutFeedback,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { setRecomsAuthToken } from '@/api/recoms';
+import * as SecureStore from 'expo-secure-store';
 
 import Logo from '@/assets/auth/splash/logo.svg';
 import LoginIcon from '@/assets/auth/splash/loginIcon.svg';
@@ -41,8 +43,24 @@ export default function LoginScreen() {
     }
     try {
       setLoading(true);
-      await login({ ownId, password });
+      const loginResult = await login({ ownId, password });
       console.log('[Login] success → /(tabs)/home');
+
+      // 토큰 추출 (반환 형태에 따라 유연하게)
+      const accessToken =
+        (loginResult as any)?.accessToken ??
+        (loginResult as any)?.data?.accessToken ??
+        (loginResult as any)?.token ??
+        (await SecureStore.getItemAsync('access_token')); // 훅 내부에서 이미 저장했다면 복원
+
+      if (accessToken) {
+        // recoms API에 토큰 주입 + (선택) 저장
+        setRecomsAuthToken(accessToken);
+        await SecureStore.setItemAsync('access_token', accessToken);
+      } else {
+        console.warn('[Login] accessToken not found from login()');
+      }
+
       router.replace('/(tabs)/home');
     } catch (e: any) {
       console.log('[Login] error', e?.message || e);
