@@ -103,7 +103,6 @@ function toApi(state: NotiState): BackendPayload {
 
 const ENDPOINT = '/api/v1/users/notification-settings';
 
-// ! 💣💣💣💣💣💣💣💣 화면 💣💣💣💣💣💣💣💣 !
 export default function Notification() {
   const router = useRouter();
 
@@ -135,21 +134,17 @@ export default function Notification() {
     s.serviceAnnouncement;
 
   useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const res = await axiosInstance.get<BackendPayload>(ENDPOINT);
-        setNoti(fromApi(res.data));
-      } catch {
-        Alert.alert(
-          '알림 설정',
-          '설정 조회에 실패했어요. 로그인/네트워크를 확인해주세요.',
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchSettings();
-  }, []);
+    Alert.alert(
+      '알림',
+      '아직 제공하지 않는 서비스입니다.',
+      [
+        {
+          text: '확인',
+          onPress: () => router.back(),
+        },
+      ]
+    );
+  }, [router]);
 
   // 저장 (optimistic + 실패 시 롤백)
   const save = async (next: NotiState, prev: NotiState) => {
