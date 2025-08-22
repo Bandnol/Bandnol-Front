@@ -306,6 +306,7 @@ const styles = StyleSheet.create({
     padding: 8,
     backgroundColor: '#1F1F1F',
     marginBottom: 20,
+    textAlignVertical: 'top',
   },
   commentOptions: {
     flexDirection: 'row',

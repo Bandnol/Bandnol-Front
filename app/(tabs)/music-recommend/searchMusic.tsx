@@ -18,11 +18,13 @@ import AlertIcon from '@/assets/icons/alert.svg';
 import { searchSpotifySong } from '@/api/spotifySearch';
 import DateHeader from '@/components/common/DateHeader';
 import { Typography } from '@/constants/typography';
+import Noresult from '@/assets/icons/jam_alert.svg';
 
 export default function SearchMusicPage() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<any[]>([]);
   const router = useRouter();
+  const [isNoResult, setIsNoResult] = useState(false);
 
   const debouncedSearch = useCallback(
     debounce(async (text: string) => {
@@ -34,6 +36,7 @@ export default function SearchMusicPage() {
       try {
         const res = await searchSpotifySong(text);
         console.log('🔍 최종 받아온 노래 목록:', res.data);
+        setIsNoResult(res.data.length === 0);
         if (res.success) {
           setResults(res.data || []);
         } else {
@@ -108,27 +111,45 @@ export default function SearchMusicPage() {
               </Pressable>
             </View>
           </View>
-
-          <FlatList
-            data={results}
-            keyExtractor={(item, idx) => `${item.title}-${idx}`}
-            contentContainerStyle={styles.listContent}
-            renderItem={({ item }) => (
-              <Pressable
-                onPress={() => handleSelect(item)}
-                style={({ pressed }) => [
-                  styles.item,
-                  pressed && styles.itemPressed,
-                ]}
-              >
-                <Image source={{ uri: item.albumImg }} style={styles.album} />
-                <View style={styles.textBox}>
-                  <Text style={styles.titleText}>{item.title}</Text>
-                  <Text style={styles.artistText}>{item.artist}</Text>
-                </View>
-              </Pressable>
-            )}
-          />
+          {isNoResult ? (
+            <View style={styles.noResultContainer}>
+              <View style={styles.noResultAlert}>
+                <Noresult style={{ alignSelf: 'center' }} />
+                <Text
+                  style={{
+                    ...Typography.body2,
+                    color: '#B3B3B3',
+                    textAlign: 'center',
+                    fontSize: 16,
+                    marginTop: 10,
+                  }}
+                >
+                  검색 결과가 없습니다.
+                </Text>
+              </View>
+            </View>
+          ) : (
+            <FlatList
+              data={results}
+              keyExtractor={(item, idx) => `${item.title}-${idx}`}
+              contentContainerStyle={styles.listContent}
+              renderItem={({ item }) => (
+                <Pressable
+                  onPress={() => handleSelect(item)}
+                  style={({ pressed }) => [
+                    styles.item,
+                    pressed && styles.itemPressed,
+                  ]}
+                >
+                  <Image source={{ uri: item.albumImg }} style={styles.album} />
+                  <View style={styles.textBox}>
+                    <Text style={styles.titleText}>{item.title}</Text>
+                    <Text style={styles.artistText}>{item.artist}</Text>
+                  </View>
+                </Pressable>
+              )}
+            />
+          )}
         </View>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
@@ -216,5 +237,15 @@ const styles = StyleSheet.create({
   artistText: {
     ...Typography.caption1,
     color: '#fff',
+  },
+  noResultContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
+  noResultAlert: {
+    alignItems: 'center',
+    paddingBottom: 120,
   },
 });
