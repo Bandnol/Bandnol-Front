@@ -1,0 +1,50 @@
+{
+  "cli": {
+    "version": ">= 16.17.4",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "store",
+      "node": "20.19.0",
+      "prebuildCommand": "ls -la && cd ios && ls -la",
+      "ios": {
+        "buildConfiguration": "Debug"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://bandnol.app"
+      }
+    },
+    "development-simulator": {
+      "developmentClient": true,
+      "distribution": "store",
+      "ios": { "simulator": true },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://bandnol.app"
+      }
+    },
+    "preview": {
+      "autoIncrement": true,
+      "distribution": "store",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://bandnol.app"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "node": "20.19.0",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://bandnol.app"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "./google-service-account.json",
+        "track": "internal"
+      }
+    }
+  }
+}

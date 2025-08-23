@@ -1,0 +1,126 @@
+import { useRouter } from 'expo-router';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+import LoginIcon from '@/assets/auth/splash/loginIcon.svg';
+import Logo from '@/assets/auth/splash/logo.svg';
+import GuestIcon from '@/assets/auth/splash/GuestIcon.svg';
+import SignupIcon from '@/assets/auth/splash/signupIcon.svg';
+import { Colors } from '@/constants/Colors';
+import { Typography } from '@/constants/typography';
+import * as SecureStore from 'expo-secure-store';
+import { useAuthStore } from '@/store/auth';
+
+export const options = {
+  headerShown: false,
+};
+
+export default function SplashScreen() {
+  const router = useRouter();
+
+  const handleGuest = async () => {
+    try {
+      await SecureStore.deleteItemAsync('accessToken');
+      await SecureStore.deleteItemAsync('refreshToken');
+      console.log('[GUEST] 저장된 토큰 삭제 완료');
+
+      const token = await SecureStore.getItemAsync('accessToken');
+      const refresh = await SecureStore.getItemAsync('refreshToken');
+      console.log('[GUEST] 삭제 후 accessToken:', token);
+      console.log('[GUEST] 삭제 후 refreshToken:', refresh);
+
+      useAuthStore.getState().clearJWTToken();
+      console.log('[GUEST] Zustand JWTToken 초기화 완료');
+
+      router.replace('/(tabs)/post');
+    } catch (error) {
+      console.error('[GUEST] 토큰 삭제 중 오류 발생:', error);
+    }
+  };
+
+  const handleLogin = () => {
+    router.push('/(auth)/login');
+  };
+
+  const handleSignup = () => {
+    router.replace('/(onboarding)/step1-personal');
+  };
+
+  const handleInquiry = () => {
+    router.push('/(auth)/inquiry');
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* 앱 로고 */}
+      <View style={{ height: 80 }} />
+      <View style={styles.logo}>
+        <Logo width={100} height={125} />
+      </View>
+      <Text style={styles.text}>{`하루 한 곡, 음악 취향을 공유하고 
+밴놀을 즐겨보세요!`}</Text>
+
+      {/* 로그인 */}
+      <TouchableOpacity
+        onPress={handleLogin}
+        style={[styles.Button, { marginTop: 66 }]}
+      >
+        <LoginIcon />
+      </TouchableOpacity>
+
+      {/* 회원가입*/}
+      <TouchableOpacity onPress={handleSignup} style={styles.Button}>
+        <SignupIcon />
+      </TouchableOpacity>
+      <View style={{ height: 20 }} />
+      {/* 로그인 없이 둘러보기 */}
+      <TouchableOpacity onPress={handleGuest} style={styles.Button}>
+        <GuestIcon />
+      </TouchableOpacity>
+
+      <View style={{ height: 95 }} />
+      <TouchableOpacity onPress={handleInquiry}>
+        <Text style={[styles.inquiry, { marginTop: 20 }]}>문의하기</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.palette.Gray900,
+    paddingHorizontal: 20,
+  },
+  logo: {
+    marginBottom: 24,
+  },
+  text: {
+    ...Typography.body2,
+    color: Colors.palette.Gray100,
+    textAlign: 'center',
+    width: 193,
+  },
+  Button: {
+    width: '100%',
+    height: 50,
+    borderRadius: 8,
+    marginBottom: 16,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  icon: {
+    width: 24,
+    height: 24,
+  },
+  inquiry: {
+    ...Typography.caption1,
+    textDecorationLine: 'underline',
+    color: Colors.palette.Gray500,
+    textAlign: 'center',
+    width: '100%',
+  },
+});
